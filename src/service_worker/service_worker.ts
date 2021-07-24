@@ -9,8 +9,8 @@ chrome.action.setIcon({"path" : "media/icon-enabled.png"}, () => {})
 
 chrome.runtime.onMessage.addListener(onMessage)
 
-function onMessage(message: any, sender: any, sendResponse: any){
-    if(message.messageType == "codes"){
+function onMessage(message: IdleMessage, sender: any, sendResponse: any){
+    if(message.messageType == MessageType.Codes){
         console.log("Code message received")
 
         chrome.storage.sync.get([Globals.SETTING_CODES, Globals.SETTING_PENDING], 
@@ -71,12 +71,18 @@ function startUploadProcess(){
     )
 }
 
-
 async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], instanceId: string, userId: string, hash: string) {
+    if(!userId || userId.length == 0 || !hash || hash.length == 0){
+        chrome.runtime.sendMessage({messageType: MessageType.MissingCredentials})
+        console.error("No credentials entered.")
+        return
+    }
+    
     let server = await IdleChampionsApi.getServer()
 
     if(!server) { 
         console.error("Failed to get idle champions server.")
+        chrome.runtime.sendMessage({messageType: MessageType.Error, messageText:"Unable to connect to Idle Champions server."})
         return
     }
 
@@ -84,7 +90,11 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
 
     await new Promise(h => setTimeout(h, 3000)) //Delay between requests
 
+    chrome.runtime.sendMessage({messageType: MessageType.Info, messageText:`Upload starting, ${pendingCodes.length} new codes to redeem. This may take a bit.` })
+
     //Upload loop
+    let duplicates = 0
+    let newCodes = 0
     while(pendingCodes.length > 0){
         let code = pendingCodes.pop()
 
@@ -111,6 +121,7 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
 
             if(!userData) {
                 console.log("Failed to retreive user data.")
+                chrome.runtime.sendMessage({messageType: MessageType.Error, messageText:"Failed to retreieve user data, check user ID and hash."})
                 return
             }
 
@@ -132,14 +143,17 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
             case CodeSubmitStatus.OutdatedInstanceId:
             case CodeSubmitStatus.Failed:
                 console.error("Unable to submit code, aborting upload process.")
+                chrome.runtime.sendMessage({messageType: MessageType.Error, messageText:"Failed to submit code for unknown reason."})
                 return
             case CodeSubmitStatus.AlreadyRedeemed:
             case CodeSubmitStatus.Success:
                 if(codeResponse == CodeSubmitStatus.AlreadyRedeemed) {
                     console.log(`Already redeemed code: ${code}`)
+                    duplicates++
                 }
                 else{
                     console.log(`Sucessfully redeemed: ${code}`)
+                    newCodes++
                 }
 
                 reedemedCodes.push(code)
@@ -149,5 +163,12 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
         }
 
         await new Promise(h => setTimeout(h, 10000)) //Delay between requests
+
+        chrome.runtime.sendMessage({messageType: MessageType.Info, messageText:`Uploading... ${pendingCodes.length} codes left. This may take a bit.` })
     }
+
+    console.log("Redeem complete:")
+    console.log(`${duplicates} duplicate codes`)
+    console.log(`${newCodes} new redemptions`)
+    chrome.runtime.sendMessage({messageType: MessageType.Success, messageText: `Upload completed successfully.\n${duplicates > 0 ? `${duplicates} codes already redeemed` : ""}\n${newCodes} redeemed.`})
 }

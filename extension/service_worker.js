@@ -235,21 +235,31 @@ function startUploadProcess() {
 }
 function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
     return __awaiter(this, void 0, void 0, function () {
-        var server, code, codeResponse, userData;
+        var server, duplicates, newCodes, code, codeResponse, userData;
         var _a, _b;
         return __generator(this, function (_c) {
             switch (_c.label) {
-                case 0: return [4, IdleChampionsApi.getServer()];
+                case 0:
+                    if (!userId || userId.length == 0 || !hash || hash.length == 0) {
+                        chrome.runtime.sendMessage({ messageType: "missingCredentials" });
+                        console.error("No credentials entered.");
+                        return [2];
+                    }
+                    return [4, IdleChampionsApi.getServer()];
                 case 1:
                     server = _c.sent();
                     if (!server) {
                         console.error("Failed to get idle champions server.");
+                        chrome.runtime.sendMessage({ messageType: "error", messageText: "Unable to connect to Idle Champions server." });
                         return [2];
                     }
                     console.log("Got server " + server);
                     return [4, new Promise(function (h) { return setTimeout(h, 3000); })];
                 case 2:
                     _c.sent();
+                    chrome.runtime.sendMessage({ messageType: "info", messageText: "Upload starting, " + pendingCodes.length + " new codes to redeem. This may take a bit." });
+                    duplicates = 0;
+                    newCodes = 0;
                     _c.label = 3;
                 case 3:
                     if (!(pendingCodes.length > 0)) return [3, 11];
@@ -278,6 +288,7 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                     userData = _c.sent();
                     if (!userData) {
                         console.log("Failed to retreive user data.");
+                        chrome.runtime.sendMessage({ messageType: "error", messageText: "Failed to retreieve user data, check user ID and hash." });
                         return [2];
                     }
                     instanceId = userData.details.instance_id;
@@ -300,14 +311,17 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                         case CodeSubmitStatus.OutdatedInstanceId:
                         case CodeSubmitStatus.Failed:
                             console.error("Unable to submit code, aborting upload process.");
+                            chrome.runtime.sendMessage({ messageType: "error", messageText: "Failed to submit code for unknown reason." });
                             return [2];
                         case CodeSubmitStatus.AlreadyRedeemed:
                         case CodeSubmitStatus.Success:
                             if (codeResponse == CodeSubmitStatus.AlreadyRedeemed) {
                                 console.log("Already redeemed code: " + code);
+                                duplicates++;
                             }
                             else {
                                 console.log("Sucessfully redeemed: " + code);
+                                newCodes++;
                             }
                             reedemedCodes.push(code);
                             chrome.storage.sync.set((_b = {}, _b[Globals.SETTING_CODES] = reedemedCodes, _b[Globals.SETTING_PENDING] = pendingCodes, _b));
@@ -316,8 +330,14 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                     return [4, new Promise(function (h) { return setTimeout(h, 10000); })];
                 case 10:
                     _c.sent();
+                    chrome.runtime.sendMessage({ messageType: "info", messageText: "Uploading... " + pendingCodes.length + " codes left. This may take a bit." });
                     return [3, 3];
-                case 11: return [2];
+                case 11:
+                    console.log("Redeem complete:");
+                    console.log(duplicates + " duplicate codes");
+                    console.log(newCodes + " new redemptions");
+                    chrome.runtime.sendMessage({ messageType: "success", messageText: "Upload completed successfully.\n" + (duplicates > 0 ? duplicates + " codes already redeemed" : "") + "\n" + newCodes + " redeemed." });
+                    return [2];
             }
         });
     });

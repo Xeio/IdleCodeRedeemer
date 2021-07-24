@@ -9,28 +9,32 @@
                 <a class="nav-link active" data-bs-toggle="tab" href="#run">Run</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="tab" href="#settings">Settings</a>
+                <a class="nav-link" data-bs-toggle="tab" id="settingsTabButton" href="#settings">Settings</a>
             </li>
         </ul>
         <div id="tabContents" class="tab-content">
             <div class="tab-pane fade show active" id="run">
                 <div class="d-grid gap-2">
-                    <button class="btn btn-primary btn-lg" id="Run">Detect And Upload Codes</button>
-                    <div class="alert alert-danger collapse" id="errors">
-                        <!-- <button type="button" class="btn-close" data-bs-dismiss="alert"></button> -->
-                        Test error message
+                    <button class="btn btn-primary btn-lg" id="detectAndUpload">Detect And Upload Codes</button>
+                    <div class="alert alert-danger alert-dismissible collapse" id="error">
+                        <button type="button" class="btn-close" data-bs-toggle="collapse" data-bs-target="#error"></button>
+                        <span>Default error text</span>
                     </div>
-                    <div class="alert alert-success collapse" id="info">
-                        <!-- <button type="button" class="btn-close" data-bs-dismiss="alert"></button> -->
-                        Test success message
+                    <div class="alert alert-success alert-dismissible collapse" id="success">
+                        <button type="button" class="btn-close" data-bs-toggle="collapse" data-bs-target="#success"></button>
+                        <span>Upload completed successfully.</span>
                     </div>
-                    <div class="alert alert-info collapse" id="info">
-                        <!-- <button type="button" class="btn-close" data-bs-dismiss="alert"></button> -->
-                        Test info message
+                    <div class="alert alert-info alert-dismissible collapse" id="info">
+                        <button type="button" class="btn-close" data-bs-toggle="collapse" data-bs-target="#info"></button>
+                        <span>Default info text</span>
                     </div>
                 </div>
             </div>
             <div class="tab-pane fade" id="settings">
+                <div class="alert alert-danger collapse" id="errorSettings">
+                    <button type="button" class="btn-close" data-bs-toggle="collapse" data-bs-target="#error"></button>
+                    <span>Default settings error</span>
+                </div>
                 <div class="form-group">
                     <label for="userId" class="form-label">User Id</label>
                     <input type="text" id="userId" class="form-control" />

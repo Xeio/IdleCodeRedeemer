@@ -21,7 +21,7 @@ const observer = new MutationObserver((mutationList, observer) => {
             }
         })
 
-        if(codes.length > 0 && !arraysSame(codes, lastCodes)){
+        if(codes.length > 0){
             lastCodes = codes
             console.info("Sending idle codes to service worker")
             chrome.runtime.sendMessage({messageType: "codes", codes: codes})
@@ -30,11 +30,6 @@ const observer = new MutationObserver((mutationList, observer) => {
         }
     }
 })
-
-function arraysSame(arr1: string[], arr2: string[]) : boolean{
-    if(arr1.length != arr2.length) return false
-    return arr1.filter(s => arr2.includes(s)).length == arr1.length
-}
 
 const observerConfig = { childList: true, subtree: true }
 

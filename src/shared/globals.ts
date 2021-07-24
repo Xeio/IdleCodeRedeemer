@@ -11,3 +11,17 @@ class Globals {
     static SETTING_USER_HASH = "userHash";
     static SETTING_USER_ID = "userId";
 }
+
+interface IdleMessage{
+    messageType: MessageType;
+    codes?: string[];
+    messageText?: string;
+}
+
+const enum MessageType{
+    Codes = "codes",
+    Error = "error",
+    Success = "success",
+    Info = "info",
+    MissingCredentials = "missingCredentials",
+}

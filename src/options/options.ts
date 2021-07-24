@@ -5,8 +5,21 @@ document.addEventListener("DOMContentLoaded", () => {
     loaded()
 })
 
+chrome.runtime.onMessage.addListener(onMessage)
+
+function onMessage(message: IdleMessage, sender: any, sendResponse: any){
+    switch(message.messageType){
+        case MessageType.Error:
+        case MessageType.Info:
+        case MessageType.Success:
+        case MessageType.MissingCredentials:
+            handleMessage(message);
+            break;
+    }
+}
+
 function loaded(){
-    document.getElementById("Run").addEventListener('click', buttonClick)
+    document.getElementById("detectAndUpload").addEventListener('click', buttonClick)
 
     chrome.storage.sync.get([Globals.SETTING_USER_ID, Globals.SETTING_USER_HASH], ({userId, userHash}) =>{
         let userIdElement = document.getElementById("userId") as HTMLInputElement
@@ -27,5 +40,38 @@ function settingsUpdated(this: HTMLElement, ev: FocusEvent){
 }
 
 function buttonClick(){
+    hideMessages()
     chrome.tabs.create({ url: Globals.discordChannelUrl })
+    //chrome.tabs.create({ url: "dst/options.html" })
+}
+
+function hideMessages() {
+    document.getElementById("error").classList.remove("show")
+    document.getElementById("success").classList.remove("show")
+    document.getElementById("info").classList.remove("show")
+    document.getElementById("errorSettings").classList.remove("show")
+}
+
+function handleMessage(message: IdleMessage){
+    hideMessages()
+
+    switch(message.messageType){
+        case MessageType.Error:
+            document.getElementById("error").classList.add("show")
+            document.querySelector("#error span").innerHTML = message.messageText
+            break
+        case MessageType.Info:
+            document.getElementById("info").classList.add("show")
+            document.querySelector("#info span").innerHTML = message.messageText
+            break
+        case MessageType.Success:
+            document.getElementById("success").classList.add("show")
+            document.querySelector("#success span").innerHTML = message.messageText
+            break
+        case MessageType.MissingCredentials:
+            document.getElementById("errorSettings").classList.add("show")
+            document.querySelector("#errorSettings span").innerHTML = "Missing credentials on settings tab."
+            document.getElementById("settingsTabButton").click()
+            break;
+    }
 }

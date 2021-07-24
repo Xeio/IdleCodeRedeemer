@@ -15,17 +15,12 @@ var observer = new MutationObserver(function (mutationList, observer) {
                 }
             }
         });
-        if (codes_1.length > 0 && !arraysSame(codes_1, lastCodes)) {
+        if (codes_1.length > 0) {
             lastCodes = codes_1;
             console.info("Sending idle codes to service worker");
             chrome.runtime.sendMessage({ messageType: "codes", codes: codes_1 });
         }
     }
 });
-function arraysSame(arr1, arr2) {
-    if (arr1.length != arr2.length)
-        return false;
-    return arr1.filter(function (s) { return arr2.includes(s); }).length == arr1.length;
-}
 var observerConfig = { childList: true, subtree: true };
 observer.observe(window.document, observerConfig);
