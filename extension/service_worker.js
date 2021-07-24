@@ -258,15 +258,15 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                         return [2];
                     }
                     console.log("Got server " + server);
-                    return [4, new Promise(function (h) { return setTimeout(h, 3000); })];
-                case 2:
-                    _c.sent();
                     chrome.runtime.sendMessage({ messageType: "info", messageText: "Upload starting, " + pendingCodes.length + " new codes to redeem. This may take a bit." });
                     duplicates = 0;
                     newCodes = 0;
-                    _c.label = 3;
+                    _c.label = 2;
+                case 2:
+                    if (!(pendingCodes.length > 0)) return [3, 10];
+                    return [4, new Promise(function (h) { return setTimeout(h, 5000); })];
                 case 3:
-                    if (!(pendingCodes.length > 0)) return [3, 11];
+                    _c.sent();
                     code = pendingCodes.pop();
                     console.log("Attempting to upload code: " + code);
                     return [4, IdleChampionsApi.submitCode({
@@ -338,12 +338,9 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                             chrome.storage.sync.set((_b = {}, _b[Globals.SETTING_CODES] = reedemedCodes, _b[Globals.SETTING_PENDING] = pendingCodes, _b));
                             break;
                     }
-                    return [4, new Promise(function (h) { return setTimeout(h, 10000); })];
-                case 10:
-                    _c.sent();
                     chrome.runtime.sendMessage({ messageType: "info", messageText: "Uploading... " + pendingCodes.length + " codes left. This may take a bit." });
-                    return [3, 3];
-                case 11:
+                    return [3, 2];
+                case 10:
                     console.log("Redeem complete:");
                     console.log(duplicates + " duplicate codes");
                     console.log(newCodes + " new redemptions");

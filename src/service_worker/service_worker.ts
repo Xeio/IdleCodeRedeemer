@@ -88,7 +88,6 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
 
     console.log(`Got server ${server}`)
 
-    await new Promise(h => setTimeout(h, 3000)) //Delay between requests
 
     chrome.runtime.sendMessage({messageType: MessageType.Info, messageText:`Upload starting, ${pendingCodes.length} new codes to redeem. This may take a bit.` })
 
@@ -96,6 +95,8 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
     let duplicates = 0
     let newCodes = 0
     while(pendingCodes.length > 0){
+        await new Promise(h => setTimeout(h, 5000)) //Delay between requests
+        
         let code = pendingCodes.pop()
 
         console.log(`Attempting to upload code: ${code}`)
@@ -169,8 +170,6 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
                 
                 break
         }
-
-        await new Promise(h => setTimeout(h, 10000)) //Delay between requests
 
         chrome.runtime.sendMessage({messageType: MessageType.Info, messageText:`Uploading... ${pendingCodes.length} codes left. This may take a bit.` })
     }
