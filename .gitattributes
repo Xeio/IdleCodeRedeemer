@@ -1,2 +1,6 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+# Mark generated files for GitHub linguist
+extension/dst/inject.js linguist-generated=true
+extension/dst/options.js linguist-generated=true
+extension/service_worker.js linguist-generated=true
