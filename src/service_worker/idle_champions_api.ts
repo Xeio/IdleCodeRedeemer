@@ -20,6 +20,7 @@ enum CodeSubmitStatus{
     Success,
     OutdatedInstanceId,
     AlreadyRedeemed,
+    InvalidParameters,
     Failed,
 }
 
@@ -77,6 +78,7 @@ class IdleChampionsApi {
         let response = await fetch(request.toString())
         if(response.ok){
             let redeemResponse : RedeemCodeResponse = await response.json()
+            console.debug(redeemResponse)
             if(redeemResponse.success && redeemResponse.failure_reason === FailureReason.AlreadyRedeemed){
                 return CodeSubmitStatus.AlreadyRedeemed
             }
@@ -86,8 +88,10 @@ class IdleChampionsApi {
             if(!redeemResponse.success && redeemResponse.failure_reason === FailureReason.OutdatedInstanceId){
                 return CodeSubmitStatus.OutdatedInstanceId
             }
+            if(!redeemResponse.success && redeemResponse.failure_reason === FailureReason.InvalidParameters){
+                return CodeSubmitStatus.InvalidParameters
+            }
             console.error("Unknown failure reason")
-            console.debug(redeemResponse)
             return CodeSubmitStatus.Failed
         }
         return CodeSubmitStatus.Failed

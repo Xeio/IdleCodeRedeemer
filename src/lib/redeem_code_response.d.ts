@@ -18,5 +18,7 @@ interface ApcStats {
 
 declare const enum FailureReason {
     OutdatedInstanceId = "Outdated instance id",
-    AlreadyRedeemed = "you_already_redeemed_combination"
+    AlreadyRedeemed = "you_already_redeemed_combination",
+    /** InvalidParameters is likely due to credential issues */
+    InvalidParameters = "Invalid or incomplete parameters",
 }

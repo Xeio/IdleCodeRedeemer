@@ -39,7 +39,8 @@ var CodeSubmitStatus;
     CodeSubmitStatus[CodeSubmitStatus["Success"] = 0] = "Success";
     CodeSubmitStatus[CodeSubmitStatus["OutdatedInstanceId"] = 1] = "OutdatedInstanceId";
     CodeSubmitStatus[CodeSubmitStatus["AlreadyRedeemed"] = 2] = "AlreadyRedeemed";
-    CodeSubmitStatus[CodeSubmitStatus["Failed"] = 3] = "Failed";
+    CodeSubmitStatus[CodeSubmitStatus["InvalidParameters"] = 3] = "InvalidParameters";
+    CodeSubmitStatus[CodeSubmitStatus["Failed"] = 4] = "Failed";
 })(CodeSubmitStatus || (CodeSubmitStatus = {}));
 var IdleChampionsApi = (function () {
     function IdleChampionsApi() {
@@ -95,6 +96,7 @@ var IdleChampionsApi = (function () {
                         return [4, response.json()];
                     case 2:
                         redeemResponse = _a.sent();
+                        console.debug(redeemResponse);
                         if (redeemResponse.success && redeemResponse.failure_reason === "you_already_redeemed_combination") {
                             return [2, CodeSubmitStatus.AlreadyRedeemed];
                         }
@@ -104,8 +106,10 @@ var IdleChampionsApi = (function () {
                         if (!redeemResponse.success && redeemResponse.failure_reason === "Outdated instance id") {
                             return [2, CodeSubmitStatus.OutdatedInstanceId];
                         }
+                        if (!redeemResponse.success && redeemResponse.failure_reason === "Invalid or incomplete parameters") {
+                            return [2, CodeSubmitStatus.InvalidParameters];
+                        }
                         console.error("Unknown failure reason");
-                        console.debug(redeemResponse);
                         return [2, CodeSubmitStatus.Failed];
                     case 3: return [2, CodeSubmitStatus.Failed];
                 }
@@ -312,6 +316,10 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                         case CodeSubmitStatus.Failed:
                             console.error("Unable to submit code, aborting upload process.");
                             chrome.runtime.sendMessage({ messageType: "error", messageText: "Failed to submit code for unknown reason." });
+                            return [2];
+                        case CodeSubmitStatus.InvalidParameters:
+                            console.error("Unable to submit code due to invalid parameters.");
+                            chrome.runtime.sendMessage({ messageType: "error", messageText: "Failed to submit code, check user/hash on settings tab." });
                             return [2];
                         case CodeSubmitStatus.AlreadyRedeemed:
                         case CodeSubmitStatus.Success:

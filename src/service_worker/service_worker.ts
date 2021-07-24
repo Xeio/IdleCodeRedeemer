@@ -145,6 +145,10 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
                 console.error("Unable to submit code, aborting upload process.")
                 chrome.runtime.sendMessage({messageType: MessageType.Error, messageText:"Failed to submit code for unknown reason."})
                 return
+            case CodeSubmitStatus.InvalidParameters:
+                console.error("Unable to submit code due to invalid parameters.")
+                chrome.runtime.sendMessage({messageType: MessageType.Error, messageText:"Failed to submit code, check user/hash on settings tab."})
+                return
             case CodeSubmitStatus.AlreadyRedeemed:
             case CodeSubmitStatus.Success:
                 if(codeResponse == CodeSubmitStatus.AlreadyRedeemed) {
