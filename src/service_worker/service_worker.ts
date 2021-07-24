@@ -55,18 +55,20 @@ function handleDetectedCodes(redeemedCodes: string[], pendingCodes: string[], de
 let uploadRunning = false
 
 function startUploadProcess(){
-    if(uploadRunning) return;
-    uploadRunning = true
-    console.log("Beginning upload.")
-    try{
-        chrome.storage.sync.get(
-            [Globals.SETTING_CODES, Globals.SETTING_PENDING, Globals.SETTING_INSTANCE_ID, Globals.SETTING_USER_ID, Globals.SETTING_USER_HASH], 
-            ({redeemedCodes, pendingCodes, instanceId, userId, userHash}) => { uploadCodes(redeemedCodes, pendingCodes, instanceId, userId, userHash) }
-        )
-    }
-    finally{
-        uploadRunning = false
-    }
+    chrome.storage.sync.get(
+        [Globals.SETTING_CODES, Globals.SETTING_PENDING, Globals.SETTING_INSTANCE_ID, Globals.SETTING_USER_ID, Globals.SETTING_USER_HASH], 
+        async ({redeemedCodes, pendingCodes, instanceId, userId, userHash}) => { 
+            if(uploadRunning) return //Only allow one upload at a time
+            uploadRunning = true
+            console.log("Beginning upload.")
+            try{
+                await uploadCodes(redeemedCodes, pendingCodes, instanceId, userId, userHash)
+            }
+            finally{
+                uploadRunning = false
+            }
+        }
+    )
 }
 
 

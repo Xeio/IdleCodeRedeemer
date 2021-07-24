@@ -206,19 +206,32 @@ function handleDetectedCodes(redeemedCodes, pendingCodes, detectedCodes) {
 }
 var uploadRunning = false;
 function startUploadProcess() {
-    if (uploadRunning)
-        return;
-    uploadRunning = true;
-    console.log("Beginning upload.");
-    try {
-        chrome.storage.sync.get([Globals.SETTING_CODES, Globals.SETTING_PENDING, Globals.SETTING_INSTANCE_ID, Globals.SETTING_USER_ID, Globals.SETTING_USER_HASH], function (_a) {
-            var redeemedCodes = _a.redeemedCodes, pendingCodes = _a.pendingCodes, instanceId = _a.instanceId, userId = _a.userId, userHash = _a.userHash;
-            uploadCodes(redeemedCodes, pendingCodes, instanceId, userId, userHash);
+    var _this = this;
+    chrome.storage.sync.get([Globals.SETTING_CODES, Globals.SETTING_PENDING, Globals.SETTING_INSTANCE_ID, Globals.SETTING_USER_ID, Globals.SETTING_USER_HASH], function (_a) {
+        var redeemedCodes = _a.redeemedCodes, pendingCodes = _a.pendingCodes, instanceId = _a.instanceId, userId = _a.userId, userHash = _a.userHash;
+        return __awaiter(_this, void 0, void 0, function () {
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        if (uploadRunning)
+                            return [2];
+                        uploadRunning = true;
+                        console.log("Beginning upload.");
+                        _b.label = 1;
+                    case 1:
+                        _b.trys.push([1, , 3, 4]);
+                        return [4, uploadCodes(redeemedCodes, pendingCodes, instanceId, userId, userHash)];
+                    case 2:
+                        _b.sent();
+                        return [3, 4];
+                    case 3:
+                        uploadRunning = false;
+                        return [7];
+                    case 4: return [2];
+                }
+            });
         });
-    }
-    finally {
-        uploadRunning = false;
-    }
+    });
 }
 function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
     return __awaiter(this, void 0, void 0, function () {
