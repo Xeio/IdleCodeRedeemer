@@ -332,6 +332,9 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                                 newCodes++;
                             }
                             reedemedCodes.push(code);
+                            if (reedemedCodes.length > 300) {
+                                reedemedCodes.shift();
+                            }
                             chrome.storage.sync.set((_b = {}, _b[Globals.SETTING_CODES] = reedemedCodes, _b[Globals.SETTING_PENDING] = pendingCodes, _b));
                             break;
                     }

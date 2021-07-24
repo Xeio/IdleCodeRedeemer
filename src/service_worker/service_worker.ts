@@ -161,6 +161,10 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
                 }
 
                 reedemedCodes.push(code)
+                if(reedemedCodes.length > 300){
+                    //Trim codes so our storage doesn't eventually exceed browser quotas
+                    reedemedCodes.shift()
+                }
                 chrome.storage.sync.set({[Globals.SETTING_CODES]: reedemedCodes, [Globals.SETTING_PENDING]: pendingCodes})
                 
                 break
