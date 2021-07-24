@@ -1,4 +1,4 @@
-/// <reference path="./../lib/chrome.d.ts" />
+var lastCodes = [];
 var observer = new MutationObserver(function (mutationList, observer) {
     if (mutationList.some(function (mut) { return mut.addedNodes.length > 0; })) {
         var regex_1 = /[A-Z0-9*!@#$%^&*]{4}-?[A-Z0-9*!@#$%^&*]{4}-?[A-Z0-9*!@#$%^&*]{4}-?([A-Z0-9*!@#$%^&*]{4})?/g;
@@ -15,13 +15,17 @@ var observer = new MutationObserver(function (mutationList, observer) {
                 }
             }
         });
-        if (codes_1.length > 0) {
-            console.debug("Sending idle codes to service worker");
+        if (codes_1.length > 0 && !arraysSame(codes_1, lastCodes)) {
+            lastCodes = codes_1;
+            console.info("Sending idle codes to service worker");
             chrome.runtime.sendMessage({ messageType: "codes", codes: codes_1 });
-            //window.close();
-            //observer.disconnect();
         }
     }
 });
+function arraysSame(arr1, arr2) {
+    if (arr1.length != arr2.length)
+        return false;
+    return arr1.filter(function (s) { return arr2.includes(s); }).length == arr1.length;
+}
 var observerConfig = { childList: true, subtree: true };
 observer.observe(window.document, observerConfig);

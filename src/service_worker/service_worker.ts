@@ -1,98 +1,151 @@
 /// <reference path="./../lib/chrome.d.ts" />
+/// <reference path="./../lib/player_data.d.ts" />
+/// <reference path="./../lib/redeem_code_response.d.ts" />
 /// <reference path="./../lib/server_definitions.d.ts" />
 /// <reference path="./../shared/globals.ts" />
+/// <reference path="./../shared/idle_champions_api.ts" />
 
-let _timeout = 0
+chrome.action.setIcon({"path" : "media/icon-enabled.png"}, () => {})
 
-const CODES_SETTING = "codes"
-const UNUPLOADED_SETTING = "unuploaded"
-const USERDATA_SETTING = "userdata"
+chrome.runtime.onMessage.addListener(onMessage)
 
-const MAX_CODES_QUOTA = 200
+function onMessage(message: any, sender: any, sendResponse: any){
+    if(message.messageType == "codes"){
+        console.log("Code message received")
 
-console.debug("Testing:" + Globals.debugMode)
-
-chrome.action.setIcon({"path" : "media/icon-enabled.png"}, () => {});
-
-chrome.runtime.onMessage.addListener(onMessage);
-
-function onMessage(request, sender, sendResponse){
-    if(request.messageType == "codes"){
-        console.log("Code message received");
-
-        clearTimeout(_timeout);
-        chrome.storage.sync.get([CODES_SETTING], ({codes}) => { newCodeAlarmUpload(codes, request.codes); });
+        chrome.storage.sync.get([Globals.SETTING_CODES, Globals.SETTING_PENDING], 
+            ({redeemedCodes, pendingCodes}) => { handleDetectedCodes(redeemedCodes, pendingCodes, message.codes) }
+        )
     }
 }
 
-function newCodeAlarmUpload(codes, detectedCodes){
-    if(!detectedCodes) return;
-    if(detectedCodes.length == 0) return; //Stop the loop
+function handleDetectedCodes(redeemedCodes: string[], pendingCodes: string[], detectedCodes: string[]){
+    if(!detectedCodes || detectedCodes.length == 0) return
 
-    if(!codes) codes = []
-
-    //TODO: Bettter loop?
-
-    let newCodes = []
+    if(!redeemedCodes) redeemedCodes = [] //Default if first run
+    if(!pendingCodes) pendingCodes = [] //Default if first run
 
     while(detectedCodes.length > 0){
-        let code = detectedCodes.pop()
+        let detectedCode = detectedCodes.pop()
 
-        if(codes.indexOf(code) == -1){
+        if(!redeemedCodes.includes(detectedCode) && !pendingCodes.includes(detectedCode)){
             //New code
-            console.log("New code detected: " + code)
+            console.log(`New code detected: ${detectedCode}`)
 
-            console.log("Uploading code: " + code)
-        
-            newCodes.push(code);
-
-            //TODO: Upload process
-
-            //TODO: Need a delay here somewhere between uploads?
-
-            //Stop processing till a delay happens
-            return;
+            pendingCodes.push(detectedCode)
+        }
+        else if(pendingCodes.includes(detectedCode)){
+            console.debug(`Duplicate pending code: ${detectedCode}`)
         }
         else{
-            console.debug("Duplicate code: " + code);
+            console.debug(`Duplicate redeemed code: ${detectedCode}`)
         }
     }
 
-    if(newCodes.length > 0){
-        console.log("New codes detected, saving list.");
+    if(pendingCodes.length > 0){
+        console.log("New codes detected, saving list.")
+        console.debug(pendingCodes)
         
-        chrome.storage.sync.set({UNUPLOADED_SETTING: newCodes}, () => {
-            clearTimeout(_timeout);
-            _timeout = setTimeout(() => { newCodeAlarmUpload(codes, detectedCodes); }, 5000);
-        });
+        chrome.storage.sync.set({[Globals.SETTING_CODES]: redeemedCodes, [Globals.SETTING_PENDING]: pendingCodes}, () => {
+            startUploadProcess()
+        })
     }
 }
 
-let server = "https://ps7.idlechampions.com/~idledragons/post.php"
+let uploadRunning = false
 
-async function getServer(): Promise<string> {
-    let request = new URL('https://master.idlechampions.com/~idledragons/post.php')
-
-    request.searchParams.append("call", "getPlayServerForDefinitions")
-    request.searchParams.append("mobile_client_version", "999")
-
-    let response = await fetch(request.toString())
-    if(response.ok){
-        let serverDefs : ServerDefinitions = await response.json()
-        server = serverDefs.play_server + "/post.php"
-        return serverDefs.play_server
+function startUploadProcess(){
+    if(uploadRunning) return;
+    uploadRunning = true
+    console.log("Beginning upload.")
+    try{
+        chrome.storage.sync.get(
+            [Globals.SETTING_CODES, Globals.SETTING_PENDING, Globals.SETTING_INSTANCE_ID, Globals.SETTING_USER_ID, Globals.SETTING_USER_HASH], 
+            ({redeemedCodes, pendingCodes, instanceId, userId, userHash}) => { uploadCodes(redeemedCodes, pendingCodes, instanceId, userId, userHash) }
+        )
     }
-    return null
+    finally{
+        uploadRunning = false
+    }
 }
 
-async function uploadCode() {
-    //TODO: Upload
-    //fetch()
-    
 
-    //TODO: If fail, refresh instance, then retry
-    
-    await new Promise(r => setTimeout(r, 2000))
+async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], instanceId: string, userId: string, hash: string) {
+    let server = await IdleChampionsApi.getServer()
+
+    if(!server) { 
+        console.error("Failed to get idle champions server.")
+        return
+    }
+
+    console.log(`Got server ${server}`)
+
+    await new Promise(h => setTimeout(h, 3000)) //Delay between requests
+
+    //Upload loop
+    while(pendingCodes.length > 0){
+        let code = pendingCodes.pop()
+
+        console.log(`Attempting to upload code: ${code}`)
+
+        let codeResponse = await IdleChampionsApi.submitCode({
+            server: server,
+            user_id: userId, 
+            hash: hash,
+            instanceId: instanceId,
+            code: code 
+        })
+
+        if(codeResponse == CodeSubmitStatus.OutdatedInstanceId){
+            console.log("Instance ID outdated, refreshing.")
+
+            await new Promise(h => setTimeout(h, 3000)) //Delay between requests
+            
+            let userData = await IdleChampionsApi.getUserDetails({
+                server: server,
+                user_id: userId,
+                hash: hash,
+            })
+
+            if(!userData) {
+                console.log("Failed to retreive user data.")
+                return
+            }
+
+            instanceId = userData.details.instance_id
+            chrome.storage.sync.set({[Globals.SETTING_INSTANCE_ID]: instanceId})
+
+            await new Promise(h => setTimeout(h, 3000)) //Delay between requests
+
+            codeResponse = await IdleChampionsApi.submitCode({
+                server: server,
+                user_id: userId, 
+                hash: hash,
+                instanceId: instanceId,
+                code: code 
+            })
+        }
+
+        switch(codeResponse){
+            case CodeSubmitStatus.OutdatedInstanceId:
+            case CodeSubmitStatus.Failed:
+                console.error("Unable to submit code, aborting upload process.")
+                return
+            case CodeSubmitStatus.AlreadyRedeemed:
+            case CodeSubmitStatus.Success:
+                if(codeResponse == CodeSubmitStatus.AlreadyRedeemed) {
+                    console.log(`Already redeemed code: ${code}`)
+                }
+                else{
+                    console.log(`Sucessfully redeemed: ${code}`)
+                }
+
+                reedemedCodes.push(code)
+                chrome.storage.sync.set({[Globals.SETTING_CODES]: reedemedCodes, [Globals.SETTING_PENDING]: pendingCodes})
+                
+                break
+        }
+
+        await new Promise(h => setTimeout(h, 10000)) //Delay between requests
+    }
 }
-
-//TODO: Alarm to loop over new codes?

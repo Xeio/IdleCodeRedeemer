@@ -1,27 +1,45 @@
-<script type="text/javascript" src="preferences.js"></script>
-<script type="text/javascript" src="globals.js"></script>
 <script type="text/javascript" src="options.js"></script>
 <script type="text/javascript" src="bootstrap.min.js"></script>
 <link rel="stylesheet" type="text/css" href="bootstrap.min.css"/>
 <link rel="stylesheet" type="text/css" href="options.css"/>
 <table class="table">
     <tbody>
-        <tr>
-            <button id="Run">Run</button>
-        </tr>
-        <!-- <tr>
-            <td colspan="2"><input id="Enabled" type="checkbox" /><label for="Enabled">Enable all sounds</label></td>
-        </tr>
-        <tr>
-            <td><input id="ExistingBadgeSound" type="checkbox" /><label nowrap for="ExistingBadgeSound">Play Sound for Owned Badges</label></td>
-            <td><input id="ExistingBadgeVolume" type="range" min="0" max="1" step="0.05" data-toggle="tooltip" title="Owned Badge Volume" /></td>
-        </tr>
-        <tr>
-            <td><input id="NewBadgesound" type="checkbox" /><label for="NewBadgesound">Play Sound for New Badges</label></td>
-            <td><input id="NewBadgeVolume" type="range" min="0" max="1" step="0.05" data-toggle="tooltip" title="New Badge Volume"/></td>
-        </tr>
-        <tr>
-            <td colspan="2"><input id="ShowBadgeDuringAds" type="checkbox" /><label for="ShowBadgeDuringAds" data-toggle="tooltip" title="Requires additional permissions on www.twitch.tv sites to function.">Show Badges During Ads</label></td>
-        </tr> -->
+        <ul class="nav nav-tabs">
+            <li class="nav-item">
+                <a class="nav-link active" data-bs-toggle="tab" href="#run">Run</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#settings">Settings</a>
+            </li>
+        </ul>
+        <div id="tabContents" class="tab-content">
+            <div class="tab-pane fade show active" id="run">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-primary btn-lg" id="Run">Detect And Upload Codes</button>
+                    <div class="alert alert-danger collapse" id="errors">
+                        <!-- <button type="button" class="btn-close" data-bs-dismiss="alert"></button> -->
+                        Test error message
+                    </div>
+                    <div class="alert alert-success collapse" id="info">
+                        <!-- <button type="button" class="btn-close" data-bs-dismiss="alert"></button> -->
+                        Test success message
+                    </div>
+                    <div class="alert alert-info collapse" id="info">
+                        <!-- <button type="button" class="btn-close" data-bs-dismiss="alert"></button> -->
+                        Test info message
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="settings">
+                <div class="form-group">
+                    <label for="userId" class="form-label">User Id</label>
+                    <input type="text" id="userId" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label for="userHash" class="form-label">User Hash</label>
+                    <input type="text" id="userHash" class="form-control" />
+                </div>
+            </div>
+        </div>
     </tbody>
 </table>
