@@ -3,7 +3,7 @@
 /// <reference path="./../lib/redeem_code_response.d.ts" />
 /// <reference path="./../lib/server_definitions.d.ts" />
 /// <reference path="./../shared/globals.ts" />
-/// <reference path="./../shared/idle_champions_api.ts" />
+/// <reference path="./idle_champions_api.ts" />
 
 chrome.action.setIcon({"path" : "media/icon-enabled.png"}, () => {})
 

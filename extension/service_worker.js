@@ -1,15 +1,3 @@
-var Globals = (function () {
-    function Globals() {
-    }
-    Globals.debugMode = !chrome.runtime.getManifest().update_url;
-    Globals.discordChannelUrl = "https://discord.com/channels/357247482247380994/358044869685673985";
-    Globals.SETTING_CODES = "redeemedCodes";
-    Globals.SETTING_PENDING = "pendingCodes";
-    Globals.SETTING_INSTANCE_ID = "instanceId";
-    Globals.SETTING_USER_HASH = "userHash";
-    Globals.SETTING_USER_ID = "userId";
-    return Globals;
-}());
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -163,6 +151,18 @@ var IdleChampionsApi = (function () {
     IdleChampionsApi.NETWORK_ID = "21";
     IdleChampionsApi.LANGUAGE_ID = "1";
     return IdleChampionsApi;
+}());
+var Globals = (function () {
+    function Globals() {
+    }
+    Globals.debugMode = !chrome.runtime.getManifest().update_url;
+    Globals.discordChannelUrl = "https://discord.com/channels/357247482247380994/358044869685673985";
+    Globals.SETTING_CODES = "redeemedCodes";
+    Globals.SETTING_PENDING = "pendingCodes";
+    Globals.SETTING_INSTANCE_ID = "instanceId";
+    Globals.SETTING_USER_HASH = "userHash";
+    Globals.SETTING_USER_ID = "userId";
+    return Globals;
 }());
 chrome.action.setIcon({ "path": "media/icon-enabled.png" }, function () { });
 chrome.runtime.onMessage.addListener(onMessage);
