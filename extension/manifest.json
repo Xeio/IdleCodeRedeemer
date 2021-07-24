@@ -1,0 +1,31 @@
+{
+  "name": "Idle Code Redeemer",
+  "version": "1.0.0",
+  "manifest_version": 3,
+  "description": "Reads codes from Discord and submits them to Idle Champions.",
+  "permissions": [
+    "storage"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://discord.com/channels/357247482247380994/358044869685673985"
+      ],
+      "all_frames" : true,
+      "js": [
+        "dst/inject.js"
+      ]
+    }
+  ],
+  "background":{
+    "service_worker": "service_worker.js"
+  },
+  "action": {
+    "default_popup": "dst/options.html"
+  },
+  "externally_connectable": {
+    "matches": [
+      "https://discord.com/channels/357247482247380994/358044869685673985"
+    ]
+  }
+}
