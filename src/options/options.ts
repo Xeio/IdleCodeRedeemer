@@ -1,4 +1,5 @@
 /// <reference path="./../lib/chrome.d.ts" />
+/// <reference path="./../lib/redeem_code_response.d.ts" />
 /// <reference path="./../shared/globals.ts" />
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -50,6 +51,7 @@ function hideMessages() {
     document.getElementById("success").classList.remove("show")
     document.getElementById("info").classList.remove("show")
     document.getElementById("errorSettings").classList.remove("show")
+    document.querySelector("#chests tbody").innerHTML = ""
 }
 
 function handleMessage(message: IdleMessage){
@@ -64,14 +66,53 @@ function handleMessage(message: IdleMessage){
             document.getElementById("info").classList.add("show")
             document.querySelector("#info span").innerHTML = message.messageText
             break
-        case MessageType.Success:
-            document.getElementById("success").classList.add("show")
-            document.querySelector("#success span").innerHTML = message.messageText
-            break
         case MessageType.MissingCredentials:
             document.getElementById("errorSettings").classList.add("show")
             document.querySelector("#errorSettings span").innerHTML = "Missing credentials on settings tab."
             document.getElementById("settingsTabButton").click()
             break
+        case MessageType.Success:
+            document.getElementById("success").classList.add("show")
+            document.querySelector("#success span").innerHTML = message.messageText
+
+            let chestsTableBody = document.querySelector("#chests tbody") as HTMLTableSectionElement
+            chestsTableBody.innerHTML = ""
+            let unknownCount = 0
+
+            Object.entries(message.chests).forEach(([chestType, amount]) => {
+                let label = ""
+                switch(chestType){
+                    case ChestType.Electrum.toString():
+                        label = "Electrum Chests"
+                        break
+                    case ChestType.Gold.toString():
+                        label = "Gold Chests"
+                        break
+                    default:
+                        unknownCount += amount
+                        return
+                }
+                chestsTableBody.appendChild(buildTableRow(label, amount))
+            })
+
+            if(unknownCount > 0){
+                chestsTableBody.appendChild(buildTableRow("Unknown/Other Chests", unknownCount))
+            }
+            break
     }
+}
+
+function buildTableRow(label: string, amount: number) : HTMLTableRowElement{
+    let labelColumn = document.createElement("td")
+    labelColumn.innerText = label
+
+    let amountColumn = document.createElement("td")
+    amountColumn.innerText = amount.toString()
+
+    let row = document.createElement("tr")
+    row.classList.add("table-primary")
+    row.appendChild(labelColumn)
+    row.appendChild(amountColumn)
+
+    return row
 }

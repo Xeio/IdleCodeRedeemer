@@ -52,6 +52,7 @@ function hideMessages() {
     document.getElementById("success").classList.remove("show");
     document.getElementById("info").classList.remove("show");
     document.getElementById("errorSettings").classList.remove("show");
+    document.querySelector("#chests tbody").innerHTML = "";
 }
 function handleMessage(message) {
     hideMessages();
@@ -64,14 +65,47 @@ function handleMessage(message) {
             document.getElementById("info").classList.add("show");
             document.querySelector("#info span").innerHTML = message.messageText;
             break;
-        case "success":
-            document.getElementById("success").classList.add("show");
-            document.querySelector("#success span").innerHTML = message.messageText;
-            break;
         case "missingCredentials":
             document.getElementById("errorSettings").classList.add("show");
             document.querySelector("#errorSettings span").innerHTML = "Missing credentials on settings tab.";
             document.getElementById("settingsTabButton").click();
             break;
+        case "success":
+            document.getElementById("success").classList.add("show");
+            document.querySelector("#success span").innerHTML = message.messageText;
+            var chestsTableBody_1 = document.querySelector("#chests tbody");
+            chestsTableBody_1.innerHTML = "";
+            var unknownCount_1 = 0;
+            Object.entries(message.chests).forEach(function (_a) {
+                var chestType = _a[0], amount = _a[1];
+                var label = "";
+                switch (chestType) {
+                    case 282..toString():
+                        label = "Electrum Chests";
+                        break;
+                    case 2..toString():
+                        label = "Gold Chests";
+                        break;
+                    default:
+                        unknownCount_1 += amount;
+                        return;
+                }
+                chestsTableBody_1.appendChild(buildTableRow(label, amount));
+            });
+            if (unknownCount_1 > 0) {
+                chestsTableBody_1.appendChild(buildTableRow("Unknown/Other Chests", unknownCount_1));
+            }
+            break;
     }
+}
+function buildTableRow(label, amount) {
+    var labelColumn = document.createElement("td");
+    labelColumn.innerText = label;
+    var amountColumn = document.createElement("td");
+    amountColumn.innerText = amount.toString();
+    var row = document.createElement("tr");
+    row.classList.add("table-primary");
+    row.appendChild(labelColumn);
+    row.appendChild(amountColumn);
+    return row;
 }

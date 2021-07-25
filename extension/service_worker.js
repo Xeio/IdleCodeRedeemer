@@ -34,13 +34,22 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var CodeSubmitResponse = (function () {
+    function CodeSubmitResponse(status, chestType) {
+        this.status = status;
+        this.chestType = chestType;
+    }
+    return CodeSubmitResponse;
+}());
 var CodeSubmitStatus;
 (function (CodeSubmitStatus) {
     CodeSubmitStatus[CodeSubmitStatus["Success"] = 0] = "Success";
     CodeSubmitStatus[CodeSubmitStatus["OutdatedInstanceId"] = 1] = "OutdatedInstanceId";
     CodeSubmitStatus[CodeSubmitStatus["AlreadyRedeemed"] = 2] = "AlreadyRedeemed";
     CodeSubmitStatus[CodeSubmitStatus["InvalidParameters"] = 3] = "InvalidParameters";
-    CodeSubmitStatus[CodeSubmitStatus["Failed"] = 4] = "Failed";
+    CodeSubmitStatus[CodeSubmitStatus["NotValidCombo"] = 4] = "NotValidCombo";
+    CodeSubmitStatus[CodeSubmitStatus["Expired"] = 5] = "Expired";
+    CodeSubmitStatus[CodeSubmitStatus["Failed"] = 6] = "Failed";
 })(CodeSubmitStatus || (CodeSubmitStatus = {}));
 var IdleChampionsApi = (function () {
     function IdleChampionsApi() {
@@ -72,10 +81,11 @@ var IdleChampionsApi = (function () {
         });
     };
     IdleChampionsApi.submitCode = function (options) {
+        var _a;
         return __awaiter(this, void 0, void 0, function () {
-            var request, response, redeemResponse;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
+            var request, response, redeemResponse, chestType;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0:
                         request = new URL(options.server);
                         request.searchParams.append("call", "redeemcoupon");
@@ -91,27 +101,34 @@ var IdleChampionsApi = (function () {
                         request.searchParams.append("localization_aware", "true");
                         return [4, fetch(request.toString())];
                     case 1:
-                        response = _a.sent();
+                        response = _b.sent();
                         if (!response.ok) return [3, 3];
                         return [4, response.json()];
                     case 2:
-                        redeemResponse = _a.sent();
+                        redeemResponse = _b.sent();
                         console.debug(redeemResponse);
                         if (redeemResponse.success && redeemResponse.failure_reason === "you_already_redeemed_combination") {
-                            return [2, CodeSubmitStatus.AlreadyRedeemed];
+                            return [2, new CodeSubmitResponse(CodeSubmitStatus.AlreadyRedeemed)];
+                        }
+                        if (redeemResponse.success && redeemResponse.failure_reason === "offer_has_expired") {
+                            return [2, new CodeSubmitResponse(CodeSubmitStatus.Expired)];
+                        }
+                        if (redeemResponse.success && redeemResponse.failure_reason === "not_valid_combination") {
+                            return [2, new CodeSubmitResponse(CodeSubmitStatus.NotValidCombo)];
                         }
                         if (redeemResponse.success) {
-                            return [2, CodeSubmitStatus.Success];
+                            chestType = ((_a = redeemResponse === null || redeemResponse === void 0 ? void 0 : redeemResponse.loot_details) === null || _a === void 0 ? void 0 : _a.length) > 0 ? redeemResponse.loot_details[0].chest_type_id : null;
+                            return [2, new CodeSubmitResponse(CodeSubmitStatus.Success, chestType)];
                         }
                         if (!redeemResponse.success && redeemResponse.failure_reason === "Outdated instance id") {
-                            return [2, CodeSubmitStatus.OutdatedInstanceId];
+                            return [2, new CodeSubmitResponse(CodeSubmitStatus.OutdatedInstanceId)];
                         }
                         if (!redeemResponse.success && redeemResponse.failure_reason === "Invalid or incomplete parameters") {
-                            return [2, CodeSubmitStatus.InvalidParameters];
+                            return [2, new CodeSubmitResponse(CodeSubmitStatus.InvalidParameters)];
                         }
                         console.error("Unknown failure reason");
-                        return [2, CodeSubmitStatus.Failed];
-                    case 3: return [2, CodeSubmitStatus.Failed];
+                        return [2, new CodeSubmitResponse(CodeSubmitStatus.Failed)];
+                    case 3: return [2, new CodeSubmitResponse(CodeSubmitStatus.Failed)];
                 }
             });
         });
@@ -250,7 +267,7 @@ function startUploadProcess() {
 }
 function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
     return __awaiter(this, void 0, void 0, function () {
-        var server, duplicates, newCodes, code, codeResponse, userData;
+        var server, duplicates, newCodes, expired, invalid, chests, code, codeResponse, userData;
         var _a, _b;
         return __generator(this, function (_c) {
             switch (_c.label) {
@@ -270,8 +287,8 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                     }
                     console.log("Got server " + server);
                     chrome.runtime.sendMessage({ messageType: "info", messageText: "Upload starting, " + pendingCodes.length + " new codes to redeem. This may take a bit." });
-                    duplicates = 0;
-                    newCodes = 0;
+                    duplicates = 0, newCodes = 0, expired = 0, invalid = 0;
+                    chests = {};
                     _c.label = 2;
                 case 2:
                     if (!(pendingCodes.length > 0)) return [3, 10];
@@ -289,7 +306,7 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                         })];
                 case 4:
                     codeResponse = _c.sent();
-                    if (!(codeResponse == CodeSubmitStatus.OutdatedInstanceId)) return [3, 9];
+                    if (!(codeResponse.status == CodeSubmitStatus.OutdatedInstanceId)) return [3, 9];
                     console.log("Instance ID outdated, refreshing.");
                     return [4, new Promise(function (h) { return setTimeout(h, 3000); })];
                 case 5:
@@ -322,7 +339,7 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                     codeResponse = _c.sent();
                     _c.label = 9;
                 case 9:
-                    switch (codeResponse) {
+                    switch (codeResponse.status) {
                         case CodeSubmitStatus.OutdatedInstanceId:
                         case CodeSubmitStatus.Failed:
                             console.error("Unable to submit code, aborting upload process.");
@@ -332,14 +349,25 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                             console.error("Unable to submit code due to invalid parameters.");
                             chrome.runtime.sendMessage({ messageType: "error", messageText: "Failed to submit code, check user/hash on settings tab." });
                             return [2];
+                        case CodeSubmitStatus.Expired:
+                        case CodeSubmitStatus.NotValidCombo:
                         case CodeSubmitStatus.AlreadyRedeemed:
                         case CodeSubmitStatus.Success:
-                            if (codeResponse == CodeSubmitStatus.AlreadyRedeemed) {
+                            if (codeResponse.status == CodeSubmitStatus.AlreadyRedeemed) {
                                 console.log("Already redeemed code: " + code);
                                 duplicates++;
                             }
+                            else if (codeResponse.status == CodeSubmitStatus.NotValidCombo) {
+                                console.log("Invalid code: " + code);
+                                invalid++;
+                            }
+                            else if (codeResponse.status == CodeSubmitStatus.Expired) {
+                                console.log("Expired code: " + code);
+                                expired++;
+                            }
                             else {
                                 console.log("Sucessfully redeemed: " + code);
+                                chests[codeResponse.chestType] = (chests[codeResponse.chestType] ? chests[codeResponse.chestType] : 0) + 1;
                                 newCodes++;
                             }
                             reedemedCodes.push(code);
@@ -355,7 +383,12 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                     console.log("Redeem complete:");
                     console.log(duplicates + " duplicate codes");
                     console.log(newCodes + " new redemptions");
-                    chrome.runtime.sendMessage({ messageType: "success", messageText: "Upload completed successfully.\n" + (duplicates > 0 ? duplicates + " codes already redeemed" : "") + "\n" + newCodes + " redeemed." });
+                    console.log(chests);
+                    chrome.runtime.sendMessage({
+                        messageType: "success",
+                        chests: chests,
+                        messageText: "Upload completed successfully.<br>\n                        " + (duplicates > 0 ? duplicates + " codes already redeemed<br>" : "") + "\n                        " + (expired > 0 ? expired + " expired codes<br>" : "") + "\n                        " + (invalid > 0 ? invalid + " invalid codes<br>" : "") + "\n                        " + newCodes + " codes redeemed."
+                    });
                     return [2];
             }
         });

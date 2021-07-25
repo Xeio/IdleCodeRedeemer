@@ -120,9 +120,9 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
 
     chrome.runtime.sendMessage({messageType: MessageType.Info, messageText:`Upload starting, ${pendingCodes.length} new codes to redeem. This may take a bit.` })
 
-    //Upload loop
-    let duplicates = 0
-    let newCodes = 0
+    let duplicates = 0, newCodes = 0, expired = 0, invalid = 0
+    let chests: {[chestType: number]: number} = {}
+
     while(pendingCodes.length > 0){
         await new Promise(h => setTimeout(h, 5000)) //Delay between requests
         
@@ -138,7 +138,7 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
             code: code 
         })
 
-        if(codeResponse == CodeSubmitStatus.OutdatedInstanceId){
+        if(codeResponse.status == CodeSubmitStatus.OutdatedInstanceId){
             console.log("Instance ID outdated, refreshing.")
 
             await new Promise(h => setTimeout(h, 3000)) //Delay between requests
@@ -169,7 +169,7 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
             })
         }
 
-        switch(codeResponse){
+        switch(codeResponse.status){
             case CodeSubmitStatus.OutdatedInstanceId:
             case CodeSubmitStatus.Failed:
                 console.error("Unable to submit code, aborting upload process.")
@@ -179,14 +179,25 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
                 console.error("Unable to submit code due to invalid parameters.")
                 chrome.runtime.sendMessage({messageType: MessageType.Error, messageText:"Failed to submit code, check user/hash on settings tab."})
                 return
+            case CodeSubmitStatus.Expired:
+            case CodeSubmitStatus.NotValidCombo:
             case CodeSubmitStatus.AlreadyRedeemed:
             case CodeSubmitStatus.Success:
-                if(codeResponse == CodeSubmitStatus.AlreadyRedeemed) {
+                if(codeResponse.status == CodeSubmitStatus.AlreadyRedeemed) {
                     console.log(`Already redeemed code: ${code}`)
                     duplicates++
                 }
+                else if(codeResponse.status == CodeSubmitStatus.NotValidCombo) {
+                    console.log(`Invalid code: ${code}`)
+                    invalid++
+                }
+                else if(codeResponse.status == CodeSubmitStatus.Expired) {
+                    console.log(`Expired code: ${code}`)
+                    expired++
+                }
                 else{
                     console.log(`Sucessfully redeemed: ${code}`)
+                    chests[codeResponse.chestType] = (chests[codeResponse.chestType] ? chests[codeResponse.chestType] : 0) + 1
                     newCodes++
                 }
 
@@ -206,5 +217,14 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
     console.log("Redeem complete:")
     console.log(`${duplicates} duplicate codes`)
     console.log(`${newCodes} new redemptions`)
-    chrome.runtime.sendMessage({messageType: MessageType.Success, messageText: `Upload completed successfully.\n${duplicates > 0 ? `${duplicates} codes already redeemed` : ""}\n${newCodes} redeemed.`})
+    console.log(chests)
+    chrome.runtime.sendMessage({
+        messageType: MessageType.Success,
+        chests: chests,
+        messageText: `Upload completed successfully.<br>
+                        ${duplicates > 0 ? `${duplicates} codes already redeemed<br>` : ""}
+                        ${expired > 0 ? `${expired} expired codes<br>` : ""}
+                        ${invalid > 0 ? `${invalid} invalid codes<br>` : ""}
+                        ${newCodes} codes redeemed.`
+    })
 }

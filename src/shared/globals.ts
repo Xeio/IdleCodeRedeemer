@@ -16,6 +16,7 @@ interface IdleMessage{
     messageType: MessageType;
     codes?: string[];
     messageText?: string;
+    chests?: {[chestType: number]: number}
 }
 
 const enum MessageType{

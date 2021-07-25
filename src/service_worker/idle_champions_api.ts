@@ -16,11 +16,23 @@ interface GetuserdetailsOptions{
     hash:string;
 }
 
+class CodeSubmitResponse{
+    status: CodeSubmitStatus;
+    chestType?: ChestType;
+
+    constructor(status: CodeSubmitStatus, chestType?: ChestType){
+        this.status = status
+        this.chestType = chestType
+    }
+}
+
 enum CodeSubmitStatus{
     Success,
     OutdatedInstanceId,
     AlreadyRedeemed,
     InvalidParameters,
+    NotValidCombo,
+    Expired,
     Failed,
 }
 
@@ -48,7 +60,7 @@ class IdleChampionsApi {
         return null
     }
 
-    static async submitCode(options: CodeSubmitOptions) : Promise<CodeSubmitStatus> {
+    static async submitCode(options: CodeSubmitOptions) : Promise<CodeSubmitResponse> {
         let request = new URL(options.server)
 
         request.searchParams.append("call", "redeemcoupon")
@@ -80,21 +92,28 @@ class IdleChampionsApi {
             let redeemResponse : RedeemCodeResponse = await response.json()
             console.debug(redeemResponse)
             if(redeemResponse.success && redeemResponse.failure_reason === FailureReason.AlreadyRedeemed){
-                return CodeSubmitStatus.AlreadyRedeemed
+                return new CodeSubmitResponse(CodeSubmitStatus.AlreadyRedeemed)
+            }
+            if(redeemResponse.success && redeemResponse.failure_reason === FailureReason.Expired){
+                return new CodeSubmitResponse(CodeSubmitStatus.Expired)
+            }
+            if(redeemResponse.success && redeemResponse.failure_reason === FailureReason.NotValidCombo){
+                return new CodeSubmitResponse(CodeSubmitStatus.NotValidCombo)
             }
             if (redeemResponse.success){
-                return CodeSubmitStatus.Success
+                let chestType = redeemResponse?.loot_details?.length > 0 ? redeemResponse.loot_details[0].chest_type_id : null
+                return new CodeSubmitResponse(CodeSubmitStatus.Success, chestType)
             }
             if(!redeemResponse.success && redeemResponse.failure_reason === FailureReason.OutdatedInstanceId){
-                return CodeSubmitStatus.OutdatedInstanceId
+                return new CodeSubmitResponse(CodeSubmitStatus.OutdatedInstanceId)
             }
             if(!redeemResponse.success && redeemResponse.failure_reason === FailureReason.InvalidParameters){
-                return CodeSubmitStatus.InvalidParameters
+                return new CodeSubmitResponse(CodeSubmitStatus.InvalidParameters)
             }
             console.error("Unknown failure reason")
-            return CodeSubmitStatus.Failed
+            return new CodeSubmitResponse(CodeSubmitStatus.Failed)
         }
-        return CodeSubmitStatus.Failed
+        return new CodeSubmitResponse(CodeSubmitStatus.Failed)
     }
 
     static async getUserDetails(options: GetuserdetailsOptions) : Promise<PlayerData> {
