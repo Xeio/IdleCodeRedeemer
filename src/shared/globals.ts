@@ -24,4 +24,7 @@ const enum MessageType{
     Success = "success",
     Info = "info",
     MissingCredentials = "missingCredentials",
+    ScanCodes = "scanCodes",
+    StartScanProcess = "startScanProcess",
+    CloseTab = "closeTab",
 }

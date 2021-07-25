@@ -169,15 +169,44 @@ var Globals = (function () {
     return Globals;
 }());
 chrome.action.setIcon({ "path": "media/icon-enabled.png" }, function () { });
-chrome.runtime.onMessage.addListener(onMessage);
-function onMessage(message, sender, sendResponse) {
+var _waitingForPort = false;
+var _port;
+chrome.runtime.onConnect.addListener(function (port) {
+    if (_waitingForPort) {
+        console.log("New port opened, requesting codes.");
+        _waitingForPort = false;
+        _port = port;
+        port.onMessage.addListener(onPortMessage);
+        port.postMessage({ messageType: "scanCodes" });
+    }
+    else {
+        console.log("Unexpected port, disconnecting.");
+        port.disconnect();
+    }
+});
+function onPortMessage(message, port) {
     if (message.messageType == "codes") {
         console.log("Code message received");
         chrome.storage.sync.get([Globals.SETTING_CODES, Globals.SETTING_PENDING], function (_a) {
             var redeemedCodes = _a.redeemedCodes, pendingCodes = _a.pendingCodes;
             handleDetectedCodes(redeemedCodes, pendingCodes, message.codes);
         });
+        _port.postMessage({ messageType: "closeTab" });
+        _port.disconnect();
+        _port = null;
     }
+}
+chrome.runtime.onMessage.addListener(onRuntimeMessage);
+function onRuntimeMessage(message, sender, sendResponse) {
+    if (message.messageType == "startScanProcess") {
+        console.log("Starting scan/upolad process. Opening discord tab.");
+        _waitingForPort = true;
+        chrome.tabs.create({ url: Globals.discordChannelUrl });
+    }
+}
+chrome.action.onClicked.addListener(browserActionClicked);
+function browserActionClicked(tab) {
+    chrome.tabs.create({ url: "dst/options.html" });
 }
 function handleDetectedCodes(redeemedCodes, pendingCodes, detectedCodes) {
     var _a;
@@ -207,34 +236,16 @@ function handleDetectedCodes(redeemedCodes, pendingCodes, detectedCodes) {
             startUploadProcess();
         });
     }
+    else {
+        console.log("No new codes detected.");
+        chrome.runtime.sendMessage({ messageType: "info", messageText: "No new codes detected." });
+    }
 }
-var uploadRunning = false;
 function startUploadProcess() {
-    var _this = this;
     chrome.storage.sync.get([Globals.SETTING_CODES, Globals.SETTING_PENDING, Globals.SETTING_INSTANCE_ID, Globals.SETTING_USER_ID, Globals.SETTING_USER_HASH], function (_a) {
         var redeemedCodes = _a.redeemedCodes, pendingCodes = _a.pendingCodes, instanceId = _a.instanceId, userId = _a.userId, userHash = _a.userHash;
-        return __awaiter(_this, void 0, void 0, function () {
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        if (uploadRunning)
-                            return [2];
-                        uploadRunning = true;
-                        console.log("Beginning upload.");
-                        _b.label = 1;
-                    case 1:
-                        _b.trys.push([1, , 3, 4]);
-                        return [4, uploadCodes(redeemedCodes, pendingCodes, instanceId, userId, userHash)];
-                    case 2:
-                        _b.sent();
-                        return [3, 4];
-                    case 3:
-                        uploadRunning = false;
-                        return [7];
-                    case 4: return [2];
-                }
-            });
-        });
+        console.log("Beginning upload.");
+        uploadCodes(redeemedCodes, pendingCodes, instanceId, userId, userHash);
     });
 }
 function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {

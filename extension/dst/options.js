@@ -45,7 +45,7 @@ function settingsUpdated(ev) {
 }
 function buttonClick() {
     hideMessages();
-    chrome.tabs.create({ url: Globals.discordChannelUrl });
+    chrome.runtime.sendMessage({ messageType: "startScanProcess" });
 }
 function hideMessages() {
     document.getElementById("error").classList.remove("show");

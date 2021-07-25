@@ -13,8 +13,8 @@ function onMessage(message: IdleMessage, sender: any, sendResponse: any){
         case MessageType.Info:
         case MessageType.Success:
         case MessageType.MissingCredentials:
-            handleMessage(message);
-            break;
+            handleMessage(message)
+            break
     }
 }
 
@@ -23,11 +23,11 @@ function loaded(){
 
     chrome.storage.sync.get([Globals.SETTING_USER_ID, Globals.SETTING_USER_HASH], ({userId, userHash}) =>{
         let userIdElement = document.getElementById("userId") as HTMLInputElement
-        userIdElement.value = userId ?? "";
+        userIdElement.value = userId ?? ""
         userIdElement.addEventListener("blur", settingsUpdated)
 
         let userHashElement = document.getElementById("userHash") as HTMLInputElement
-        userHashElement.value = userHash ?? "";
+        userHashElement.value = userHash ?? ""
         userHashElement.addEventListener("blur", settingsUpdated)
     })
 }
@@ -41,8 +41,8 @@ function settingsUpdated(this: HTMLElement, ev: FocusEvent){
 
 function buttonClick(){
     hideMessages()
-    chrome.tabs.create({ url: Globals.discordChannelUrl })
-    //chrome.tabs.create({ url: "dst/options.html" })
+
+    chrome.runtime.sendMessage({messageType: MessageType.StartScanProcess})
 }
 
 function hideMessages() {
@@ -72,6 +72,6 @@ function handleMessage(message: IdleMessage){
             document.getElementById("errorSettings").classList.add("show")
             document.querySelector("#errorSettings span").innerHTML = "Missing credentials on settings tab."
             document.getElementById("settingsTabButton").click()
-            break;
+            break
     }
 }

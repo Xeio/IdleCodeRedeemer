@@ -20,9 +20,7 @@
   "background":{
     "service_worker": "service_worker.js"
   },
-  "action": {
-    "default_popup": "dst/options.html"
-  },
+  "action": {},
   "externally_connectable": {
     "matches": [
       "https://discord.com/channels/357247482247380994/358044869685673985"

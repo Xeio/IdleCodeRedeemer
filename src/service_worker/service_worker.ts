@@ -7,16 +7,52 @@
 
 chrome.action.setIcon({"path" : "media/icon-enabled.png"}, () => {})
 
-chrome.runtime.onMessage.addListener(onMessage)
+let _waitingForPort = false
+let _port: chrome.runtime.Port
 
-function onMessage(message: IdleMessage, sender: any, sendResponse: any){
+chrome.runtime.onConnect.addListener((port) => {
+    if(_waitingForPort){
+        console.log("New port opened, requesting codes.")
+        _waitingForPort = false
+        _port = port
+        port.onMessage.addListener(onPortMessage)
+        port.postMessage({messageType: MessageType.ScanCodes})
+    }
+    else{
+        console.log("Unexpected port, disconnecting.")
+        //We weren't expecting this port, so just disconnect it immediately
+        port.disconnect()
+    }
+})
+
+function onPortMessage(message: IdleMessage, port: chrome.runtime.Port){
     if(message.messageType == MessageType.Codes){
         console.log("Code message received")
 
         chrome.storage.sync.get([Globals.SETTING_CODES, Globals.SETTING_PENDING], 
             ({redeemedCodes, pendingCodes}) => { handleDetectedCodes(redeemedCodes, pendingCodes, message.codes) }
         )
+
+        _port.postMessage({messageType: MessageType.CloseTab})
+        _port.disconnect()
+        _port = null
     }
+}
+
+chrome.runtime.onMessage.addListener(onRuntimeMessage)
+
+function onRuntimeMessage(message: IdleMessage, sender: any, sendResponse: any){
+    if(message.messageType == MessageType.StartScanProcess){
+        console.log("Starting scan/upolad process. Opening discord tab.")
+
+        _waitingForPort = true
+        chrome.tabs.create({ url: Globals.discordChannelUrl })
+    }
+}
+
+chrome.action.onClicked.addListener(browserActionClicked)
+function browserActionClicked(tab:chrome.tabs.Tab) {
+    chrome.tabs.create({url: "dst/options.html"})
 }
 
 function handleDetectedCodes(redeemedCodes: string[], pendingCodes: string[], detectedCodes: string[]){
@@ -50,23 +86,17 @@ function handleDetectedCodes(redeemedCodes: string[], pendingCodes: string[], de
             startUploadProcess()
         })
     }
+    else{
+        console.log("No new codes detected.")
+        chrome.runtime.sendMessage({messageType: MessageType.Info, messageText:`No new codes detected.` })
+    }
 }
-
-let uploadRunning = false
-
 function startUploadProcess(){
     chrome.storage.sync.get(
         [Globals.SETTING_CODES, Globals.SETTING_PENDING, Globals.SETTING_INSTANCE_ID, Globals.SETTING_USER_ID, Globals.SETTING_USER_HASH], 
-        async ({redeemedCodes, pendingCodes, instanceId, userId, userHash}) => { 
-            if(uploadRunning) return //Only allow one upload at a time
-            uploadRunning = true
+        ({redeemedCodes, pendingCodes, instanceId, userId, userHash}) => { 
             console.log("Beginning upload.")
-            try{
-                await uploadCodes(redeemedCodes, pendingCodes, instanceId, userId, userHash)
-            }
-            finally{
-                uploadRunning = false
-            }
+            uploadCodes(redeemedCodes, pendingCodes, instanceId, userId, userHash)
         }
     )
 }
@@ -87,7 +117,6 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
     }
 
     console.log(`Got server ${server}`)
-
 
     chrome.runtime.sendMessage({messageType: MessageType.Info, messageText:`Upload starting, ${pendingCodes.length} new codes to redeem. This may take a bit.` })
 
