@@ -217,6 +217,8 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
     console.log("Redeem complete:")
     console.log(`${duplicates} duplicate codes`)
     console.log(`${newCodes} new redemptions`)
+    console.log(`${expired} expired`)
+    console.log(`${invalid} invalid`)
     console.log(chests)
     chrome.runtime.sendMessage({
         messageType: MessageType.Success,

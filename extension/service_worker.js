@@ -383,6 +383,8 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                     console.log("Redeem complete:");
                     console.log(duplicates + " duplicate codes");
                     console.log(newCodes + " new redemptions");
+                    console.log(expired + " expired");
+                    console.log(invalid + " invalid");
                     console.log(chests);
                     chrome.runtime.sendMessage({
                         messageType: "success",
