@@ -217,10 +217,14 @@ function onPortMessage(message, port) {
 }
 chrome.runtime.onMessage.addListener(onRuntimeMessage);
 function onRuntimeMessage(message, sender, sendResponse) {
+    var _a;
     if (message.messageType == "startScanProcess") {
         console.log("Starting scan/upolad process. Opening discord tab.");
         _waitingForPort = true;
         chrome.tabs.create({ url: Globals.discordChannelUrl });
+        if ((_a = sender === null || sender === void 0 ? void 0 : sender.tab) === null || _a === void 0 ? void 0 : _a.id) {
+            chrome.tabs.update(sender.tab.id, { 'active': true });
+        }
     }
 }
 chrome.action.onClicked.addListener(browserActionClicked);

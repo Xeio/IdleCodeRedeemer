@@ -43,12 +43,16 @@ function onPortMessage(message: IdleMessage, port: chrome.runtime.Port){
 
 chrome.runtime.onMessage.addListener(onRuntimeMessage)
 
-function onRuntimeMessage(message: IdleMessage, sender: any, sendResponse: any){
+function onRuntimeMessage(message: IdleMessage, sender: chrome.runtime.MessageSender, sendResponse: (response?: any) => void){
     if(message.messageType == MessageType.StartScanProcess){
         console.log("Starting scan/upolad process. Opening discord tab.")
 
         _waitingForPort = true
         chrome.tabs.create({ url: Globals.discordChannelUrl })
+        
+        if(sender?.tab?.id){
+            chrome.tabs.update(sender.tab.id, { 'active': true });
+        }
     }
 }
 
