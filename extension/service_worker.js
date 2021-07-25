@@ -187,14 +187,11 @@ var Globals = (function () {
 }());
 chrome.action.setIcon({ "path": "media/icon-enabled.png" }, function () { });
 var _waitingForPort = false;
-var _port;
 chrome.runtime.onConnect.addListener(function (port) {
     if (_waitingForPort) {
-        console.log("New port opened, requesting codes.");
+        console.log("New port opened.");
         _waitingForPort = false;
-        _port = port;
         port.onMessage.addListener(onPortMessage);
-        port.postMessage({ messageType: "scanCodes" });
     }
     else {
         console.log("Unexpected port, disconnecting.");
@@ -202,15 +199,20 @@ chrome.runtime.onConnect.addListener(function (port) {
     }
 });
 function onPortMessage(message, port) {
-    if (message.messageType == "codes") {
-        console.log("Code message received");
-        chrome.storage.sync.get([Globals.SETTING_CODES, Globals.SETTING_PENDING], function (_a) {
-            var redeemedCodes = _a.redeemedCodes, pendingCodes = _a.pendingCodes;
-            handleDetectedCodes(redeemedCodes, pendingCodes, message.codes);
-        });
-        _port.postMessage({ messageType: "closeTab" });
-        _port.disconnect();
-        _port = null;
+    switch (message.messageType) {
+        case "pageReady":
+            console.log("Page ready message");
+            port.postMessage({ messageType: "scanCodes" });
+            break;
+        case "codes":
+            console.log("Code message received");
+            chrome.storage.sync.get([Globals.SETTING_CODES, Globals.SETTING_PENDING], function (_a) {
+                var redeemedCodes = _a.redeemedCodes, pendingCodes = _a.pendingCodes;
+                handleDetectedCodes(redeemedCodes, pendingCodes, message.codes);
+            });
+            port.postMessage({ messageType: "closeTab" });
+            port.disconnect();
+            break;
     }
 }
 chrome.runtime.onMessage.addListener(onRuntimeMessage);

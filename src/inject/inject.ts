@@ -3,8 +3,9 @@
 
 let _port = chrome.runtime.connect()
 _port.onMessage.addListener(onMessage)
+_port.postMessage({messageType: MessageType.PageReady})
 
-const observer = new MutationObserver((mutationList, observer) => {
+const _observer = new MutationObserver((mutationList, observer) => {
     if(mutationList.some((mut) => mut.addedNodes.length > 0))
     {
         let codes = getCodesList()
@@ -12,7 +13,7 @@ const observer = new MutationObserver((mutationList, observer) => {
             console.info("Observer found codes, sending to service worker")
 
             observer.disconnect()
-            _port.postMessage({messageType: "codes", codes: codes})
+            _port.postMessage({messageType: MessageType.Codes, codes: codes})
         }
     }
 })
@@ -25,14 +26,14 @@ function onMessage(message: IdleMessage, port: chrome.runtime.Port){
             let codes = getCodesList()
             if(codes.length > 0){
                 console.info("Found codes, sending to service worker")
-                port.postMessage({messageType: "codes", codes: codes})
+                port.postMessage({messageType: MessageType.Codes, codes: codes})
             }
             else{
                 //Got message too early, need to wait for page to finish loading
                 console.info("Codes not found yet, observing DOM for new codes.")
 
                 const observerConfig = { childList: true, subtree: true }
-                observer.observe(window.document, observerConfig)
+                _observer.observe(window.document, observerConfig)
             }
 
             break

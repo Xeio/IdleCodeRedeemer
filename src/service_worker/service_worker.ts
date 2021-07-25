@@ -8,15 +8,12 @@
 chrome.action.setIcon({"path" : "media/icon-enabled.png"}, () => {})
 
 let _waitingForPort = false
-let _port: chrome.runtime.Port
 
 chrome.runtime.onConnect.addListener((port) => {
     if(_waitingForPort){
-        console.log("New port opened, requesting codes.")
+        console.log("New port opened.")
         _waitingForPort = false
-        _port = port
         port.onMessage.addListener(onPortMessage)
-        port.postMessage({messageType: MessageType.ScanCodes})
     }
     else{
         console.log("Unexpected port, disconnecting.")
@@ -26,16 +23,21 @@ chrome.runtime.onConnect.addListener((port) => {
 })
 
 function onPortMessage(message: IdleMessage, port: chrome.runtime.Port){
-    if(message.messageType == MessageType.Codes){
-        console.log("Code message received")
+    switch(message.messageType){
+        case MessageType.PageReady:
+            console.log("Page ready message")
+            port.postMessage({messageType: MessageType.ScanCodes})
+            break
+        case MessageType.Codes:
+            console.log("Code message received")
 
-        chrome.storage.sync.get([Globals.SETTING_CODES, Globals.SETTING_PENDING], 
-            ({redeemedCodes, pendingCodes}) => { handleDetectedCodes(redeemedCodes, pendingCodes, message.codes) }
-        )
+            chrome.storage.sync.get([Globals.SETTING_CODES, Globals.SETTING_PENDING], 
+                ({redeemedCodes, pendingCodes}) => { handleDetectedCodes(redeemedCodes, pendingCodes, message.codes) }
+            )
 
-        _port.postMessage({messageType: MessageType.CloseTab})
-        _port.disconnect()
-        _port = null
+            port.postMessage({messageType: MessageType.CloseTab})
+            port.disconnect()
+            break
     }
 }
 

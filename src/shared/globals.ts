@@ -28,4 +28,5 @@ const enum MessageType{
     ScanCodes = "scanCodes",
     StartScanProcess = "startScanProcess",
     CloseTab = "closeTab",
+    PageReady = "pageReady",
 }

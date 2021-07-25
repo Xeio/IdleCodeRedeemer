@@ -12,7 +12,8 @@ var Globals = (function () {
 }());
 var _port = chrome.runtime.connect();
 _port.onMessage.addListener(onMessage);
-var observer = new MutationObserver(function (mutationList, observer) {
+_port.postMessage({ messageType: "pageReady" });
+var _observer = new MutationObserver(function (mutationList, observer) {
     if (mutationList.some(function (mut) { return mut.addedNodes.length > 0; })) {
         var codes = getCodesList();
         if (codes.length > 0) {
@@ -34,7 +35,7 @@ function onMessage(message, port) {
             else {
                 console.info("Codes not found yet, observing DOM for new codes.");
                 var observerConfig = { childList: true, subtree: true };
-                observer.observe(window.document, observerConfig);
+                _observer.observe(window.document, observerConfig);
             }
             break;
         case "closeTab":
