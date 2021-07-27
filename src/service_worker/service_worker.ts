@@ -114,7 +114,7 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
         return
     }
     
-    let server = await IdleChampionsApi.getServer()
+    const server = await IdleChampionsApi.getServer()
 
     if(!server) { 
         console.error("Failed to get idle champions server.")
@@ -127,7 +127,7 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
     chrome.runtime.sendMessage({messageType: MessageType.Info, messageText:`Upload starting, ${pendingCodes.length} new codes to redeem. This may take a bit.` })
 
     let duplicates = 0, newCodes = 0, expired = 0, invalid = 0
-    let chests: {[chestType: number]: number} = {}
+    const chests: {[chestType: number]: number} = {}
 
     let code:string | undefined
     while(code = pendingCodes.pop()){
@@ -148,7 +148,7 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
 
             await new Promise(h => setTimeout(h, 3000)) //Delay between requests
             
-            let userData = await IdleChampionsApi.getUserDetails({
+            const userData = await IdleChampionsApi.getUserDetails({
                 server: server,
                 user_id: userId,
                 hash: hash,

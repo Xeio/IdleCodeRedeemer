@@ -23,11 +23,11 @@ function loaded(){
     document.getElementById("detectAndUpload")!.addEventListener('click', buttonClick)
 
     chrome.storage.sync.get([Globals.SETTING_USER_ID, Globals.SETTING_USER_HASH], ({userId, userHash}) =>{
-        let userIdElement = document.getElementById("userId") as HTMLInputElement
+        const userIdElement = document.getElementById("userId") as HTMLInputElement
         userIdElement.value = userId ?? ""
         userIdElement.addEventListener("blur", settingsUpdated)
 
-        let userHashElement = document.getElementById("userHash") as HTMLInputElement
+        const userHashElement = document.getElementById("userHash") as HTMLInputElement
         userHashElement.value = userHash ?? ""
         userHashElement.addEventListener("blur", settingsUpdated)
     })
@@ -75,7 +75,7 @@ function handleMessage(message: IdleMessage){
             document.getElementById("success")!.classList.add("show")
             document.querySelector("#success span")!.innerHTML = message.messageText ?? ""
 
-            let chestsTableBody = document.querySelector("#chests tbody") as HTMLTableSectionElement
+            const chestsTableBody = document.querySelector("#chests tbody") as HTMLTableSectionElement
             chestsTableBody.innerHTML = ""
             let unknownCount = 0
 
@@ -106,13 +106,13 @@ function handleMessage(message: IdleMessage){
 }
 
 function buildTableRow(label: string, amount: number) : HTMLTableRowElement{
-    let labelColumn = document.createElement("td")
+    const labelColumn = document.createElement("td")
     labelColumn.innerText = label
 
-    let amountColumn = document.createElement("td")
+    const amountColumn = document.createElement("td")
     amountColumn.innerText = amount.toString()
 
-    let row = document.createElement("tr")
+    const row = document.createElement("tr")
     row.classList.add("table-primary")
     row.appendChild(labelColumn)
     row.appendChild(amountColumn)

@@ -43,7 +43,7 @@ class IdleChampionsApi {
     private static LANGUAGE_ID = "1"
 
     static async getServer(): Promise<string | undefined> {
-        let request = new URL('https://master.idlechampions.com/~idledragons/post.php')
+        const request = new URL('https://master.idlechampions.com/~idledragons/post.php')
 
         request.searchParams.append("call", "getPlayServerForDefinitions")
         request.searchParams.append("mobile_client_version", "999")
@@ -52,16 +52,16 @@ class IdleChampionsApi {
         request.searchParams.append("request_id", "0")
         request.searchParams.append("localization_aware", "true")
 
-        let response = await fetch(request.toString())
+        const response = await fetch(request.toString())
         if(response.ok){
-            let serverDefs : ServerDefinitions = await response.json()
+            const serverDefs : ServerDefinitions = await response.json()
             return serverDefs.play_server + "post.php"
         }
         return undefined
     }
 
     static async submitCode(options: CodeSubmitOptions) : Promise<CodeSubmitResponse> {
-        let request = new URL(options.server)
+        const request = new URL(options.server)
 
         request.searchParams.append("call", "redeemcoupon")
         request.searchParams.append("user_id", options.user_id)
@@ -87,9 +87,9 @@ class IdleChampionsApi {
         // &localization_aware=true
         // &instance_id=
 
-        let response = await fetch(request.toString())
+        const response = await fetch(request.toString())
         if(response.ok){
-            let redeemResponse : RedeemCodeResponse = await response.json()
+            const redeemResponse : RedeemCodeResponse = await response.json()
             if(!redeemResponse){
                 console.error("No json response")
                 return new CodeSubmitResponse(CodeSubmitStatus.Failed)
@@ -105,7 +105,7 @@ class IdleChampionsApi {
                 return new CodeSubmitResponse(CodeSubmitStatus.NotValidCombo)
             }
             if (redeemResponse.success){
-                let chestType = redeemResponse?.loot_details?.[0]?.chest_type_id
+                const chestType = redeemResponse?.loot_details?.[0]?.chest_type_id
                 return new CodeSubmitResponse(CodeSubmitStatus.Success, chestType)
             }
             if(!redeemResponse.success && redeemResponse.failure_reason === FailureReason.OutdatedInstanceId){
@@ -121,7 +121,7 @@ class IdleChampionsApi {
     }
 
     static async getUserDetails(options: GetuserdetailsOptions) : Promise<PlayerData | undefined> {
-        let request = new URL(options.server)
+        const request = new URL(options.server)
 
         request.searchParams.append("call", "getuserdetails")
         request.searchParams.append("user_id", options.user_id)
@@ -148,9 +148,9 @@ class IdleChampionsApi {
         // &mobile_client_version=396
         // &localization_aware=true&
 
-        let response = await fetch(request.toString())
+        const response = await fetch(request.toString())
         if(response.ok){
-            let playerData : PlayerData = await response.json()
+            const playerData : PlayerData = await response.json()
             if(playerData.success){
                 return playerData
             }
