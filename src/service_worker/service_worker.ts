@@ -62,15 +62,14 @@ function browserActionClicked(tab:chrome.tabs.Tab) {
     chrome.tabs.create({url: "dst/options.html"})
 }
 
-function handleDetectedCodes(redeemedCodes: string[], pendingCodes: string[], detectedCodes: string[]){
+function handleDetectedCodes(redeemedCodes: string[], pendingCodes: string[], detectedCodes?: string[]){
     if(!detectedCodes || detectedCodes.length == 0) return
 
     if(!redeemedCodes) redeemedCodes = [] //Default if first run
     if(!pendingCodes) pendingCodes = [] //Default if first run
 
-    while(detectedCodes.length > 0){
-        let detectedCode = detectedCodes.pop()
-
+    let detectedCode:string | undefined
+    while(detectedCode = detectedCodes.pop()){
         if(!redeemedCodes.includes(detectedCode) && !pendingCodes.includes(detectedCode)){
             //New code
             console.log(`New code detected: ${detectedCode}`)
@@ -130,10 +129,9 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
     let duplicates = 0, newCodes = 0, expired = 0, invalid = 0
     let chests: {[chestType: number]: number} = {}
 
-    while(pendingCodes.length > 0){
+    let code:string | undefined
+    while(code = pendingCodes.pop()){
         await new Promise(h => setTimeout(h, 5000)) //Delay between requests
-        
-        let code = pendingCodes.pop()
 
         console.log(`Attempting to upload code: ${code}`)
 
@@ -204,7 +202,9 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
                 }
                 else{
                     console.log(`Sucessfully redeemed: ${code}`)
-                    chests[codeResponse.chestType] = (chests[codeResponse.chestType] ? chests[codeResponse.chestType] : 0) + 1
+                    if(codeResponse.chestType){
+                        chests[codeResponse.chestType] = (chests[codeResponse.chestType] ?? 0) + 1
+                    }
                     newCodes++
                 }
 

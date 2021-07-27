@@ -5,6 +5,8 @@
         "outFile": "./../../extension/dst/inject.js",
         "noFallthroughCasesInSwitch": true,
         "removeComments": true,
-        "noImplicitAny": true
+        "noImplicitAny": true,
+        "strict": true,
+        "noUncheckedIndexedAccess": true
     }
 }

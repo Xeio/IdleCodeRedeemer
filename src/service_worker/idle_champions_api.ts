@@ -42,7 +42,7 @@ class IdleChampionsApi {
     private static NETWORK_ID = "21"
     private static LANGUAGE_ID = "1"
 
-    static async getServer(): Promise<string> {
+    static async getServer(): Promise<string | undefined> {
         let request = new URL('https://master.idlechampions.com/~idledragons/post.php')
 
         request.searchParams.append("call", "getPlayServerForDefinitions")
@@ -57,7 +57,7 @@ class IdleChampionsApi {
             let serverDefs : ServerDefinitions = await response.json()
             return serverDefs.play_server + "post.php"
         }
-        return null
+        return undefined
     }
 
     static async submitCode(options: CodeSubmitOptions) : Promise<CodeSubmitResponse> {
@@ -90,6 +90,10 @@ class IdleChampionsApi {
         let response = await fetch(request.toString())
         if(response.ok){
             let redeemResponse : RedeemCodeResponse = await response.json()
+            if(!redeemResponse){
+                console.error("No json response")
+                return new CodeSubmitResponse(CodeSubmitStatus.Failed)
+            }
             console.debug(redeemResponse)
             if(redeemResponse.success && redeemResponse.failure_reason === FailureReason.AlreadyRedeemed){
                 return new CodeSubmitResponse(CodeSubmitStatus.AlreadyRedeemed)
@@ -101,7 +105,7 @@ class IdleChampionsApi {
                 return new CodeSubmitResponse(CodeSubmitStatus.NotValidCombo)
             }
             if (redeemResponse.success){
-                let chestType = redeemResponse?.loot_details?.length > 0 ? redeemResponse.loot_details[0].chest_type_id : null
+                let chestType = redeemResponse?.loot_details?.[0]?.chest_type_id
                 return new CodeSubmitResponse(CodeSubmitStatus.Success, chestType)
             }
             if(!redeemResponse.success && redeemResponse.failure_reason === FailureReason.OutdatedInstanceId){
@@ -116,7 +120,7 @@ class IdleChampionsApi {
         return new CodeSubmitResponse(CodeSubmitStatus.Failed)
     }
 
-    static async getUserDetails(options: GetuserdetailsOptions) : Promise<PlayerData> {
+    static async getUserDetails(options: GetuserdetailsOptions) : Promise<PlayerData | undefined> {
         let request = new URL(options.server)
 
         request.searchParams.append("call", "getuserdetails")
@@ -151,6 +155,6 @@ class IdleChampionsApi {
                 return playerData
             }
         }
-        return null
+        return undefined
     }
 }

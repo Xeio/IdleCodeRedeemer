@@ -20,7 +20,7 @@ function onMessage(message: IdleMessage, sender: any, sendResponse: any){
 }
 
 function loaded(){
-    document.getElementById("detectAndUpload").addEventListener('click', buttonClick)
+    document.getElementById("detectAndUpload")!.addEventListener('click', buttonClick)
 
     chrome.storage.sync.get([Globals.SETTING_USER_ID, Globals.SETTING_USER_HASH], ({userId, userHash}) =>{
         let userIdElement = document.getElementById("userId") as HTMLInputElement
@@ -47,11 +47,11 @@ function buttonClick(){
 }
 
 function hideMessages() {
-    document.getElementById("error").classList.remove("show")
-    document.getElementById("success").classList.remove("show")
-    document.getElementById("info").classList.remove("show")
-    document.getElementById("errorSettings").classList.remove("show")
-    document.querySelector("#chests tbody").innerHTML = ""
+    document.getElementById("error")!.classList.remove("show")
+    document.getElementById("success")!.classList.remove("show")
+    document.getElementById("info")!.classList.remove("show")
+    document.getElementById("errorSettings")!.classList.remove("show")
+    document.querySelector("#chests tbody")!.innerHTML = ""
 }
 
 function handleMessage(message: IdleMessage){
@@ -59,27 +59,27 @@ function handleMessage(message: IdleMessage){
 
     switch(message.messageType){
         case MessageType.Error:
-            document.getElementById("error").classList.add("show")
-            document.querySelector("#error span").innerHTML = message.messageText
+            document.getElementById("error")!.classList.add("show")
+            document.querySelector("#error span")!.innerHTML = message.messageText ?? ""
             break
         case MessageType.Info:
-            document.getElementById("info").classList.add("show")
-            document.querySelector("#info span").innerHTML = message.messageText
+            document.getElementById("info")!.classList.add("show")
+            document.querySelector("#info span")!.innerHTML = message.messageText ?? ""
             break
         case MessageType.MissingCredentials:
-            document.getElementById("errorSettings").classList.add("show")
-            document.querySelector("#errorSettings span").innerHTML = "Missing credentials on settings tab."
-            document.getElementById("settingsTabButton").click()
+            document.getElementById("errorSettings")!.classList.add("show")
+            document.querySelector("#errorSettings span")!.innerHTML = "Missing credentials on settings tab."
+            document.getElementById("settingsTabButton")!.click()
             break
         case MessageType.Success:
-            document.getElementById("success").classList.add("show")
-            document.querySelector("#success span").innerHTML = message.messageText
+            document.getElementById("success")!.classList.add("show")
+            document.querySelector("#success span")!.innerHTML = message.messageText ?? ""
 
             let chestsTableBody = document.querySelector("#chests tbody") as HTMLTableSectionElement
             chestsTableBody.innerHTML = ""
             let unknownCount = 0
 
-            Object.entries(message.chests).forEach(([chestType, amount]) => {
+            Object.entries(message.chests || []).forEach(([chestType, amount]) => {
                 let label = ""
                 switch(chestType){
                     case ChestType.Electrum.toString():

@@ -1,3 +1,4 @@
+"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -75,17 +76,17 @@ var IdleChampionsApi = (function () {
                     case 2:
                         serverDefs = _a.sent();
                         return [2, serverDefs.play_server + "post.php"];
-                    case 3: return [2, null];
+                    case 3: return [2, undefined];
                 }
             });
         });
     };
     IdleChampionsApi.submitCode = function (options) {
-        var _a;
+        var _a, _b;
         return __awaiter(this, void 0, void 0, function () {
             var request, response, redeemResponse, chestType;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
+            return __generator(this, function (_c) {
+                switch (_c.label) {
                     case 0:
                         request = new URL(options.server);
                         request.searchParams.append("call", "redeemcoupon");
@@ -101,11 +102,15 @@ var IdleChampionsApi = (function () {
                         request.searchParams.append("localization_aware", "true");
                         return [4, fetch(request.toString())];
                     case 1:
-                        response = _b.sent();
+                        response = _c.sent();
                         if (!response.ok) return [3, 3];
                         return [4, response.json()];
                     case 2:
-                        redeemResponse = _b.sent();
+                        redeemResponse = _c.sent();
+                        if (!redeemResponse) {
+                            console.error("No json response");
+                            return [2, new CodeSubmitResponse(CodeSubmitStatus.Failed)];
+                        }
                         console.debug(redeemResponse);
                         if (redeemResponse.success && redeemResponse.failure_reason === "you_already_redeemed_combination") {
                             return [2, new CodeSubmitResponse(CodeSubmitStatus.AlreadyRedeemed)];
@@ -117,7 +122,7 @@ var IdleChampionsApi = (function () {
                             return [2, new CodeSubmitResponse(CodeSubmitStatus.NotValidCombo)];
                         }
                         if (redeemResponse.success) {
-                            chestType = ((_a = redeemResponse === null || redeemResponse === void 0 ? void 0 : redeemResponse.loot_details) === null || _a === void 0 ? void 0 : _a.length) > 0 ? redeemResponse.loot_details[0].chest_type_id : null;
+                            chestType = (_b = (_a = redeemResponse === null || redeemResponse === void 0 ? void 0 : redeemResponse.loot_details) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b.chest_type_id;
                             return [2, new CodeSubmitResponse(CodeSubmitStatus.Success, chestType)];
                         }
                         if (!redeemResponse.success && redeemResponse.failure_reason === "Outdated instance id") {
@@ -162,7 +167,7 @@ var IdleChampionsApi = (function () {
                             return [2, playerData];
                         }
                         _a.label = 3;
-                    case 3: return [2, null];
+                    case 3: return [2, undefined];
                 }
             });
         });
@@ -240,8 +245,8 @@ function handleDetectedCodes(redeemedCodes, pendingCodes, detectedCodes) {
         redeemedCodes = [];
     if (!pendingCodes)
         pendingCodes = [];
-    while (detectedCodes.length > 0) {
-        var detectedCode = detectedCodes.pop();
+    var detectedCode;
+    while (detectedCode = detectedCodes.pop()) {
         if (!redeemedCodes.includes(detectedCode) && !pendingCodes.includes(detectedCode)) {
             console.log("New code detected: " + detectedCode);
             pendingCodes.push(detectedCode);
@@ -273,11 +278,12 @@ function startUploadProcess() {
     });
 }
 function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
+    var _a;
     return __awaiter(this, void 0, void 0, function () {
         var server, duplicates, newCodes, expired, invalid, chests, code, codeResponse, userData;
-        var _a, _b;
-        return __generator(this, function (_c) {
-            switch (_c.label) {
+        var _b, _c;
+        return __generator(this, function (_d) {
+            switch (_d.label) {
                 case 0:
                     if (!userId || userId.length == 0 || !hash || hash.length == 0) {
                         chrome.runtime.sendMessage({ messageType: "missingCredentials" });
@@ -286,7 +292,7 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                     }
                     return [4, IdleChampionsApi.getServer()];
                 case 1:
-                    server = _c.sent();
+                    server = _d.sent();
                     if (!server) {
                         console.error("Failed to get idle champions server.");
                         chrome.runtime.sendMessage({ messageType: "error", messageText: "Unable to connect to Idle Champions server." });
@@ -296,13 +302,12 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                     chrome.runtime.sendMessage({ messageType: "info", messageText: "Upload starting, " + pendingCodes.length + " new codes to redeem. This may take a bit." });
                     duplicates = 0, newCodes = 0, expired = 0, invalid = 0;
                     chests = {};
-                    _c.label = 2;
+                    _d.label = 2;
                 case 2:
-                    if (!(pendingCodes.length > 0)) return [3, 10];
+                    if (!(code = pendingCodes.pop())) return [3, 10];
                     return [4, new Promise(function (h) { return setTimeout(h, 5000); })];
                 case 3:
-                    _c.sent();
-                    code = pendingCodes.pop();
+                    _d.sent();
                     console.log("Attempting to upload code: " + code);
                     return [4, IdleChampionsApi.submitCode({
                             server: server,
@@ -312,29 +317,29 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                             code: code
                         })];
                 case 4:
-                    codeResponse = _c.sent();
+                    codeResponse = _d.sent();
                     if (!(codeResponse.status == CodeSubmitStatus.OutdatedInstanceId)) return [3, 9];
                     console.log("Instance ID outdated, refreshing.");
                     return [4, new Promise(function (h) { return setTimeout(h, 3000); })];
                 case 5:
-                    _c.sent();
+                    _d.sent();
                     return [4, IdleChampionsApi.getUserDetails({
                             server: server,
                             user_id: userId,
                             hash: hash
                         })];
                 case 6:
-                    userData = _c.sent();
+                    userData = _d.sent();
                     if (!userData) {
                         console.log("Failed to retreive user data.");
                         chrome.runtime.sendMessage({ messageType: "error", messageText: "Failed to retreieve user data, check user ID and hash." });
                         return [2];
                     }
                     instanceId = userData.details.instance_id;
-                    chrome.storage.sync.set((_a = {}, _a[Globals.SETTING_INSTANCE_ID] = instanceId, _a));
+                    chrome.storage.sync.set((_b = {}, _b[Globals.SETTING_INSTANCE_ID] = instanceId, _b));
                     return [4, new Promise(function (h) { return setTimeout(h, 3000); })];
                 case 7:
-                    _c.sent();
+                    _d.sent();
                     return [4, IdleChampionsApi.submitCode({
                             server: server,
                             user_id: userId,
@@ -343,8 +348,8 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                             code: code
                         })];
                 case 8:
-                    codeResponse = _c.sent();
-                    _c.label = 9;
+                    codeResponse = _d.sent();
+                    _d.label = 9;
                 case 9:
                     switch (codeResponse.status) {
                         case CodeSubmitStatus.OutdatedInstanceId:
@@ -374,14 +379,16 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                             }
                             else {
                                 console.log("Sucessfully redeemed: " + code);
-                                chests[codeResponse.chestType] = (chests[codeResponse.chestType] ? chests[codeResponse.chestType] : 0) + 1;
+                                if (codeResponse.chestType) {
+                                    chests[codeResponse.chestType] = ((_a = chests[codeResponse.chestType]) !== null && _a !== void 0 ? _a : 0) + 1;
+                                }
                                 newCodes++;
                             }
                             reedemedCodes.push(code);
                             if (reedemedCodes.length > 300) {
                                 reedemedCodes.shift();
                             }
-                            chrome.storage.sync.set((_b = {}, _b[Globals.SETTING_CODES] = reedemedCodes, _b[Globals.SETTING_PENDING] = pendingCodes, _b));
+                            chrome.storage.sync.set((_c = {}, _c[Globals.SETTING_CODES] = reedemedCodes, _c[Globals.SETTING_PENDING] = pendingCodes, _c));
                             break;
                     }
                     chrome.runtime.sendMessage({ messageType: "info", messageText: "Uploading... " + pendingCodes.length + " codes left. This may take a bit." });

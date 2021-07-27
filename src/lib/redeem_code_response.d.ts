@@ -35,18 +35,17 @@ declare const enum FailureReason {
 }
 
 interface LootDetail {
-    loot_item:     string;
-    loot_action:   string;
-    count:         number;
-    chest_type_id: ChestType;
-    before:        number;
-    after:         number;
+    loot_item:          string;
+    loot_action:        string;
+    count:              number;
+    chest_type_id?:     ChestType;
+    before:             number;
+    after:              number;
 }
 
 declare const enum ChestType{
     Silver = 1,
     Gold = 2,
-    Strahd = 219,
     Modron = 230,
     Electrum = 282,
 }

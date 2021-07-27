@@ -5,6 +5,8 @@
         "outFile": "./../../extension/service_worker.js",
         "noFallthroughCasesInSwitch": true,
         "removeComments": true,
-        "noImplicitAny": true
+        "noImplicitAny": true,
+        "strict": true,
+        "noUncheckedIndexedAccess": true
     }
 }

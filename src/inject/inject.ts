@@ -49,10 +49,10 @@ function getCodesList() : string[] {
 
     let messageElements = document.querySelectorAll("div[class^='message-']")
     messageElements.forEach(messageElement => {
-        let markupElement: HTMLElement = messageElement.querySelector("div[class^='markup-']")
+        let markupElement = messageElement.querySelector("div[class^='markup-']") as HTMLElement
         if(markupElement){
             let codeMatch = markupElement.innerText.toUpperCase().match(regex)
-            if(codeMatch){
+            if(codeMatch?.[0]){
                 let code = codeMatch[0].replaceAll("-", "")
                 console.debug(`Idle Code found: ${code}`)
                 codes.push(code)

@@ -1,3 +1,4 @@
+"use strict";
 var Globals = (function () {
     function Globals() {
     }
@@ -55,15 +56,16 @@ function hideMessages() {
     document.querySelector("#chests tbody").innerHTML = "";
 }
 function handleMessage(message) {
+    var _a, _b, _c;
     hideMessages();
     switch (message.messageType) {
         case "error":
             document.getElementById("error").classList.add("show");
-            document.querySelector("#error span").innerHTML = message.messageText;
+            document.querySelector("#error span").innerHTML = (_a = message.messageText) !== null && _a !== void 0 ? _a : "";
             break;
         case "info":
             document.getElementById("info").classList.add("show");
-            document.querySelector("#info span").innerHTML = message.messageText;
+            document.querySelector("#info span").innerHTML = (_b = message.messageText) !== null && _b !== void 0 ? _b : "";
             break;
         case "missingCredentials":
             document.getElementById("errorSettings").classList.add("show");
@@ -72,11 +74,11 @@ function handleMessage(message) {
             break;
         case "success":
             document.getElementById("success").classList.add("show");
-            document.querySelector("#success span").innerHTML = message.messageText;
+            document.querySelector("#success span").innerHTML = (_c = message.messageText) !== null && _c !== void 0 ? _c : "";
             var chestsTableBody_1 = document.querySelector("#chests tbody");
             chestsTableBody_1.innerHTML = "";
             var unknownCount_1 = 0;
-            Object.entries(message.chests).forEach(function (_a) {
+            Object.entries(message.chests || []).forEach(function (_a) {
                 var chestType = _a[0], amount = _a[1];
                 var label = "";
                 switch (chestType) {
