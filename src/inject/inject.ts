@@ -1,9 +1,9 @@
 /// <reference path="./../lib/chrome.d.ts" />
 /// <reference path="./../shared/globals.ts" />
 
-const _port = chrome.runtime.connect()
-_port.onMessage.addListener(onMessage)
-_port.postMessage({messageType: MessageType.PageReady})
+const _servicePort = chrome.runtime.connect({name:"page"})
+_servicePort.onMessage.addListener(onMessage)
+_servicePort.postMessage({messageType: MessageType.PageReady})
 
 const _observer = new MutationObserver((mutationList, observer) => {
     if(mutationList.some((mut) => mut.addedNodes.length > 0))
@@ -13,7 +13,7 @@ const _observer = new MutationObserver((mutationList, observer) => {
             console.info("Observer found codes, sending to service worker")
 
             observer.disconnect()
-            _port.postMessage({messageType: MessageType.Codes, codes: codes})
+            _servicePort.postMessage({messageType: MessageType.Codes, codes: codes})
         }
     }
 })

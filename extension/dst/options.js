@@ -14,14 +14,23 @@ var Globals = (function () {
 document.addEventListener("DOMContentLoaded", function () {
     loaded();
 });
-chrome.runtime.onMessage.addListener(onMessage);
-function onMessage(message, sender, sendResponse) {
+var _servicePort = chrome.runtime.connect({ name: "options" });
+_servicePort.onMessage.addListener(onMessage);
+_servicePort.onDisconnect.addListener(function () { return window.close(); });
+function onMessage(message, port) {
     switch (message.messageType) {
         case "error":
         case "info":
         case "success":
         case "missingCredentials":
             handleMessage(message);
+            break;
+        case "activateTab":
+            chrome.tabs.getCurrent(function (tab) {
+                if (tab === null || tab === void 0 ? void 0 : tab.id) {
+                    chrome.tabs.update(tab.id, { "active": true });
+                }
+            });
             break;
     }
 }
@@ -46,7 +55,7 @@ function settingsUpdated(ev) {
 }
 function buttonClick() {
     hideMessages();
-    chrome.runtime.sendMessage({ messageType: "startScanProcess" });
+    _servicePort.postMessage({ messageType: "startScanProcess" });
 }
 function hideMessages() {
     document.getElementById("error").classList.remove("show");

@@ -11,16 +11,16 @@ var Globals = (function () {
     Globals.SETTING_USER_ID = "userId";
     return Globals;
 }());
-var _port = chrome.runtime.connect();
-_port.onMessage.addListener(onMessage);
-_port.postMessage({ messageType: "pageReady" });
+var _servicePort = chrome.runtime.connect({ name: "page" });
+_servicePort.onMessage.addListener(onMessage);
+_servicePort.postMessage({ messageType: "pageReady" });
 var _observer = new MutationObserver(function (mutationList, observer) {
     if (mutationList.some(function (mut) { return mut.addedNodes.length > 0; })) {
         var codes = getCodesList();
         if (codes.length > 0) {
             console.info("Observer found codes, sending to service worker");
             observer.disconnect();
-            _port.postMessage({ messageType: "codes", codes: codes });
+            _servicePort.postMessage({ messageType: "codes", codes: codes });
         }
     }
 });

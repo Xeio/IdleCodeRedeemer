@@ -7,22 +7,30 @@
 
 chrome.action.setIcon({"path" : "media/icon-enabled.png"}, () => {})
 
-let _waitingForPort = false
+let _waitingForPagePort = false
+let _optionsPort: chrome.runtime.Port
 
 chrome.runtime.onConnect.addListener((port) => {
-    if(_waitingForPort){
-        console.log("New port opened.")
-        _waitingForPort = false
-        port.onMessage.addListener(onPortMessage)
+    if(port.name == "page"){
+        if(_waitingForPagePort){
+            console.log("New port opened.")
+            _waitingForPagePort = false
+            port.onMessage.addListener(onPagePortMessage)
+        }
+        else{
+            console.log("Unexpected port, disconnecting.")
+            //We weren't expecting this port, so just disconnect it immediately
+            port.disconnect()
+        }
     }
-    else{
-        console.log("Unexpected port, disconnecting.")
-        //We weren't expecting this port, so just disconnect it immediately
-        port.disconnect()
+    else if (port.name == "options"){
+        _optionsPort?.disconnect()
+        port.onMessage.addListener(onOptionsPortMessage)
+        _optionsPort = port
     }
 })
 
-function onPortMessage(message: IdleMessage, port: chrome.runtime.Port){
+function onPagePortMessage(message: IdleMessage, port: chrome.runtime.Port){
     switch(message.messageType){
         case MessageType.PageReady:
             console.log("Page ready message")
@@ -41,19 +49,15 @@ function onPortMessage(message: IdleMessage, port: chrome.runtime.Port){
     }
 }
 
-chrome.runtime.onMessage.addListener(onRuntimeMessage)
-
-function onRuntimeMessage(message: IdleMessage, sender: chrome.runtime.MessageSender, sendResponse: (response?: any) => void){
+function onOptionsPortMessage(message: IdleMessage, port: chrome.runtime.Port){
     if(message.messageType == MessageType.StartScanProcess){
-        chrome.runtime.sendMessage({messageType: MessageType.Info, messageText:`Opening discord tab to scan for codes.` })
+        port.postMessage({messageType: MessageType.Info, messageText:`Opening discord tab to scan for codes.` })
         console.log("Starting scan/upolad process. Opening discord tab.")
 
-        _waitingForPort = true
+        _waitingForPagePort = true
         chrome.tabs.create({ url: Globals.discordChannelUrl })
         
-        if(sender?.tab?.id){
-            chrome.tabs.update(sender.tab.id, { 'active': true });
-        }
+        port.postMessage({messageType: MessageType.ActivateTab})
     }
 }
 
@@ -94,7 +98,7 @@ function handleDetectedCodes(redeemedCodes: string[], pendingCodes: string[], de
     }
     else{
         console.log("No new codes detected.")
-        chrome.runtime.sendMessage({messageType: MessageType.Info, messageText:`No new codes detected.` })
+        _optionsPort.postMessage({messageType: MessageType.Info, messageText:`No new codes detected.` })
     }
 }
 function startUploadProcess(){
@@ -109,7 +113,7 @@ function startUploadProcess(){
 
 async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], instanceId: string, userId: string, hash: string) {
     if(!userId || userId.length == 0 || !hash || hash.length == 0){
-        chrome.runtime.sendMessage({messageType: MessageType.MissingCredentials})
+        _optionsPort.postMessage({messageType: MessageType.MissingCredentials})
         console.error("No credentials entered.")
         return
     }
@@ -118,13 +122,13 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
 
     if(!server) { 
         console.error("Failed to get idle champions server.")
-        chrome.runtime.sendMessage({messageType: MessageType.Error, messageText:"Unable to connect to Idle Champions server."})
+        _optionsPort.postMessage({messageType: MessageType.Error, messageText:"Unable to connect to Idle Champions server."})
         return
     }
 
     console.log(`Got server ${server}`)
 
-    chrome.runtime.sendMessage({messageType: MessageType.Info, messageText:`Upload starting, ${pendingCodes.length} new codes to redeem. This may take a bit.` })
+    _optionsPort.postMessage({messageType: MessageType.Info, messageText:`Upload starting, ${pendingCodes.length} new codes to redeem. This may take a bit.` })
 
     let duplicates = 0, newCodes = 0, expired = 0, invalid = 0
     const chests: {[chestType: number]: number} = {}
@@ -156,7 +160,7 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
 
             if(!userData) {
                 console.log("Failed to retreive user data.")
-                chrome.runtime.sendMessage({messageType: MessageType.Error, messageText:"Failed to retreieve user data, check user ID and hash."})
+                _optionsPort.postMessage({messageType: MessageType.Error, messageText:"Failed to retreieve user data, check user ID and hash."})
                 return
             }
 
@@ -178,11 +182,11 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
             case CodeSubmitStatus.OutdatedInstanceId:
             case CodeSubmitStatus.Failed:
                 console.error("Unable to submit code, aborting upload process.")
-                chrome.runtime.sendMessage({messageType: MessageType.Error, messageText:"Failed to submit code for unknown reason."})
+                _optionsPort.postMessage({messageType: MessageType.Error, messageText:"Failed to submit code for unknown reason."})
                 return
             case CodeSubmitStatus.InvalidParameters:
                 console.error("Unable to submit code due to invalid parameters.")
-                chrome.runtime.sendMessage({messageType: MessageType.Error, messageText:"Failed to submit code, check user/hash on settings tab."})
+                _optionsPort.postMessage({messageType: MessageType.Error, messageText:"Failed to submit code, check user/hash on settings tab."})
                 return
             case CodeSubmitStatus.Expired:
             case CodeSubmitStatus.NotValidCombo:
@@ -218,7 +222,7 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
                 break
         }
 
-        chrome.runtime.sendMessage({messageType: MessageType.Info, messageText:`Uploading... ${pendingCodes.length} codes left. This may take a bit.` })
+        _optionsPort.postMessage({messageType: MessageType.Info, messageText:`Uploading... ${pendingCodes.length} codes left. This may take a bit.` })
     }
 
     console.log("Redeem complete:")
@@ -227,7 +231,7 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
     console.log(`${expired} expired`)
     console.log(`${invalid} invalid`)
     console.log(chests)
-    chrome.runtime.sendMessage({
+    _optionsPort.postMessage({
         messageType: MessageType.Success,
         chests: chests,
         messageText: `Upload completed successfully.<br>

@@ -6,15 +6,24 @@ document.addEventListener("DOMContentLoaded", () => {
     loaded()
 })
 
-chrome.runtime.onMessage.addListener(onMessage)
+const _servicePort = chrome.runtime.connect({name:"options"})
+_servicePort.onMessage.addListener(onMessage)
+_servicePort.onDisconnect.addListener(() => window.close())
 
-function onMessage(message: IdleMessage, sender: any, sendResponse: any){
+function onMessage(message: IdleMessage, port: chrome.runtime.Port){
     switch(message.messageType){
         case MessageType.Error:
         case MessageType.Info:
         case MessageType.Success:
         case MessageType.MissingCredentials:
             handleMessage(message)
+            break
+        case MessageType.ActivateTab:
+            chrome.tabs.getCurrent((tab) => {
+                if(tab?.id) {
+                    chrome.tabs.update(tab.id, {"active":true})
+                }
+            })
             break
     }
 }
@@ -43,7 +52,7 @@ function settingsUpdated(this: HTMLElement, ev: FocusEvent){
 function buttonClick(){
     hideMessages()
 
-    chrome.runtime.sendMessage({messageType: MessageType.StartScanProcess})
+    _servicePort.postMessage({messageType: MessageType.StartScanProcess})
 }
 
 function hideMessages() {

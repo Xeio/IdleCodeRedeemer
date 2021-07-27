@@ -191,19 +191,27 @@ var Globals = (function () {
     return Globals;
 }());
 chrome.action.setIcon({ "path": "media/icon-enabled.png" }, function () { });
-var _waitingForPort = false;
+var _waitingForPagePort = false;
+var _optionsPort;
 chrome.runtime.onConnect.addListener(function (port) {
-    if (_waitingForPort) {
-        console.log("New port opened.");
-        _waitingForPort = false;
-        port.onMessage.addListener(onPortMessage);
+    if (port.name == "page") {
+        if (_waitingForPagePort) {
+            console.log("New port opened.");
+            _waitingForPagePort = false;
+            port.onMessage.addListener(onPagePortMessage);
+        }
+        else {
+            console.log("Unexpected port, disconnecting.");
+            port.disconnect();
+        }
     }
-    else {
-        console.log("Unexpected port, disconnecting.");
-        port.disconnect();
+    else if (port.name == "options") {
+        _optionsPort === null || _optionsPort === void 0 ? void 0 : _optionsPort.disconnect();
+        port.onMessage.addListener(onOptionsPortMessage);
+        _optionsPort = port;
     }
 });
-function onPortMessage(message, port) {
+function onPagePortMessage(message, port) {
     switch (message.messageType) {
         case "pageReady":
             console.log("Page ready message");
@@ -220,17 +228,13 @@ function onPortMessage(message, port) {
             break;
     }
 }
-chrome.runtime.onMessage.addListener(onRuntimeMessage);
-function onRuntimeMessage(message, sender, sendResponse) {
-    var _a;
+function onOptionsPortMessage(message, port) {
     if (message.messageType == "startScanProcess") {
-        chrome.runtime.sendMessage({ messageType: "info", messageText: "Opening discord tab to scan for codes." });
+        port.postMessage({ messageType: "info", messageText: "Opening discord tab to scan for codes." });
         console.log("Starting scan/upolad process. Opening discord tab.");
-        _waitingForPort = true;
+        _waitingForPagePort = true;
         chrome.tabs.create({ url: Globals.discordChannelUrl });
-        if ((_a = sender === null || sender === void 0 ? void 0 : sender.tab) === null || _a === void 0 ? void 0 : _a.id) {
-            chrome.tabs.update(sender.tab.id, { 'active': true });
-        }
+        port.postMessage({ messageType: "activateTab" });
     }
 }
 chrome.action.onClicked.addListener(browserActionClicked);
@@ -267,7 +271,7 @@ function handleDetectedCodes(redeemedCodes, pendingCodes, detectedCodes) {
     }
     else {
         console.log("No new codes detected.");
-        chrome.runtime.sendMessage({ messageType: "info", messageText: "No new codes detected." });
+        _optionsPort.postMessage({ messageType: "info", messageText: "No new codes detected." });
     }
 }
 function startUploadProcess() {
@@ -286,7 +290,7 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
             switch (_d.label) {
                 case 0:
                     if (!userId || userId.length == 0 || !hash || hash.length == 0) {
-                        chrome.runtime.sendMessage({ messageType: "missingCredentials" });
+                        _optionsPort.postMessage({ messageType: "missingCredentials" });
                         console.error("No credentials entered.");
                         return [2];
                     }
@@ -295,11 +299,11 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                     server = _d.sent();
                     if (!server) {
                         console.error("Failed to get idle champions server.");
-                        chrome.runtime.sendMessage({ messageType: "error", messageText: "Unable to connect to Idle Champions server." });
+                        _optionsPort.postMessage({ messageType: "error", messageText: "Unable to connect to Idle Champions server." });
                         return [2];
                     }
                     console.log("Got server " + server);
-                    chrome.runtime.sendMessage({ messageType: "info", messageText: "Upload starting, " + pendingCodes.length + " new codes to redeem. This may take a bit." });
+                    _optionsPort.postMessage({ messageType: "info", messageText: "Upload starting, " + pendingCodes.length + " new codes to redeem. This may take a bit." });
                     duplicates = 0, newCodes = 0, expired = 0, invalid = 0;
                     chests = {};
                     _d.label = 2;
@@ -332,7 +336,7 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                     userData = _d.sent();
                     if (!userData) {
                         console.log("Failed to retreive user data.");
-                        chrome.runtime.sendMessage({ messageType: "error", messageText: "Failed to retreieve user data, check user ID and hash." });
+                        _optionsPort.postMessage({ messageType: "error", messageText: "Failed to retreieve user data, check user ID and hash." });
                         return [2];
                     }
                     instanceId = userData.details.instance_id;
@@ -355,11 +359,11 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                         case CodeSubmitStatus.OutdatedInstanceId:
                         case CodeSubmitStatus.Failed:
                             console.error("Unable to submit code, aborting upload process.");
-                            chrome.runtime.sendMessage({ messageType: "error", messageText: "Failed to submit code for unknown reason." });
+                            _optionsPort.postMessage({ messageType: "error", messageText: "Failed to submit code for unknown reason." });
                             return [2];
                         case CodeSubmitStatus.InvalidParameters:
                             console.error("Unable to submit code due to invalid parameters.");
-                            chrome.runtime.sendMessage({ messageType: "error", messageText: "Failed to submit code, check user/hash on settings tab." });
+                            _optionsPort.postMessage({ messageType: "error", messageText: "Failed to submit code, check user/hash on settings tab." });
                             return [2];
                         case CodeSubmitStatus.Expired:
                         case CodeSubmitStatus.NotValidCombo:
@@ -391,7 +395,7 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                             chrome.storage.sync.set((_c = {}, _c[Globals.SETTING_CODES] = reedemedCodes, _c[Globals.SETTING_PENDING] = pendingCodes, _c));
                             break;
                     }
-                    chrome.runtime.sendMessage({ messageType: "info", messageText: "Uploading... " + pendingCodes.length + " codes left. This may take a bit." });
+                    _optionsPort.postMessage({ messageType: "info", messageText: "Uploading... " + pendingCodes.length + " codes left. This may take a bit." });
                     return [3, 2];
                 case 10:
                     console.log("Redeem complete:");
@@ -400,7 +404,7 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                     console.log(expired + " expired");
                     console.log(invalid + " invalid");
                     console.log(chests);
-                    chrome.runtime.sendMessage({
+                    _optionsPort.postMessage({
                         messageType: "success",
                         chests: chests,
                         messageText: "Upload completed successfully.<br>\n                        " + (duplicates > 0 ? duplicates + " codes already redeemed<br>" : "") + "\n                        " + (expired > 0 ? expired + " expired codes<br>" : "") + "\n                        " + (invalid > 0 ? invalid + " invalid codes<br>" : "") + "\n                        " + newCodes + " codes redeemed."
