@@ -88,6 +88,9 @@ function handleMessage(message: IdleMessage){
                     case ChestType.Gold.toString():
                         label = "Gold Chests"
                         break
+                    case ChestType.Modron.toString():
+                        label = "Modron Chests"
+                        break
                     default:
                         unknownCount += amount
                         return

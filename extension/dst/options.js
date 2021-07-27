@@ -86,6 +86,9 @@ function handleMessage(message) {
                     case 2..toString():
                         label = "Gold Chests";
                         break;
+                    case 230..toString():
+                        label = "Modron Chests";
+                        break;
                     default:
                         unknownCount_1 += amount;
                         return;

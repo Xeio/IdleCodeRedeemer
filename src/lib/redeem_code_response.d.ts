@@ -44,6 +44,9 @@ interface LootDetail {
 }
 
 declare const enum ChestType{
+    Silver = 1,
     Gold = 2,
+    Strahd = 219,
+    Modron = 230,
     Electrum = 282,
 }
