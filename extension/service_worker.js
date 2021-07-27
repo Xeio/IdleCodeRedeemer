@@ -219,6 +219,7 @@ chrome.runtime.onMessage.addListener(onRuntimeMessage);
 function onRuntimeMessage(message, sender, sendResponse) {
     var _a;
     if (message.messageType == "startScanProcess") {
+        chrome.runtime.sendMessage({ messageType: "info", messageText: "Opening discord tab to scan for codes." });
         console.log("Starting scan/upolad process. Opening discord tab.");
         _waitingForPort = true;
         chrome.tabs.create({ url: Globals.discordChannelUrl });

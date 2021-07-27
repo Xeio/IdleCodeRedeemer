@@ -45,6 +45,7 @@ chrome.runtime.onMessage.addListener(onRuntimeMessage)
 
 function onRuntimeMessage(message: IdleMessage, sender: chrome.runtime.MessageSender, sendResponse: (response?: any) => void){
     if(message.messageType == MessageType.StartScanProcess){
+        chrome.runtime.sendMessage({messageType: MessageType.Info, messageText:`Opening discord tab to scan for codes.` })
         console.log("Starting scan/upolad process. Opening discord tab.")
 
         _waitingForPort = true
