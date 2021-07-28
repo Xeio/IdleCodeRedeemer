@@ -191,6 +191,7 @@ var Globals = (function () {
     return Globals;
 }());
 chrome.action.setIcon({ "path": "media/icon-enabled.png" }, function () { });
+var REQUEST_DELAY = 3000;
 var _waitingForPagePort = false;
 var _optionsPort;
 chrome.runtime.onConnect.addListener(function (port) {
@@ -309,7 +310,7 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                     _d.label = 2;
                 case 2:
                     if (!(code = pendingCodes.pop())) return [3, 10];
-                    return [4, new Promise(function (h) { return setTimeout(h, 5000); })];
+                    return [4, new Promise(function (h) { return setTimeout(h, REQUEST_DELAY); })];
                 case 3:
                     _d.sent();
                     console.log("Attempting to upload code: " + code);
@@ -324,7 +325,7 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                     codeResponse = _d.sent();
                     if (!(codeResponse.status == CodeSubmitStatus.OutdatedInstanceId)) return [3, 9];
                     console.log("Instance ID outdated, refreshing.");
-                    return [4, new Promise(function (h) { return setTimeout(h, 3000); })];
+                    return [4, new Promise(function (h) { return setTimeout(h, REQUEST_DELAY); })];
                 case 5:
                     _d.sent();
                     return [4, IdleChampionsApi.getUserDetails({
@@ -341,7 +342,7 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                     }
                     instanceId = userData.details.instance_id;
                     chrome.storage.sync.set((_b = {}, _b[Globals.SETTING_INSTANCE_ID] = instanceId, _b));
-                    return [4, new Promise(function (h) { return setTimeout(h, 3000); })];
+                    return [4, new Promise(function (h) { return setTimeout(h, REQUEST_DELAY); })];
                 case 7:
                     _d.sent();
                     return [4, IdleChampionsApi.submitCode({

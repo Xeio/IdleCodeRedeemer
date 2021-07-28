@@ -7,6 +7,8 @@
 
 chrome.action.setIcon({"path" : "media/icon-enabled.png"}, () => {})
 
+const REQUEST_DELAY = 3000
+
 let _waitingForPagePort = false
 let _optionsPort: chrome.runtime.Port
 
@@ -135,7 +137,7 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
 
     let code:string | undefined
     while(code = pendingCodes.pop()){
-        await new Promise(h => setTimeout(h, 5000)) //Delay between requests
+        await new Promise(h => setTimeout(h, REQUEST_DELAY)) //Delay between requests
 
         console.log(`Attempting to upload code: ${code}`)
 
@@ -150,7 +152,7 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
         if(codeResponse.status == CodeSubmitStatus.OutdatedInstanceId){
             console.log("Instance ID outdated, refreshing.")
 
-            await new Promise(h => setTimeout(h, 3000)) //Delay between requests
+            await new Promise(h => setTimeout(h, REQUEST_DELAY)) //Delay between requests
             
             const userData = await IdleChampionsApi.getUserDetails({
                 server: server,
@@ -167,7 +169,7 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
             instanceId = userData.details.instance_id
             chrome.storage.sync.set({[Globals.SETTING_INSTANCE_ID]: instanceId})
 
-            await new Promise(h => setTimeout(h, 3000)) //Delay between requests
+            await new Promise(h => setTimeout(h, REQUEST_DELAY)) //Delay between requests
 
             codeResponse = await IdleChampionsApi.submitCode({
                 server: server,
