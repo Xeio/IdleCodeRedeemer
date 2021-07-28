@@ -190,7 +190,6 @@ var Globals = (function () {
     Globals.SETTING_USER_ID = "userId";
     return Globals;
 }());
-chrome.action.setIcon({ "path": "media/icon-enabled.png" }, function () { });
 var REQUEST_DELAY = 3000;
 var _waitingForPagePort = false;
 var _optionsPort;

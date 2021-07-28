@@ -5,8 +5,6 @@
 /// <reference path="./../shared/globals.ts" />
 /// <reference path="./idle_champions_api.ts" />
 
-chrome.action.setIcon({"path" : "media/icon-enabled.png"}, () => {})
-
 const REQUEST_DELAY = 3000
 
 let _waitingForPagePort = false
