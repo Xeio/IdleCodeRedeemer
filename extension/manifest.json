@@ -20,7 +20,11 @@
   "background":{
     "service_worker": "service_worker.js"
   },
-  "action": {},
+  "action": {
+    "default_icon":{
+      "32" : "media/icon.png"
+    }
+  },
   "externally_connectable": {
     "matches": [
       "https://discord.com/channels/357247482247380994/358044869685673985"
