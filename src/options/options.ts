@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 const _servicePort = chrome.runtime.connect({name:"options"})
 _servicePort.onMessage.addListener(onMessage)
-_servicePort.onDisconnect.addListener(() => window.close())
+_servicePort.postMessage({messageType: MessageType.PageReady})
 
 function onMessage(message: IdleMessage, port: chrome.runtime.Port){
     switch(message.messageType){
@@ -29,8 +29,6 @@ function onMessage(message: IdleMessage, port: chrome.runtime.Port){
 }
 
 function loaded(){
-    document.getElementById("detectAndUpload")!.addEventListener('click', buttonClick)
-
     chrome.storage.sync.get([Globals.SETTING_USER_ID, Globals.SETTING_USER_HASH], ({userId, userHash}) =>{
         const userIdElement = document.getElementById("userId") as HTMLInputElement
         userIdElement.value = userId ?? ""
@@ -47,12 +45,8 @@ function settingsUpdated(this: HTMLElement, ev: FocusEvent){
         [Globals.SETTING_USER_ID]: (document.getElementById("userId") as HTMLInputElement).value,
         [Globals.SETTING_USER_HASH]: (document.getElementById("userHash") as HTMLInputElement).value
     }, () => console.log("User settings saved"))
-}
-
-function buttonClick(){
-    hideMessages()
-
-    _servicePort.postMessage({messageType: MessageType.StartScanProcess})
+    document.getElementById("settingsInfo")!.classList.add("show")
+    document.querySelector("#settingsInfo span")!.innerHTML = "After updating credentials, click browser extension button to launch new request."
 }
 
 function hideMessages() {
@@ -77,7 +71,7 @@ function handleMessage(message: IdleMessage){
             break
         case MessageType.MissingCredentials:
             document.getElementById("errorSettings")!.classList.add("show")
-            document.querySelector("#errorSettings span")!.innerHTML = "Missing credentials on settings tab."
+            document.querySelector("#errorSettings span")!.innerHTML = "Missing credentials."
             document.getElementById("settingsTabButton")!.click()
             break
         case MessageType.Success:

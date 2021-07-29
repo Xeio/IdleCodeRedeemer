@@ -50,7 +50,7 @@ function onPagePortMessage(message: IdleMessage, port: chrome.runtime.Port){
 }
 
 function onOptionsPortMessage(message: IdleMessage, port: chrome.runtime.Port){
-    if(message.messageType == MessageType.StartScanProcess){
+    if(message.messageType == MessageType.PageReady){
         port.postMessage({messageType: MessageType.Info, messageText:`Opening discord tab to scan for codes.` })
         console.log("Starting scan/upolad process. Opening discord tab.")
 

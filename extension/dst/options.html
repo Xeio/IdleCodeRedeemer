@@ -6,33 +6,28 @@
     <tbody>
         <ul class="nav nav-tabs">
             <li class="nav-item">
-                <a class="nav-link active" data-bs-toggle="tab" href="#run">Run</a>
+                <a class="nav-link active" data-bs-toggle="tab" href="#status">Status</a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" data-bs-toggle="tab" id="settingsTabButton" href="#settings">Settings</a>
             </li>
         </ul>
         <div id="tabContents" class="tab-content">
-            <div class="tab-pane fade show active" id="run">
+            <div class="tab-pane fade show active" id="status">
                 <div class="d-grid gap-2">
-                    <button class="btn btn-primary btn-lg" id="detectAndUpload">Detect And Upload Codes</button>
-                    <div class="alert alert-danger alert-dismissible collapse" id="error">
-                        <button type="button" class="btn-close" data-bs-toggle="collapse" data-bs-target="#error"></button>
+                    <div class="alert alert-danger collapse" id="error">
                         <span>Default error text</span>
                     </div>
-                    <div class="alert alert-success alert-dismissible collapse" id="success">
-                        <button type="button" class="btn-close" data-bs-toggle="collapse" data-bs-target="#success"></button>
+                    <div class="alert alert-success collapse" id="success">
                         <span>Upload completed successfully.</span>
                     </div>
-                    <div class="alert alert-info alert-dismissible collapse" id="info">
-                        <button type="button" class="btn-close" data-bs-toggle="collapse" data-bs-target="#info"></button>
+                    <div class="alert alert-info collapse" id="info">
                         <span>Default info text</span>
                     </div>
                 </div>
             </div>
             <div class="tab-pane fade" id="settings">
                 <div class="alert alert-danger collapse" id="errorSettings">
-                    <button type="button" class="btn-close" data-bs-toggle="collapse" data-bs-target="#error"></button>
                     <span>Default settings error</span>
                 </div>
                 <div class="form-group">
@@ -42,6 +37,10 @@
                 <div class="form-group">
                     <label for="userHash" class="form-label">User Hash</label>
                     <input type="text" id="userHash" class="form-control" />
+                </div>
+                <div class="alert alert-info alert-dismissible collapse mt-1" id="settingsInfo">
+                    <button type="button" class="btn-close" data-bs-toggle="collapse" data-bs-target="#settingsInfo"></button>
+                    <span>Default settings info</span>
                 </div>
             </div>
         </div>

@@ -229,7 +229,7 @@ function onPagePortMessage(message, port) {
     }
 }
 function onOptionsPortMessage(message, port) {
-    if (message.messageType == "startScanProcess") {
+    if (message.messageType == "pageReady") {
         port.postMessage({ messageType: "info", messageText: "Opening discord tab to scan for codes." });
         console.log("Starting scan/upolad process. Opening discord tab.");
         _waitingForPagePort = true;

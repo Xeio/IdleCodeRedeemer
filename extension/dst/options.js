@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 var _servicePort = chrome.runtime.connect({ name: "options" });
 _servicePort.onMessage.addListener(onMessage);
-_servicePort.onDisconnect.addListener(function () { return window.close(); });
+_servicePort.postMessage({ messageType: "pageReady" });
 function onMessage(message, port) {
     switch (message.messageType) {
         case "error":
@@ -35,7 +35,6 @@ function onMessage(message, port) {
     }
 }
 function loaded() {
-    document.getElementById("detectAndUpload").addEventListener('click', buttonClick);
     chrome.storage.sync.get([Globals.SETTING_USER_ID, Globals.SETTING_USER_HASH], function (_a) {
         var userId = _a.userId, userHash = _a.userHash;
         var userIdElement = document.getElementById("userId");
@@ -52,10 +51,8 @@ function settingsUpdated(ev) {
         _a[Globals.SETTING_USER_ID] = document.getElementById("userId").value,
         _a[Globals.SETTING_USER_HASH] = document.getElementById("userHash").value,
         _a), function () { return console.log("User settings saved"); });
-}
-function buttonClick() {
-    hideMessages();
-    _servicePort.postMessage({ messageType: "startScanProcess" });
+    document.getElementById("settingsInfo").classList.add("show");
+    document.querySelector("#settingsInfo span").innerHTML = "After updating credentials, click browser extension button to launch new request.";
 }
 function hideMessages() {
     document.getElementById("error").classList.remove("show");
@@ -78,7 +75,7 @@ function handleMessage(message) {
             break;
         case "missingCredentials":
             document.getElementById("errorSettings").classList.add("show");
-            document.querySelector("#errorSettings span").innerHTML = "Missing credentials on settings tab.";
+            document.querySelector("#errorSettings span").innerHTML = "Missing credentials.";
             document.getElementById("settingsTabButton").click();
             break;
         case "success":
