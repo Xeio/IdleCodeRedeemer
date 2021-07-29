@@ -234,10 +234,10 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
     _optionsPort.postMessage({
         messageType: MessageType.Success,
         chests: chests,
-        messageText: `Upload completed successfully.<br>
+        messageText: `Upload completed successfully:<br>
                         ${duplicates > 0 ? `${duplicates} codes already redeemed<br>` : ""}
                         ${expired > 0 ? `${expired} expired codes<br>` : ""}
                         ${invalid > 0 ? `${invalid} invalid codes<br>` : ""}
-                        ${newCodes} codes redeemed.`
+                        ${newCodes} codes redeemed`
     })
 }

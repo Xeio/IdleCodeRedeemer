@@ -407,7 +407,7 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                     _optionsPort.postMessage({
                         messageType: "success",
                         chests: chests,
-                        messageText: "Upload completed successfully.<br>\n                        " + (duplicates > 0 ? duplicates + " codes already redeemed<br>" : "") + "\n                        " + (expired > 0 ? expired + " expired codes<br>" : "") + "\n                        " + (invalid > 0 ? invalid + " invalid codes<br>" : "") + "\n                        " + newCodes + " codes redeemed."
+                        messageText: "Upload completed successfully:<br>\n                        " + (duplicates > 0 ? duplicates + " codes already redeemed<br>" : "") + "\n                        " + (expired > 0 ? expired + " expired codes<br>" : "") + "\n                        " + (invalid > 0 ? invalid + " invalid codes<br>" : "") + "\n                        " + newCodes + " codes redeemed"
                     });
                     return [2];
             }
