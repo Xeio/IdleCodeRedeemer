@@ -44,7 +44,7 @@ function onMessage(message: IdleMessage, port: chrome.runtime.Port){
 }
 
 function getCodesList() : string[] {
-    const regex = /[A-Z0-9*!@#$%^&*]{4}-?[A-Z0-9*!@#$%^&*]{4}-?[A-Z0-9*!@#$%^&*]{4}-?([A-Z0-9*!@#$%^&*]{4})?/g
+    const regex = /(?:[A-Z0-9*!@#$%^&*]-?){12}(?:(?:[A-Z0-9*!@#$%^&*]-?){4})?/g
     const codes: string[] = []
 
     const messageElements = document.querySelectorAll("div[class^='message-']")

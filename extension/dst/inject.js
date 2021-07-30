@@ -45,7 +45,7 @@ function onMessage(message, port) {
     }
 }
 function getCodesList() {
-    var regex = /[A-Z0-9*!@#$%^&*]{4}-?[A-Z0-9*!@#$%^&*]{4}-?[A-Z0-9*!@#$%^&*]{4}-?([A-Z0-9*!@#$%^&*]{4})?/g;
+    var regex = /(?:[A-Z0-9*!@#$%^&*]-?){12}(?:(?:[A-Z0-9*!@#$%^&*]-?){4})?/g;
     var codes = [];
     var messageElements = document.querySelectorAll("div[class^='message-']");
     messageElements.forEach(function (messageElement) {
