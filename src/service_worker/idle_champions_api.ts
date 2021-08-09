@@ -37,7 +37,6 @@ enum CodeSubmitStatus{
 }
 
 class IdleChampionsApi {
-    private static MAX_CODES_QUOTA = 200
     private static CLIENT_VERSION = "999"
     private static NETWORK_ID = "21"
     private static LANGUAGE_ID = "1"

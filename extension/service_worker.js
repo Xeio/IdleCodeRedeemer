@@ -172,7 +172,6 @@ var IdleChampionsApi = (function () {
             });
         });
     };
-    IdleChampionsApi.MAX_CODES_QUOTA = 200;
     IdleChampionsApi.CLIENT_VERSION = "999";
     IdleChampionsApi.NETWORK_ID = "21";
     IdleChampionsApi.LANGUAGE_ID = "1";
