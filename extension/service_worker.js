@@ -36,9 +36,9 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 var CodeSubmitResponse = (function () {
-    function CodeSubmitResponse(status, chestType) {
+    function CodeSubmitResponse(status, lootDetail) {
         this.status = status;
-        this.chestType = chestType;
+        this.lootDetail = lootDetail;
     }
     return CodeSubmitResponse;
 }());
@@ -82,11 +82,10 @@ var IdleChampionsApi = (function () {
         });
     };
     IdleChampionsApi.submitCode = function (options) {
-        var _a, _b;
         return __awaiter(this, void 0, void 0, function () {
-            var request, response, redeemResponse, chestType;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
+            var request, response, redeemResponse;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
                     case 0:
                         request = new URL(options.server);
                         request.searchParams.append("call", "redeemcoupon");
@@ -102,11 +101,11 @@ var IdleChampionsApi = (function () {
                         request.searchParams.append("localization_aware", "true");
                         return [4, fetch(request.toString())];
                     case 1:
-                        response = _c.sent();
+                        response = _a.sent();
                         if (!response.ok) return [3, 3];
                         return [4, response.json()];
                     case 2:
-                        redeemResponse = _c.sent();
+                        redeemResponse = _a.sent();
                         if (!redeemResponse) {
                             console.error("No json response");
                             return [2, new CodeSubmitResponse(CodeSubmitStatus.Failed)];
@@ -122,8 +121,7 @@ var IdleChampionsApi = (function () {
                             return [2, new CodeSubmitResponse(CodeSubmitStatus.NotValidCombo)];
                         }
                         if (redeemResponse.success) {
-                            chestType = (_b = (_a = redeemResponse === null || redeemResponse === void 0 ? void 0 : redeemResponse.loot_details) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b.chest_type_id;
-                            return [2, new CodeSubmitResponse(CodeSubmitStatus.Success, chestType)];
+                            return [2, new CodeSubmitResponse(CodeSubmitStatus.Success, redeemResponse === null || redeemResponse === void 0 ? void 0 : redeemResponse.loot_details)];
                         }
                         if (!redeemResponse.success && redeemResponse.failure_reason === "Outdated instance id") {
                             return [2, new CodeSubmitResponse(CodeSubmitStatus.OutdatedInstanceId)];
@@ -283,7 +281,7 @@ function startUploadProcess() {
 function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
     var _a;
     return __awaiter(this, void 0, void 0, function () {
-        var server, duplicates, newCodes, expired, invalid, chests, code, codeResponse, userData;
+        var server, duplicates, newCodes, expired, invalid, chests, heroUnlocks, code, codeResponse, userData;
         var _b, _c;
         return __generator(this, function (_d) {
             switch (_d.label) {
@@ -305,6 +303,7 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                     _optionsPort.postMessage({ messageType: "info", messageText: "Upload starting, " + pendingCodes.length + " new codes to redeem. This may take a bit." });
                     duplicates = 0, newCodes = 0, expired = 0, invalid = 0;
                     chests = {};
+                    heroUnlocks = 0;
                     _d.label = 2;
                 case 2:
                     if (!(code = pendingCodes.pop())) return [3, 10];
@@ -382,9 +381,19 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                             }
                             else {
                                 console.log("Sucessfully redeemed: " + code);
-                                if (codeResponse.chestType) {
-                                    chests[codeResponse.chestType] = ((_a = chests[codeResponse.chestType]) !== null && _a !== void 0 ? _a : 0) + 1;
-                                }
+                                (_a = codeResponse.lootDetail) === null || _a === void 0 ? void 0 : _a.forEach(function (loot) {
+                                    var _a;
+                                    switch (loot.loot_item) {
+                                        case "generic_chest":
+                                            if (loot.chest_type_id) {
+                                                chests[loot.chest_type_id] = ((_a = chests[loot.chest_type_id]) !== null && _a !== void 0 ? _a : 0) + 1;
+                                            }
+                                            break;
+                                        case "unlock_hero":
+                                            heroUnlocks++;
+                                            break;
+                                    }
+                                });
                                 newCodes++;
                             }
                             reedemedCodes.push(code);
@@ -406,6 +415,7 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                     _optionsPort.postMessage({
                         messageType: "success",
                         chests: chests,
+                        heroUnlocks: heroUnlocks,
                         messageText: "Upload completed successfully:<br>\n                        " + (duplicates > 0 ? duplicates + " codes already redeemed<br>" : "") + "\n                        " + (expired > 0 ? expired + " expired codes<br>" : "") + "\n                        " + (invalid > 0 ? invalid + " invalid codes<br>" : "") + "\n                        " + newCodes + " codes redeemed"
                     });
                     return [2];

@@ -132,6 +132,7 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
 
     let duplicates = 0, newCodes = 0, expired = 0, invalid = 0
     const chests: {[chestType: number]: number} = {}
+    let heroUnlocks = 0
 
     let code:string | undefined
     while(code = pendingCodes.pop()){
@@ -206,9 +207,18 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
                 }
                 else{
                     console.log(`Sucessfully redeemed: ${code}`)
-                    if(codeResponse.chestType){
-                        chests[codeResponse.chestType] = (chests[codeResponse.chestType] ?? 0) + 1
-                    }
+                    codeResponse.lootDetail?.forEach(loot => {
+                        switch(loot.loot_item){
+                            case LootType.Chest:
+                                if(loot.chest_type_id){
+                                    chests[loot.chest_type_id] = (chests[loot.chest_type_id] ?? 0) + 1
+                                }
+                                break
+                            case LootType.HeroUnlock:
+                                heroUnlocks++
+                                break
+                        }
+                    })
                     newCodes++
                 }
 
@@ -234,6 +244,7 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
     _optionsPort.postMessage({
         messageType: MessageType.Success,
         chests: chests,
+        heroUnlocks: heroUnlocks,
         messageText: `Upload completed successfully:<br>
                         ${duplicates > 0 ? `${duplicates} codes already redeemed<br>` : ""}
                         ${expired > 0 ? `${expired} expired codes<br>` : ""}

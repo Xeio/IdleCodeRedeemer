@@ -82,6 +82,10 @@ function handleMessage(message: IdleMessage){
             chestsTableBody.innerHTML = ""
             let unknownCount = 0
 
+            if(message.heroUnlocks){
+                chestsTableBody.appendChild(buildTableRow("Hero Unlocks", message.heroUnlocks))
+            }
+
             Object.entries(message.chests || []).forEach(([chestType, amount]) => {
                 let label = ""
                 switch(chestType){
@@ -102,7 +106,7 @@ function handleMessage(message: IdleMessage){
             })
 
             if(unknownCount > 0){
-                chestsTableBody.appendChild(buildTableRow("Unknown/Other Chests", unknownCount))
+                chestsTableBody.appendChild(buildTableRow("Other Chests", unknownCount))
             }
             break
     }

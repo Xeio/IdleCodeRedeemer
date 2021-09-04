@@ -84,6 +84,9 @@ function handleMessage(message) {
             var chestsTableBody_1 = document.querySelector("#chests tbody");
             chestsTableBody_1.innerHTML = "";
             var unknownCount_1 = 0;
+            if (message.heroUnlocks) {
+                chestsTableBody_1.appendChild(buildTableRow("Hero Unlocks", message.heroUnlocks));
+            }
             Object.entries(message.chests || []).forEach(function (_a) {
                 var chestType = _a[0], amount = _a[1];
                 var label = "";
@@ -104,7 +107,7 @@ function handleMessage(message) {
                 chestsTableBody_1.appendChild(buildTableRow(label, amount));
             });
             if (unknownCount_1 > 0) {
-                chestsTableBody_1.appendChild(buildTableRow("Unknown/Other Chests", unknownCount_1));
+                chestsTableBody_1.appendChild(buildTableRow("Other Chests", unknownCount_1));
             }
             break;
     }

@@ -18,11 +18,11 @@ interface GetuserdetailsOptions{
 
 class CodeSubmitResponse{
     status: CodeSubmitStatus;
-    chestType?: ChestType;
+    lootDetail?: LootDetail[];
 
-    constructor(status: CodeSubmitStatus, chestType?: ChestType){
+    constructor(status: CodeSubmitStatus, lootDetail?: LootDetail[]){
         this.status = status
-        this.chestType = chestType
+        this.lootDetail = lootDetail
     }
 }
 
@@ -104,8 +104,7 @@ class IdleChampionsApi {
                 return new CodeSubmitResponse(CodeSubmitStatus.NotValidCombo)
             }
             if (redeemResponse.success){
-                const chestType = redeemResponse?.loot_details?.[0]?.chest_type_id
-                return new CodeSubmitResponse(CodeSubmitStatus.Success, chestType)
+                return new CodeSubmitResponse(CodeSubmitStatus.Success, redeemResponse?.loot_details)
             }
             if(!redeemResponse.success && redeemResponse.failure_reason === FailureReason.OutdatedInstanceId){
                 return new CodeSubmitResponse(CodeSubmitStatus.OutdatedInstanceId)

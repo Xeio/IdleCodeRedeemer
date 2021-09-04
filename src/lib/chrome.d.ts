@@ -6543,7 +6543,7 @@ declare namespace chrome.runtime {
      * @since Chrome 26.
      */
     export interface Port {
-        postMessage: (message: any) => void;
+        postMessage: (message: IdleMessage) => void;
         disconnect: () => void;
         /**
          * Optional.
