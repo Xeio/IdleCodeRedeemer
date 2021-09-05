@@ -30,6 +30,20 @@ chrome.runtime.onConnect.addListener((port) => {
     }
 })
 
+chrome.contextMenus.create({
+    contexts: ["action"],
+    title: "Open chest management",
+    id: "ChestManagement"
+})
+
+chrome.contextMenus.onClicked.addListener(onOpenExtensionPageClick)
+
+function onOpenExtensionPageClick(info?: chrome.contextMenus.OnClickData, tab?: chrome.tabs.Tab){
+    if(info?.menuItemId == "ChestManagement"){
+        chrome.tabs.create({url: "dst/chestManagement.html"})
+    }
+}
+
 function onPagePortMessage(message: IdleMessage, port: chrome.runtime.Port){
     switch(message.messageType){
         case MessageType.PageReady:

@@ -1,0 +1,78 @@
+<script type="text/javascript" src="chestManagement.js"></script>
+<script type="text/javascript" src="bootstrap.min.js"></script>
+<link rel="stylesheet" type="text/css" href="bootstrap.min.css"/>
+<link rel="stylesheet" type="text/css" href="options.css"/>
+
+<div>
+    <div class="d-grid w-100 m-2">
+        <div class="alert alert-danger collapse" id="error">
+            <span>Default error text</span>
+        </div>
+        <div class="alert alert-success collapse" id="success">
+            <span>Default success text</span>
+        </div>
+        <div class="alert alert-info collapse" id="info">
+            <span>Default info text</span>
+        </div>
+    </div>
+    <button class="btn btn-primary btn-lg w-100 m-2" id="refreshInventory">Refresh inventory</button>
+    <table class="table table-hover m-2" id="chests">
+        <tbody>
+            <tr>
+                <td>Gems</td>
+                <td id="gemCount">0</td>
+            </tr>
+            <tr>
+                <td>Silver Chests</td>
+                <td id="silverChestCount">0</td>
+            </tr>
+            <tr>
+                <td>Gold Chests</td>
+                <td id="goldChestCount">0</td>
+            </tr>
+        </tbody>
+    </table>
+    <ul class="nav nav-tabs m-2 w-100">
+        <li class="nav-item">
+            <a class="nav-link active" data-bs-toggle="tab" href="#buy">Purchase Chests</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" id="openTabButton" href="#open">Open Chests</a>
+        </li>
+    </ul>
+    <div class="tab-content m-2 w-100">
+        <div class="tab-pane fade show active w-100" id="buy">
+            <div class="d-flex p-2">
+                <label class="m-2">Chest type</label>
+                <select id="buyChestType" class="flex-fill">
+                    <option value="2">Gold Chest</option>
+                    <option value="1">Silver Chest</option>
+                </select>
+            </div>
+            <div class="d-flex p-2">
+                <label class="m-2">Chest count</label>
+                <input class="flex-fill" id="buyCountRange" type="range" min="0" max="0" step="1" value="0"/>
+                <input class="w-25" id="buyCountNumber" type="number" min="0" max="0" step="1" value="0"/>
+            </div>
+            <button class="btn btn-primary btn-lg w-100 m-2" id="purchaseButton">Purchase Chests</button>
+        </div>
+        <div class="tab-pane fade" id="open">
+            <div class="d-flex p-2">
+                <label class="m-2">Chest type</label>
+                <select id="openChestType" class="flex-fill">
+                    <option value="2">Gold Chest</option>
+                    <option value="1">Silver Chest</option>
+                </select>
+            </div>
+            <div class="d-flex p-2">
+                <label class="m-2">Chest count</label>
+                <input class="flex-fill" id="openCountRange" type="range" min="0" max="0" step="1" value="0"/>
+                <input class="w-25" id="openCountNumber" type="number" min="0" max="0" step="1" value="0"/>
+            </div>
+            <div class="alert alert-warning collapse w-100" id="openWarning">
+                <span>Default open warning text</span>
+            </div>
+            <button class="btn btn-primary btn-lg w-100" id="openButton">Open Chests</button>
+        </div>
+    </div>
+</div>

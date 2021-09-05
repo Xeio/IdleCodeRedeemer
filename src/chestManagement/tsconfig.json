@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+        "module": "None",
+        "lib": ["DOM", "ES5", "ESNEXT"],
+        "outFile": "./../../extension/dst/chestManagement.js",
+        "noFallthroughCasesInSwitch": true,
+        "removeComments": true,
+        "noImplicitAny": true,
+        "strict": true,
+        "noUncheckedIndexedAccess": true
+    }
+}

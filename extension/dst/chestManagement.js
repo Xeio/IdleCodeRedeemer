@@ -1,4 +1,16 @@
 "use strict";
+var Globals = (function () {
+    function Globals() {
+    }
+    Globals.debugMode = !chrome.runtime.getManifest().update_url;
+    Globals.discordChannelUrl = "https://discord.com/channels/357247482247380994/358044869685673985";
+    Globals.SETTING_CODES = "redeemedCodes";
+    Globals.SETTING_PENDING = "pendingCodes";
+    Globals.SETTING_INSTANCE_ID = "instanceId";
+    Globals.SETTING_USER_HASH = "userHash";
+    Globals.SETTING_USER_ID = "userId";
+    return Globals;
+}());
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -263,262 +275,299 @@ var IdleChampionsApi = (function () {
     IdleChampionsApi.LANGUAGE_ID = "1";
     return IdleChampionsApi;
 }());
-var Globals = (function () {
-    function Globals() {
-    }
-    Globals.debugMode = !chrome.runtime.getManifest().update_url;
-    Globals.discordChannelUrl = "https://discord.com/channels/357247482247380994/358044869685673985";
-    Globals.SETTING_CODES = "redeemedCodes";
-    Globals.SETTING_PENDING = "pendingCodes";
-    Globals.SETTING_INSTANCE_ID = "instanceId";
-    Globals.SETTING_USER_HASH = "userHash";
-    Globals.SETTING_USER_ID = "userId";
-    return Globals;
-}());
-var REQUEST_DELAY = 3000;
-var _waitingForPagePort = false;
-var _optionsPort;
-chrome.runtime.onConnect.addListener(function (port) {
-    if (port.name == "page") {
-        if (_waitingForPagePort) {
-            console.log("New port opened.");
-            _waitingForPagePort = false;
-            port.onMessage.addListener(onPagePortMessage);
-        }
-        else {
-            console.log("Unexpected port, disconnecting.");
-            port.disconnect();
-        }
-    }
-    else if (port.name == "options") {
-        _optionsPort === null || _optionsPort === void 0 ? void 0 : _optionsPort.disconnect();
-        port.onMessage.addListener(onOptionsPortMessage);
-        _optionsPort = port;
-    }
-});
-chrome.contextMenus.create({
-    contexts: ["action"],
-    title: "Open chest management",
-    id: "ChestManagement"
-});
-chrome.contextMenus.onClicked.addListener(onOpenExtensionPageClick);
-function onOpenExtensionPageClick(info, tab) {
-    if ((info === null || info === void 0 ? void 0 : info.menuItemId) == "ChestManagement") {
-        chrome.tabs.create({ url: "dst/chestManagement.html" });
-    }
+document.addEventListener("DOMContentLoaded", loaded);
+var REQUEST_DELAY = 4000;
+var buyCountRange, buyCountNumber;
+var openCountRange, openCountNumber;
+var server;
+var instanceId;
+var userData;
+var shownCloseClientWarning = false;
+function loaded() {
+    var _a, _b;
+    document.getElementById("refreshInventory").addEventListener('click', refreshClick);
+    document.getElementById("purchaseButton").addEventListener('click', purchaseClick);
+    document.getElementById("openButton").addEventListener('click', openClick);
+    (_a = document.getElementById("buyChestType")) === null || _a === void 0 ? void 0 : _a.addEventListener('change', setMaximumValues);
+    (_b = document.getElementById("openChestType")) === null || _b === void 0 ? void 0 : _b.addEventListener('change', setMaximumValues);
+    buyCountRange = document.getElementById("buyCountRange");
+    buyCountNumber = document.getElementById("buyCountNumber");
+    buyCountRange.oninput = buyRangeChanged;
+    buyCountNumber.oninput = buyNumberChanged;
+    openCountRange = document.getElementById("openCountRange");
+    openCountNumber = document.getElementById("openCountNumber");
+    openCountRange.oninput = openRangeChanged;
+    openCountNumber.oninput = openNumberChanged;
 }
-function onPagePortMessage(message, port) {
-    switch (message.messageType) {
-        case "pageReady":
-            console.log("Page ready message");
-            port.postMessage({ messageType: "scanCodes" });
-            break;
-        case "codes":
-            console.log("Code message received");
-            chrome.storage.sync.get([Globals.SETTING_CODES, Globals.SETTING_PENDING], function (_a) {
-                var redeemedCodes = _a.redeemedCodes, pendingCodes = _a.pendingCodes;
-                handleDetectedCodes(redeemedCodes, pendingCodes, message.codes);
-            });
-            port.postMessage({ messageType: "closeTab" });
-            port.disconnect();
-            break;
-    }
+function buyRangeChanged() {
+    buyCountNumber.value = buyCountRange.value;
 }
-function onOptionsPortMessage(message, port) {
-    if (message.messageType == "pageReady") {
-        port.postMessage({ messageType: "info", messageText: "Opening discord tab to scan for codes." });
-        console.log("Starting scan/upolad process. Opening discord tab.");
-        _waitingForPagePort = true;
-        chrome.tabs.create({ url: Globals.discordChannelUrl });
-        port.postMessage({ messageType: "activateTab" });
+function buyNumberChanged() {
+    if (parseInt(buyCountNumber.value) > parseInt(buyCountNumber.max)) {
+        buyCountNumber.value = buyCountNumber.max;
     }
+    buyCountRange.value = buyCountNumber.value;
 }
-chrome.action.onClicked.addListener(browserActionClicked);
-function browserActionClicked(tab) {
-    chrome.tabs.create({ url: "dst/options.html" });
+function openRangeChanged() {
+    openCountNumber.value = openCountRange.value;
 }
-function handleDetectedCodes(redeemedCodes, pendingCodes, detectedCodes) {
-    var _a;
-    if (!detectedCodes || detectedCodes.length == 0)
-        return;
-    if (!redeemedCodes)
-        redeemedCodes = [];
-    if (!pendingCodes)
-        pendingCodes = [];
-    var detectedCode;
-    while (detectedCode = detectedCodes.pop()) {
-        if (!redeemedCodes.includes(detectedCode) && !pendingCodes.includes(detectedCode)) {
-            console.log("New code detected: " + detectedCode);
-            pendingCodes.push(detectedCode);
-        }
-        else if (pendingCodes.includes(detectedCode)) {
-            console.debug("Duplicate pending code: " + detectedCode);
-        }
-        else {
-            console.debug("Duplicate redeemed code: " + detectedCode);
-        }
+function openNumberChanged() {
+    if (parseInt(openCountNumber.value) > parseInt(openCountNumber.max)) {
+        openCountNumber.value = openCountNumber.max;
     }
-    if (pendingCodes.length > 0) {
-        console.log("New codes detected, saving list.");
-        console.debug(pendingCodes);
-        chrome.storage.sync.set((_a = {}, _a[Globals.SETTING_CODES] = redeemedCodes, _a[Globals.SETTING_PENDING] = pendingCodes, _a), function () {
-            startUploadProcess();
-        });
-    }
-    else {
-        console.log("No new codes detected.");
-        _optionsPort.postMessage({ messageType: "info", messageText: "No new codes detected." });
-    }
+    openCountRange.value = openCountNumber.value;
 }
-function startUploadProcess() {
-    chrome.storage.sync.get([Globals.SETTING_CODES, Globals.SETTING_PENDING, Globals.SETTING_INSTANCE_ID, Globals.SETTING_USER_ID, Globals.SETTING_USER_HASH], function (_a) {
-        var redeemedCodes = _a.redeemedCodes, pendingCodes = _a.pendingCodes, instanceId = _a.instanceId, userId = _a.userId, userHash = _a.userHash;
-        console.log("Beginning upload.");
-        uploadCodes(redeemedCodes, pendingCodes, instanceId, userId, userHash);
+function refreshClick() {
+    hideMessages();
+    chrome.storage.sync.get([Globals.SETTING_USER_ID, Globals.SETTING_USER_HASH], function (_a) {
+        var userId = _a.userId, userHash = _a.userHash;
+        refreshInventory(userId, userHash);
     });
 }
-function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
-    var _a;
+function refreshInventory(userId, hash) {
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function () {
-        var server, duplicates, newCodes, expired, invalid, chests, heroUnlocks, code, codeResponse, userData;
-        var _b, _c;
+        var _c;
         return __generator(this, function (_d) {
             switch (_d.label) {
                 case 0:
                     if (!userId || userId.length == 0 || !hash || hash.length == 0) {
-                        _optionsPort.postMessage({ messageType: "missingCredentials" });
                         console.error("No credentials entered.");
+                        showError("No credentials entered.");
                         return [2];
                     }
+                    if (!!server) return [3, 2];
                     return [4, IdleChampionsApi.getServer()];
                 case 1:
                     server = _d.sent();
-                    if (!server) {
-                        console.error("Failed to get idle champions server.");
-                        _optionsPort.postMessage({ messageType: "error", messageText: "Unable to connect to Idle Champions server." });
-                        return [2];
-                    }
                     console.log("Got server " + server);
-                    _optionsPort.postMessage({ messageType: "info", messageText: "Upload starting, " + pendingCodes.length + " new codes to redeem. This may take a bit." });
-                    duplicates = 0, newCodes = 0, expired = 0, invalid = 0;
-                    chests = {};
-                    heroUnlocks = 0;
                     _d.label = 2;
                 case 2:
-                    if (!(code = pendingCodes.pop())) return [3, 10];
-                    return [4, new Promise(function (h) { return setTimeout(h, REQUEST_DELAY); })];
-                case 3:
-                    _d.sent();
-                    console.log("Attempting to upload code: " + code);
-                    return [4, IdleChampionsApi.submitCode({
-                            server: server,
-                            user_id: userId,
-                            hash: hash,
-                            instanceId: instanceId,
-                            code: code
-                        })];
-                case 4:
-                    codeResponse = _d.sent();
-                    if (!(codeResponse.status == CodeSubmitStatus.OutdatedInstanceId)) return [3, 9];
-                    console.log("Instance ID outdated, refreshing.");
-                    return [4, new Promise(function (h) { return setTimeout(h, REQUEST_DELAY); })];
-                case 5:
-                    _d.sent();
+                    if (!server) {
+                        showError("Failed to get idle champions server.");
+                        console.error("Failed to get idle champions server.");
+                        return [2];
+                    }
                     return [4, IdleChampionsApi.getUserDetails({
                             server: server,
                             user_id: userId,
                             hash: hash
                         })];
-                case 6:
+                case 3:
                     userData = _d.sent();
                     if (!userData) {
-                        console.log("Failed to retreive user data.");
-                        _optionsPort.postMessage({ messageType: "error", messageText: "Failed to retreieve user data, check user ID and hash." });
+                        showError("Failed to retreive user data.");
+                        console.error("Failed to retreive user data.");
                         return [2];
                     }
+                    console.log("Refreshed inventory data.");
+                    console.debug(userData);
                     instanceId = userData.details.instance_id;
-                    chrome.storage.sync.set((_b = {}, _b[Globals.SETTING_INSTANCE_ID] = instanceId, _b));
-                    return [4, new Promise(function (h) { return setTimeout(h, REQUEST_DELAY); })];
-                case 7:
-                    _d.sent();
-                    return [4, IdleChampionsApi.submitCode({
-                            server: server,
-                            user_id: userId,
-                            hash: hash,
-                            instanceId: instanceId,
-                            code: code
-                        })];
-                case 8:
-                    codeResponse = _d.sent();
-                    _d.label = 9;
-                case 9:
-                    switch (codeResponse.status) {
-                        case CodeSubmitStatus.OutdatedInstanceId:
-                        case CodeSubmitStatus.Failed:
-                            console.error("Unable to submit code, aborting upload process.");
-                            _optionsPort.postMessage({ messageType: "error", messageText: "Failed to submit code for unknown reason." });
-                            return [2];
-                        case CodeSubmitStatus.InvalidParameters:
-                            console.error("Unable to submit code due to invalid parameters.");
-                            _optionsPort.postMessage({ messageType: "error", messageText: "Failed to submit code, check user/hash on settings tab." });
-                            return [2];
-                        case CodeSubmitStatus.Expired:
-                        case CodeSubmitStatus.NotValidCombo:
-                        case CodeSubmitStatus.AlreadyRedeemed:
-                        case CodeSubmitStatus.Success:
-                            if (codeResponse.status == CodeSubmitStatus.AlreadyRedeemed) {
-                                console.log("Already redeemed code: " + code);
-                                duplicates++;
-                            }
-                            else if (codeResponse.status == CodeSubmitStatus.NotValidCombo) {
-                                console.log("Invalid code: " + code);
-                                invalid++;
-                            }
-                            else if (codeResponse.status == CodeSubmitStatus.Expired) {
-                                console.log("Expired code: " + code);
-                                expired++;
-                            }
-                            else {
-                                console.log("Sucessfully redeemed: " + code);
-                                (_a = codeResponse.lootDetail) === null || _a === void 0 ? void 0 : _a.forEach(function (loot) {
-                                    var _a;
-                                    switch (loot.loot_item) {
-                                        case "generic_chest":
-                                            if (loot.chest_type_id) {
-                                                chests[loot.chest_type_id] = ((_a = chests[loot.chest_type_id]) !== null && _a !== void 0 ? _a : 0) + 1;
-                                            }
-                                            break;
-                                        case "unlock_hero":
-                                            heroUnlocks++;
-                                            break;
-                                    }
-                                });
-                                newCodes++;
-                            }
-                            reedemedCodes.push(code);
-                            if (reedemedCodes.length > 300) {
-                                reedemedCodes.shift();
-                            }
-                            chrome.storage.sync.set((_c = {}, _c[Globals.SETTING_CODES] = reedemedCodes, _c[Globals.SETTING_PENDING] = pendingCodes, _c));
-                            break;
-                    }
-                    _optionsPort.postMessage({ messageType: "info", messageText: "Uploading... " + pendingCodes.length + " codes left. This may take a bit." });
-                    return [3, 2];
-                case 10:
-                    console.log("Redeem complete:");
-                    console.log(duplicates + " duplicate codes");
-                    console.log(newCodes + " new redemptions");
-                    console.log(expired + " expired");
-                    console.log(invalid + " invalid");
-                    console.log(chests);
-                    _optionsPort.postMessage({
-                        messageType: "success",
-                        chests: chests,
-                        heroUnlocks: heroUnlocks,
-                        messageText: "Upload completed successfully:<br>\n                        " + (duplicates > 0 ? duplicates + " codes already redeemed<br>" : "") + "\n                        " + (expired > 0 ? expired + " expired codes<br>" : "") + "\n                        " + (invalid > 0 ? invalid + " invalid codes<br>" : "") + "\n                        " + newCodes + " codes redeemed"
-                    });
+                    chrome.storage.sync.set((_c = {}, _c[Globals.SETTING_INSTANCE_ID] = userData.details.instance_id, _c));
+                    document.getElementById("gemCount").textContent = userData.details.red_rubies.toLocaleString();
+                    document.getElementById("silverChestCount").textContent = ((_a = userData.details.chests[1]) === null || _a === void 0 ? void 0 : _a.toLocaleString()) || "";
+                    document.getElementById("goldChestCount").textContent = ((_b = userData.details.chests[2]) === null || _b === void 0 ? void 0 : _b.toLocaleString()) || "";
+                    setMaximumValues();
                     return [2];
             }
         });
     });
+}
+function setMaximumValues() {
+    if (!userData)
+        return;
+    var gems = userData.details.red_rubies;
+    var silverChests = userData.details.chests[1] || 0;
+    var goldChests = userData.details.chests[2] || 0;
+    var buyMax = 0;
+    switch (document.getElementById("buyChestType").value) {
+        case 1..toString():
+            buyMax = Math.trunc(gems / 50);
+            break;
+        case 2..toString():
+            buyMax = Math.trunc(gems / 500);
+            break;
+    }
+    document.getElementById("buyCountRange").max = buyMax.toString();
+    document.getElementById("buyCountRange").value = buyMax.toString();
+    document.getElementById("buyCountNumber").max = buyMax.toString();
+    document.getElementById("buyCountNumber").value = buyMax.toString();
+    var openMax = 0;
+    switch (document.getElementById("openChestType").value) {
+        case 1..toString():
+            openMax = silverChests;
+            break;
+        case 2..toString():
+            openMax = goldChests;
+            break;
+    }
+    document.getElementById("openCountRange").max = openMax.toString();
+    document.getElementById("openCountRange").value = openMax.toString();
+    document.getElementById("openCountNumber").max = openMax.toString();
+    document.getElementById("openCountNumber").value = openMax.toString();
+}
+function purchaseClick() {
+    hideMessages();
+    chrome.storage.sync.get([Globals.SETTING_USER_ID, Globals.SETTING_USER_HASH], function (_a) {
+        var userId = _a.userId, userHash = _a.userHash;
+        purchaseChests(userId, userHash);
+    });
+}
+function purchaseChests(userId, hash) {
+    return __awaiter(this, void 0, void 0, function () {
+        var MAX_PURCHASE_AMOUNT, chestType, chestAmount, remainingChests, currentAmount, responseStatus;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    if (!server)
+                        return [2];
+                    MAX_PURCHASE_AMOUNT = 100;
+                    chestType = document.getElementById("buyChestType").value;
+                    chestAmount = parseInt(document.getElementById("buyCountRange").value) || 0;
+                    if (!chestType || chestAmount < 1) {
+                        return [2];
+                    }
+                    remainingChests = chestAmount;
+                    _a.label = 1;
+                case 1:
+                    if (!(remainingChests > 0)) return [3, 5];
+                    showInfo("Opening... " + remainingChests + " chests remaining to purchase");
+                    currentAmount = remainingChests > MAX_PURCHASE_AMOUNT ? MAX_PURCHASE_AMOUNT : remainingChests;
+                    remainingChests -= currentAmount;
+                    console.log("Purchasing " + currentAmount + " chests");
+                    return [4, IdleChampionsApi.purchaseChests({
+                            server: server,
+                            user_id: userId,
+                            hash: hash,
+                            chestTypeId: chestType,
+                            count: currentAmount
+                        })];
+                case 2:
+                    responseStatus = _a.sent();
+                    if (responseStatus == ResponseStatus.InsuficcientCurrency) {
+                        console.error("Insufficient currency error");
+                        showError("Insufficient gems remaining");
+                        return [2];
+                    }
+                    else if (responseStatus == ResponseStatus.Failed) {
+                        console.error("Purchase API call failed");
+                        showError("Purchase failed");
+                        return [2];
+                    }
+                    if (!(remainingChests > 0)) return [3, 4];
+                    return [4, new Promise(function (h) { return setTimeout(h, REQUEST_DELAY); })];
+                case 3:
+                    _a.sent();
+                    _a.label = 4;
+                case 4: return [3, 1];
+                case 5:
+                    console.log("Completed purchase");
+                    refreshInventory(userId, hash);
+                    showSuccess("Purchased " + chestAmount + " chests");
+                    return [2];
+            }
+        });
+    });
+}
+function openClick() {
+    hideMessages();
+    chrome.storage.sync.get([Globals.SETTING_USER_ID, Globals.SETTING_USER_HASH], function (_a) {
+        var userId = _a.userId, userHash = _a.userHash;
+        openChests(userId, userHash);
+    });
+}
+function openChests(userId, hash) {
+    return __awaiter(this, void 0, void 0, function () {
+        var MAX_OPEN_AMOUNT, chestType, chestAmount, remainingChests, currentAmount, responseStatus, lastInstanceId;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    MAX_OPEN_AMOUNT = 50;
+                    if (!server || !instanceId)
+                        return [2];
+                    if (!shownCloseClientWarning) {
+                        showOpenWarning("You MUST close the client before calling open chests. Click open again to confirm.");
+                        shownCloseClientWarning = true;
+                        return [2];
+                    }
+                    shownCloseClientWarning = false;
+                    chestType = document.getElementById("openChestType").value;
+                    chestAmount = parseInt(document.getElementById("openCountRange").value) || 0;
+                    if (!chestType || chestAmount < 1) {
+                        return [2];
+                    }
+                    remainingChests = chestAmount;
+                    _a.label = 1;
+                case 1:
+                    if (!(remainingChests > 0)) return [3, 5];
+                    showInfo("Opening... " + remainingChests + " chests remaining to open");
+                    currentAmount = remainingChests > MAX_OPEN_AMOUNT ? MAX_OPEN_AMOUNT : remainingChests;
+                    remainingChests -= currentAmount;
+                    console.log("Opening " + currentAmount + " chests");
+                    return [4, IdleChampionsApi.openChests({
+                            server: server,
+                            user_id: userId,
+                            hash: hash,
+                            chestTypeId: chestType,
+                            count: currentAmount,
+                            instanceId: instanceId
+                        })];
+                case 2:
+                    responseStatus = _a.sent();
+                    if (responseStatus == ResponseStatus.OutdatedInstanceId) {
+                        lastInstanceId = instanceId;
+                        console.log("Refreshing inventory for instance ID");
+                        refreshInventory(userId, hash);
+                        if (instanceId == lastInstanceId) {
+                            console.error("Failed to refresh instance id");
+                            showError("Failed to get updated instance ID. Check credentials.");
+                            return [2];
+                        }
+                        remainingChests += currentAmount;
+                    }
+                    else if (responseStatus == ResponseStatus.Failed) {
+                        console.error("Purchase API call failed");
+                        showError("Purchase failed");
+                        return [2];
+                    }
+                    if (!(remainingChests > 0)) return [3, 4];
+                    return [4, new Promise(function (h) { return setTimeout(h, REQUEST_DELAY); })];
+                case 3:
+                    _a.sent();
+                    _a.label = 4;
+                case 4: return [3, 1];
+                case 5:
+                    console.log("Completed opening");
+                    refreshInventory(userId, hash);
+                    showSuccess("Opened " + chestAmount + " chests");
+                    return [2];
+            }
+        });
+    });
+}
+function hideMessages() {
+    document.getElementById("error").classList.remove("show");
+    document.getElementById("openWarning").classList.remove("show");
+    document.getElementById("success").classList.remove("show");
+    document.getElementById("info").classList.remove("show");
+}
+function showError(text) {
+    hideMessages();
+    document.getElementById("error").classList.add("show");
+    document.querySelector("#error span").innerHTML = text;
+}
+function showOpenWarning(text) {
+    hideMessages();
+    document.getElementById("openWarning").classList.add("show");
+    document.querySelector("#openWarning span").innerHTML = text;
+}
+function showInfo(text) {
+    hideMessages();
+    document.getElementById("info").classList.add("show");
+    document.querySelector("#info span").innerHTML = text;
+}
+function showSuccess(text) {
+    hideMessages();
+    document.getElementById("success").classList.add("show");
+    document.querySelector("#success span").innerHTML = text;
 }

@@ -16,6 +16,23 @@ interface GetuserdetailsOptions{
     hash:string;
 }
 
+interface OpenChestsOptions{
+    server: string;
+    user_id: string;
+    hash:string;
+    chestTypeId: ChestType;
+    count: number;
+    instanceId: string;
+}
+
+interface PurchaseChestsOptions{
+    server: string;
+    user_id: string;
+    hash:string;
+    chestTypeId: ChestType;
+    count: number;
+}
+
 class CodeSubmitResponse{
     status: CodeSubmitStatus;
     lootDetail?: LootDetail[];
@@ -34,6 +51,13 @@ enum CodeSubmitStatus{
     NotValidCombo,
     Expired,
     Failed,
+}
+
+enum ResponseStatus{
+    Success,
+    OutdatedInstanceId,
+    Failed,
+    InsuficcientCurrency,
 }
 
 class IdleChampionsApi {
@@ -154,5 +178,93 @@ class IdleChampionsApi {
             }
         }
         return undefined
+    }
+
+    static async openChests(options: OpenChestsOptions) : Promise<ResponseStatus> {
+        const request = new URL(options.server)
+
+        request.searchParams.append("call", "openGenericChest")
+        request.searchParams.append("user_id", options.user_id)
+        request.searchParams.append("hash", options.hash)
+        request.searchParams.append("chest_type_id", options.chestTypeId.toString())
+        request.searchParams.append("count", options.count.toString())
+        request.searchParams.append("instance_id", options.instanceId)
+        request.searchParams.append("gold_per_second", "0.00")
+        request.searchParams.append("game_instance_id", "1")
+        request.searchParams.append("checksum", "d99242bc7924646a5e069bc39eeb735b") //A buttery smooth checksum
+        request.searchParams.append("timestamp", "0")
+        request.searchParams.append("request_id", "0")
+        request.searchParams.append("language_id", IdleChampionsApi.LANGUAGE_ID)
+        request.searchParams.append("network_id", IdleChampionsApi.NETWORK_ID)
+        request.searchParams.append("localization_aware", "true")
+
+        // http://ps7.idlechampions.com/~idledragons/post.php?
+        // call=opengenericchest&
+        // gold_per_second=&
+        // checksum=&
+        // user_id=&
+        // hash=&
+        // instance_id=&
+        // chest_type_id=1&
+        // game_instance_id=1&
+        // count=12
+
+        const response = await fetch(request.toString())
+        if(response.ok){
+            const openChestResponse : OpenChestResponse = await response.json()
+            console.debug(openChestResponse)
+            if(openChestResponse.success){
+                return ResponseStatus.Success
+            }
+            if(openChestResponse.failure_reason == FailureReason.OutdatedInstanceId){
+                return ResponseStatus.OutdatedInstanceId
+            }
+        }
+        return ResponseStatus.Failed
+    }
+
+    static async purchaseChests(options: PurchaseChestsOptions) : Promise<ResponseStatus> {
+        const request = new URL(options.server)
+
+        if(options.count > 100) throw new Error("Limited to 100 chests purchased per call.")
+
+        request.searchParams.append("call", "buysoftcurrencychest")
+        request.searchParams.append("user_id", options.user_id)
+        request.searchParams.append("hash", options.hash)
+        request.searchParams.append("chest_type_id", options.chestTypeId.toString())
+        request.searchParams.append("count", options.count.toString())
+
+        request.searchParams.append("timestamp", "0")
+        request.searchParams.append("request_id", "0")
+        request.searchParams.append("network_id", IdleChampionsApi.NETWORK_ID)
+        request.searchParams.append("localization_aware", "true")
+        request.searchParams.append("mobile_client_version", "999")
+        request.searchParams.append("language_id", IdleChampionsApi.LANGUAGE_ID)
+
+        // Request URI Query Parameter: call=buysoftcurrencychest
+        // Request URI Query Parameter: language_id=1
+        // Request URI Query Parameter: user_id=
+        // Request URI Query Parameter: hash=
+        // Request URI Query Parameter: chest_type_id=2
+        // Request URI Query Parameter: count=3
+        // Request URI Query Parameter: timestamp=
+        // Request URI Query Parameter: request_id=
+        // Request URI Query Parameter: network_id=21
+        // Request URI Query Parameter: mobile_client_version=399
+        // Request URI Query Parameter: localization_aware=true
+        // Request URI Query Parameter: instance_id=
+
+        const response = await fetch(request.toString())
+        if(response.ok){
+            const purchaseResponse : PurchaseChestResponse = await response.json()
+            console.debug(purchaseResponse)
+            if(purchaseResponse.success){
+                return ResponseStatus.Success
+            }
+            if(purchaseResponse.failure_reason == FailureReason.NotEnoughCurrency){
+                return ResponseStatus.InsuficcientCurrency
+            }
+        }
+        return ResponseStatus.Failed
     }
 }
