@@ -1,7 +1,7 @@
 /// <reference path="./../shared/globals.ts" />
 /// <reference path="./../lib/chrome.d.ts" />
 /// <reference path="./../lib/redeem_code_response.d.ts" />
-/// <reference path="./../service_worker/idle_champions_api.ts" />
+/// <reference path="./../shared/idle_champions_api.ts" />
 
 document.addEventListener("DOMContentLoaded", loaded)
 
