@@ -30,11 +30,13 @@ chrome.runtime.onConnect.addListener((port) => {
     }
 })
 
-chrome.contextMenus.create({
-    contexts: ["action"],
-    title: "Open chest management",
-    id: "ChestManagement"
-})
+chrome.runtime.onInstalled.addListener(() => {
+    chrome.contextMenus.create({
+        contexts: ["action"],
+        title: "Open chest management",
+        id: "ChestManagement"
+    })
+});
 
 chrome.contextMenus.onClicked.addListener(onOpenExtensionPageClick)
 

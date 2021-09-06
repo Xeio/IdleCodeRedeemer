@@ -296,10 +296,12 @@ chrome.runtime.onConnect.addListener(function (port) {
         _optionsPort = port;
     }
 });
-chrome.contextMenus.create({
-    contexts: ["action"],
-    title: "Open chest management",
-    id: "ChestManagement"
+chrome.runtime.onInstalled.addListener(function () {
+    chrome.contextMenus.create({
+        contexts: ["action"],
+        title: "Open chest management",
+        id: "ChestManagement"
+    });
 });
 chrome.contextMenus.onClicked.addListener(onOpenExtensionPageClick);
 function onOpenExtensionPageClick(info, tab) {
