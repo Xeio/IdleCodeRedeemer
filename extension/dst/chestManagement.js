@@ -432,7 +432,7 @@ function purchaseChests(userId, hash) {
                     _a.label = 1;
                 case 1:
                     if (!(remainingChests > 0)) return [3, 5];
-                    showInfo("Opening... " + remainingChests + " chests remaining to purchase");
+                    showInfo("Purchasing... " + remainingChests + " chests remaining to purchase");
                     currentAmount = remainingChests > MAX_PURCHASE_AMOUNT ? MAX_PURCHASE_AMOUNT : remainingChests;
                     remainingChests -= currentAmount;
                     console.log("Purchasing " + currentAmount + " chests");

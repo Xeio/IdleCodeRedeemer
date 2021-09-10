@@ -173,7 +173,7 @@ async function purchaseChests(userId: string, hash: string){
     let remainingChests = chestAmount
     //Have to batch these into max of 100 at a time
     while(remainingChests > 0){
-        showInfo(`Opening... ${remainingChests} chests remaining to purchase`)
+        showInfo(`Purchasing... ${remainingChests} chests remaining to purchase`)
 
         const currentAmount = remainingChests > MAX_PURCHASE_AMOUNT ? MAX_PURCHASE_AMOUNT : remainingChests
         remainingChests -= currentAmount
