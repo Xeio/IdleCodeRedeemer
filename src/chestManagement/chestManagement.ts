@@ -106,6 +106,8 @@ async function refreshInventory(userId: string, hash: string) {
     document.getElementById("goldChestCount")!.textContent = userData.details.chests[ChestType.Gold]?.toLocaleString() || ""
 
     setMaximumValues()
+
+    document.getElementById("actionTabs")!.classList.add("show")
 }
 
 function setMaximumValues(){

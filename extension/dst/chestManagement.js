@@ -368,6 +368,7 @@ function refreshInventory(userId, hash) {
                     document.getElementById("silverChestCount").textContent = ((_a = userData.details.chests[1]) === null || _a === void 0 ? void 0 : _a.toLocaleString()) || "";
                     document.getElementById("goldChestCount").textContent = ((_b = userData.details.chests[2]) === null || _b === void 0 ? void 0 : _b.toLocaleString()) || "";
                     setMaximumValues();
+                    document.getElementById("actionTabs").classList.add("show");
                     return [2];
             }
         });
