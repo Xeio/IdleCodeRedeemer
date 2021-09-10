@@ -382,7 +382,7 @@ function startUploadProcess() {
 function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
     var _a;
     return __awaiter(this, void 0, void 0, function () {
-        var server, duplicates, newCodes, expired, invalid, chests, heroUnlocks, code, codeResponse, userData;
+        var server, duplicates, newCodes, expired, invalid, chests, heroUnlocks, skinUnlocks, code, codeResponse, userData;
         var _b, _c;
         return __generator(this, function (_d) {
             switch (_d.label) {
@@ -404,7 +404,7 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                     _optionsPort.postMessage({ messageType: "info", messageText: "Upload starting, " + pendingCodes.length + " new codes to redeem. This may take a bit." });
                     duplicates = 0, newCodes = 0, expired = 0, invalid = 0;
                     chests = {};
-                    heroUnlocks = 0;
+                    heroUnlocks = 0, skinUnlocks = 0;
                     _d.label = 2;
                 case 2:
                     if (!(code = pendingCodes.pop())) return [3, 10];
@@ -493,6 +493,11 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                                         case "unlock_hero":
                                             heroUnlocks++;
                                             break;
+                                        case "claim":
+                                            if (loot.unlock_hero_skin) {
+                                                skinUnlocks++;
+                                            }
+                                            break;
                                     }
                                 });
                                 newCodes++;
@@ -517,6 +522,7 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                         messageType: "success",
                         chests: chests,
                         heroUnlocks: heroUnlocks,
+                        skinUnlocks: skinUnlocks,
                         messageText: "Upload completed successfully:<br>\n                        " + (duplicates > 0 ? duplicates + " codes already redeemed<br>" : "") + "\n                        " + (expired > 0 ? expired + " expired codes<br>" : "") + "\n                        " + (invalid > 0 ? invalid + " invalid codes<br>" : "") + "\n                        " + newCodes + " codes redeemed"
                     });
                     return [2];

@@ -17,6 +17,7 @@ interface IdleMessage{
     codes?: string[];
     messageText?: string;
     heroUnlocks?: number;
+    skinUnlocks?: number;
     chests?: {[chestType: number]: number}
 }
 

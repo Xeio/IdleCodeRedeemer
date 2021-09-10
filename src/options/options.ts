@@ -85,6 +85,9 @@ function handleMessage(message: IdleMessage){
             if(message.heroUnlocks){
                 chestsTableBody.appendChild(buildTableRow("Hero Unlocks", message.heroUnlocks))
             }
+            if(message.skinUnlocks){
+                chestsTableBody.appendChild(buildTableRow("Skin Unlocks", message.skinUnlocks))
+            }
 
             Object.entries(message.chests || []).forEach(([chestType, amount]) => {
                 let label = ""

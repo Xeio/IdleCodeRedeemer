@@ -43,6 +43,7 @@ interface LootDetail {
     chest_type_id?:     ChestType;
     before?:            number;
     after?:             number;
+    unlock_hero_skin?:  number;
 }
 
 declare const enum ChestType{
@@ -55,6 +56,7 @@ declare const enum ChestType{
 declare const enum LootType{
     HeroUnlock = "unlock_hero",
     Chest = "generic_chest",
+    Claim = "claim",
 }
 
 interface PurchaseChestResponse {

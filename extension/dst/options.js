@@ -87,6 +87,9 @@ function handleMessage(message) {
             if (message.heroUnlocks) {
                 chestsTableBody_1.appendChild(buildTableRow("Hero Unlocks", message.heroUnlocks));
             }
+            if (message.skinUnlocks) {
+                chestsTableBody_1.appendChild(buildTableRow("Skin Unlocks", message.skinUnlocks));
+            }
             Object.entries(message.chests || []).forEach(function (_a) {
                 var chestType = _a[0], amount = _a[1];
                 var label = "";

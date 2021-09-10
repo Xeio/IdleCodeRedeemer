@@ -148,7 +148,7 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
 
     let duplicates = 0, newCodes = 0, expired = 0, invalid = 0
     const chests: {[chestType: number]: number} = {}
-    let heroUnlocks = 0
+    let heroUnlocks = 0, skinUnlocks = 0
 
     let code:string | undefined
     while(code = pendingCodes.pop()){
@@ -233,6 +233,11 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
                             case LootType.HeroUnlock:
                                 heroUnlocks++
                                 break
+                            case LootType.Claim:
+                                if(loot.unlock_hero_skin){
+                                    skinUnlocks++
+                                }
+                                break
                         }
                     })
                     newCodes++
@@ -261,6 +266,7 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
         messageType: MessageType.Success,
         chests: chests,
         heroUnlocks: heroUnlocks,
+        skinUnlocks: skinUnlocks,
         messageText: `Upload completed successfully:<br>
                         ${duplicates > 0 ? `${duplicates} codes already redeemed<br>` : ""}
                         ${expired > 0 ? `${expired} expired codes<br>` : ""}
