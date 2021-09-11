@@ -486,8 +486,8 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                                     var _a;
                                     switch (loot.loot_item) {
                                         case "generic_chest":
-                                            if (loot.chest_type_id) {
-                                                chests[loot.chest_type_id] = ((_a = chests[loot.chest_type_id]) !== null && _a !== void 0 ? _a : 0) + 1;
+                                            if (loot.chest_type_id && loot.count) {
+                                                chests[loot.chest_type_id] = ((_a = chests[loot.chest_type_id]) !== null && _a !== void 0 ? _a : 0) + loot.count;
                                             }
                                             break;
                                         case "unlock_hero":

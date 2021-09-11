@@ -226,8 +226,8 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
                     codeResponse.lootDetail?.forEach(loot => {
                         switch(loot.loot_item){
                             case LootType.Chest:
-                                if(loot.chest_type_id){
-                                    chests[loot.chest_type_id] = (chests[loot.chest_type_id] ?? 0) + 1
+                                if(loot.chest_type_id && loot.count){
+                                    chests[loot.chest_type_id] = (chests[loot.chest_type_id] ?? 0) + loot.count
                                 }
                                 break
                             case LootType.HeroUnlock:
