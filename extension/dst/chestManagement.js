@@ -54,6 +54,13 @@ var CodeSubmitResponse = (function () {
     }
     return CodeSubmitResponse;
 }());
+var OpenChestResponse = (function () {
+    function OpenChestResponse(status, lootDetail) {
+        this.status = status;
+        this.lootDetail = lootDetail;
+    }
+    return OpenChestResponse;
+}());
 var CodeSubmitStatus;
 (function (CodeSubmitStatus) {
     CodeSubmitStatus[CodeSubmitStatus["Success"] = 0] = "Success";
@@ -191,7 +198,7 @@ var IdleChampionsApi = (function () {
     };
     IdleChampionsApi.openChests = function (options) {
         return __awaiter(this, void 0, void 0, function () {
-            var request, response, openChestResponse;
+            var request, response, openGenericChestResponse;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -216,16 +223,16 @@ var IdleChampionsApi = (function () {
                         if (!response.ok) return [3, 3];
                         return [4, response.json()];
                     case 2:
-                        openChestResponse = _a.sent();
-                        console.debug(openChestResponse);
-                        if (openChestResponse.success) {
-                            return [2, ResponseStatus.Success];
+                        openGenericChestResponse = _a.sent();
+                        console.debug(openGenericChestResponse);
+                        if (openGenericChestResponse.success) {
+                            return [2, new OpenChestResponse(ResponseStatus.Success, openGenericChestResponse.loot_details)];
                         }
-                        if (openChestResponse.failure_reason == "Outdated instance id") {
-                            return [2, ResponseStatus.OutdatedInstanceId];
+                        if (openGenericChestResponse.failure_reason == "Outdated instance id") {
+                            return [2, new OpenChestResponse(ResponseStatus.OutdatedInstanceId)];
                         }
                         _a.label = 3;
-                    case 3: return [2, ResponseStatus.Failed];
+                    case 3: return [2, new OpenChestResponse(ResponseStatus.Failed)];
                 }
             });
         });
@@ -478,10 +485,11 @@ function openClick() {
     });
 }
 function openChests(userId, hash) {
+    var _a;
     return __awaiter(this, void 0, void 0, function () {
-        var MAX_OPEN_AMOUNT, chestType, chestAmount, remainingChests, currentAmount, responseStatus, lastInstanceId;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
+        var MAX_OPEN_AMOUNT, lootResults, chestType, chestAmount, remainingChests, currentAmount, openResponse, lastInstanceId;
+        return __generator(this, function (_b) {
+            switch (_b.label) {
                 case 0:
                     MAX_OPEN_AMOUNT = 50;
                     if (!server || !instanceId)
@@ -492,13 +500,14 @@ function openChests(userId, hash) {
                         return [2];
                     }
                     shownCloseClientWarning = false;
+                    lootResults = new LootAggregateResult();
                     chestType = document.getElementById("openChestType").value;
                     chestAmount = parseInt(document.getElementById("openCountRange").value) || 0;
                     if (!chestType || chestAmount < 1) {
                         return [2];
                     }
                     remainingChests = chestAmount;
-                    _a.label = 1;
+                    _b.label = 1;
                 case 1:
                     if (!(remainingChests > 0)) return [3, 5];
                     showInfo("Opening... " + remainingChests + " chests remaining to open");
@@ -514,8 +523,8 @@ function openChests(userId, hash) {
                             instanceId: instanceId
                         })];
                 case 2:
-                    responseStatus = _a.sent();
-                    if (responseStatus == ResponseStatus.OutdatedInstanceId) {
+                    openResponse = _b.sent();
+                    if (openResponse.status == ResponseStatus.OutdatedInstanceId) {
                         lastInstanceId = instanceId;
                         console.log("Refreshing inventory for instance ID");
                         refreshInventory(userId, hash);
@@ -526,16 +535,18 @@ function openChests(userId, hash) {
                         }
                         remainingChests += currentAmount;
                     }
-                    else if (responseStatus == ResponseStatus.Failed) {
+                    else if (openResponse.status == ResponseStatus.Failed) {
                         console.error("Purchase API call failed");
                         showError("Purchase failed");
                         return [2];
                     }
+                    aggregateResults((_a = openResponse.lootDetail) !== null && _a !== void 0 ? _a : [], lootResults);
+                    displayLootResults(lootResults);
                     if (!(remainingChests > 0)) return [3, 4];
                     return [4, new Promise(function (h) { return setTimeout(h, REQUEST_DELAY); })];
                 case 3:
-                    _a.sent();
-                    _a.label = 4;
+                    _b.sent();
+                    _b.label = 4;
                 case 4: return [3, 1];
                 case 5:
                     console.log("Completed opening");
@@ -571,4 +582,60 @@ function showSuccess(text) {
     hideMessages();
     document.getElementById("success").classList.add("show");
     document.querySelector("#success span").innerHTML = text;
+}
+var LootAggregateResult = (function () {
+    function LootAggregateResult() {
+        this.shinies = 0;
+        this.commonBounties = 0;
+        this.uncommonBounties = 0;
+        this.rareBounties = 0;
+        this.epicBounties = 0;
+        this.commonBlacksmith = 0;
+        this.uncommonBlacksmith = 0;
+        this.rareBlacksmith = 0;
+        this.epicBlacksmith = 0;
+    }
+    return LootAggregateResult;
+}());
+function aggregateResults(loot, aggregateResult) {
+    aggregateResult.shinies += loot.filter(function (l) { return l.gilded; }).length;
+    aggregateResult.commonBounties += loot.filter(function (l) { return l.add_inventory_buff_id == 17; }).length;
+    aggregateResult.uncommonBounties += loot.filter(function (l) { return l.add_inventory_buff_id == 18; }).length;
+    aggregateResult.rareBounties += loot.filter(function (l) { return l.add_inventory_buff_id == 19; }).length;
+    aggregateResult.epicBounties += loot.filter(function (l) { return l.add_inventory_buff_id == 20; }).length;
+    aggregateResult.commonBlacksmith += loot.filter(function (l) { return l.add_inventory_buff_id == 31; }).length;
+    aggregateResult.uncommonBlacksmith += loot.filter(function (l) { return l.add_inventory_buff_id == 32; }).length;
+    aggregateResult.rareBlacksmith += loot.filter(function (l) { return l.add_inventory_buff_id == 33; }).length;
+    aggregateResult.epicBlacksmith += loot.filter(function (l) { return l.add_inventory_buff_id == 34; }).length;
+}
+function displayLootResults(aggregateResult) {
+    document.querySelector("#chestLoot tbody").innerHTML = "";
+    addTableRow("Shinies", aggregateResult.shinies);
+    addTableRow("Tiny Bounty Contract", aggregateResult.commonBounties, "rarity-common");
+    addTableRow("Small Bounty Contract", aggregateResult.uncommonBounties, "rarity-uncommon");
+    addTableRow("Medium Bounty Contract", aggregateResult.rareBounties, "rarity-rare");
+    addTableRow("Large Bounty Contract", aggregateResult.epicBounties, "rarity-epic");
+    addTableRow("Tiny Blacksmithing Contract", aggregateResult.commonBlacksmith, "rarity-common");
+    addTableRow("Small Blacksmithing Contract", aggregateResult.uncommonBlacksmith, "rarity-uncommon");
+    addTableRow("Medium Blacksmithing Contract", aggregateResult.rareBlacksmith, "rarity-rare");
+    addTableRow("Large Blacksmithing Contract", aggregateResult.epicBlacksmith, "rarity-epic");
+}
+function addTableRow(text, amount, style) {
+    if (amount == 0)
+        return;
+    var tbody = document.querySelector("#chestLoot tbody");
+    tbody.append(buildTableRow(text, amount, style));
+}
+function buildTableRow(label, amount, style) {
+    var labelColumn = document.createElement("td");
+    labelColumn.innerText = label;
+    var amountColumn = document.createElement("td");
+    amountColumn.innerText = amount.toString();
+    var row = document.createElement("tr");
+    if (style) {
+        row.classList.add(style);
+    }
+    row.appendChild(labelColumn);
+    row.appendChild(amountColumn);
+    return row;
 }

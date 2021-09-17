@@ -54,6 +54,13 @@ var CodeSubmitResponse = (function () {
     }
     return CodeSubmitResponse;
 }());
+var OpenChestResponse = (function () {
+    function OpenChestResponse(status, lootDetail) {
+        this.status = status;
+        this.lootDetail = lootDetail;
+    }
+    return OpenChestResponse;
+}());
 var CodeSubmitStatus;
 (function (CodeSubmitStatus) {
     CodeSubmitStatus[CodeSubmitStatus["Success"] = 0] = "Success";
@@ -219,13 +226,13 @@ var IdleChampionsApi = (function () {
                         openChestResponse = _a.sent();
                         console.debug(openChestResponse);
                         if (openChestResponse.success) {
-                            return [2, ResponseStatus.Success];
+                            return [2, new OpenChestResponse(ResponseStatus.Success, openChestResponse.lootDetail)];
                         }
                         if (openChestResponse.failure_reason == "Outdated instance id") {
-                            return [2, ResponseStatus.OutdatedInstanceId];
+                            return [2, new OpenChestResponse(ResponseStatus.OutdatedInstanceId)];
                         }
                         _a.label = 3;
-                    case 3: return [2, ResponseStatus.Failed];
+                    case 3: return [2, new OpenChestResponse(ResponseStatus.Failed)];
                 }
             });
         });

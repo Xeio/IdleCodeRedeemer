@@ -233,6 +233,8 @@ async function openChests(userId: string, hash: string){
     }
     shownCloseClientWarning = false
 
+    let lootResults = new LootAggregateResult()
+
     const chestType = <any>(document.getElementById("openChestType") as HTMLSelectElement).value as ChestType
     const chestAmount = parseInt((document.getElementById("openCountRange") as HTMLInputElement).value) || 0
 
@@ -250,7 +252,7 @@ async function openChests(userId: string, hash: string){
 
         console.log(`Opening ${currentAmount} chests`)
 
-        const responseStatus = await IdleChampionsApi.openChests({
+        const openResponse = await IdleChampionsApi.openChests({
             server: server,
             user_id: userId,
             hash: hash,
@@ -259,10 +261,9 @@ async function openChests(userId: string, hash: string){
             instanceId: instanceId,
         })
 
-        if(responseStatus == ResponseStatus.OutdatedInstanceId){
+        if(openResponse.status == ResponseStatus.OutdatedInstanceId){
             const lastInstanceId:string = instanceId
             console.log("Refreshing inventory for instance ID")
-
             refreshInventory(userId, hash)
             if(instanceId == lastInstanceId){
                 console.error("Failed to refresh instance id")
@@ -272,12 +273,16 @@ async function openChests(userId: string, hash: string){
 
             remainingChests += currentAmount
         }
-        else if(responseStatus == ResponseStatus.Failed){
+        else if(openResponse.status == ResponseStatus.Failed){
             console.error("Purchase API call failed")
             showError("Purchase failed")
             return
         }
         
+        aggregateResults(openResponse.lootDetail ?? [], lootResults)
+
+        displayLootResults(lootResults)
+
         if(remainingChests > 0){
             await new Promise(h => setTimeout(h, REQUEST_DELAY)) //Delay between requests
         }
@@ -326,4 +331,69 @@ function showSuccess(text:string){
     document.querySelector("#success span")!.innerHTML = text
 }
 
+class LootAggregateResult{
+    shinies = 0;
+    commonBounties = 0;
+    uncommonBounties = 0;
+    rareBounties = 0;
+    epicBounties = 0;
+    commonBlacksmith = 0;
+    uncommonBlacksmith = 0;
+    rareBlacksmith = 0;
+    epicBlacksmith = 0;
+}
 
+function aggregateResults(loot:LootDetailsEntity[], aggregateResult:LootAggregateResult){
+    aggregateResult.shinies += loot.filter(l => l.gilded).length;
+
+    aggregateResult.commonBounties += loot.filter(l => l.add_inventory_buff_id == 17).length;
+    aggregateResult.uncommonBounties += loot.filter(l => l.add_inventory_buff_id == 18).length;
+    aggregateResult.rareBounties += loot.filter(l => l.add_inventory_buff_id == 19).length;
+    aggregateResult.epicBounties += loot.filter(l => l.add_inventory_buff_id == 20).length;
+
+    aggregateResult.commonBlacksmith += loot.filter(l => l.add_inventory_buff_id == 31).length;
+    aggregateResult.uncommonBlacksmith += loot.filter(l => l.add_inventory_buff_id == 32).length;
+    aggregateResult.rareBlacksmith += loot.filter(l => l.add_inventory_buff_id == 33).length;
+    aggregateResult.epicBlacksmith += loot.filter(l => l.add_inventory_buff_id == 34).length;
+}
+
+function displayLootResults(aggregateResult:LootAggregateResult){
+    document.querySelector("#chestLoot tbody")!.innerHTML = ""
+
+    addTableRow("Shinies", aggregateResult.shinies)
+
+    addTableRow("Tiny Bounty Contract", aggregateResult.commonBounties, "rarity-common")
+    addTableRow("Small Bounty Contract", aggregateResult.uncommonBounties, "rarity-uncommon")
+    addTableRow("Medium Bounty Contract", aggregateResult.rareBounties, "rarity-rare")
+    addTableRow("Large Bounty Contract", aggregateResult.epicBounties, "rarity-epic")
+
+    addTableRow("Tiny Blacksmithing Contract", aggregateResult.commonBlacksmith, "rarity-common")
+    addTableRow("Small Blacksmithing Contract", aggregateResult.uncommonBlacksmith, "rarity-uncommon")
+    addTableRow("Medium Blacksmithing Contract", aggregateResult.rareBlacksmith, "rarity-rare")
+    addTableRow("Large Blacksmithing Contract", aggregateResult.epicBlacksmith, "rarity-epic")
+}
+
+function addTableRow(text:string, amount:number, style?:string){
+    if(amount == 0) return
+
+    let tbody = document.querySelector("#chestLoot tbody") as HTMLTableSectionElement
+
+    tbody.append(buildTableRow(text, amount, style))
+}
+
+function buildTableRow(label: string, amount: number, style?:string) : HTMLTableRowElement{
+    const labelColumn = document.createElement("td")
+    labelColumn.innerText = label
+
+    const amountColumn = document.createElement("td")
+    amountColumn.innerText = amount.toString()
+
+    const row = document.createElement("tr")
+    if(style){
+        row.classList.add(style)
+    }
+    row.appendChild(labelColumn)
+    row.appendChild(amountColumn)
+
+    return row
+}

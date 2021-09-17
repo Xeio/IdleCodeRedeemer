@@ -43,6 +43,16 @@ class CodeSubmitResponse{
     }
 }
 
+class OpenChestResponse{
+    status: ResponseStatus;
+    lootDetail?: LootDetailsEntity[];
+
+    constructor(status: ResponseStatus, lootDetail?: LootDetailsEntity[]){
+        this.status = status
+        this.lootDetail = lootDetail
+    }
+}
+
 enum CodeSubmitStatus{
     Success,
     OutdatedInstanceId,
@@ -180,7 +190,7 @@ class IdleChampionsApi {
         return undefined
     }
 
-    static async openChests(options: OpenChestsOptions) : Promise<ResponseStatus> {
+    static async openChests(options: OpenChestsOptions) : Promise<OpenChestResponse> {
         const request = new URL(options.server)
 
         request.searchParams.append("call", "openGenericChest")
@@ -211,16 +221,16 @@ class IdleChampionsApi {
 
         const response = await fetch(request.toString())
         if(response.ok){
-            const openChestResponse : OpenChestResponse = await response.json()
-            console.debug(openChestResponse)
-            if(openChestResponse.success){
-                return ResponseStatus.Success
+            const openGenericChestResponse : OpenGenericChestResponse = await response.json()
+            console.debug(openGenericChestResponse)
+            if(openGenericChestResponse.success){
+                return new OpenChestResponse(ResponseStatus.Success, openGenericChestResponse.loot_details)
             }
-            if(openChestResponse.failure_reason == FailureReason.OutdatedInstanceId){
-                return ResponseStatus.OutdatedInstanceId
+            if(openGenericChestResponse.failure_reason == FailureReason.OutdatedInstanceId){
+                return new OpenChestResponse(ResponseStatus.OutdatedInstanceId)
             }
         }
-        return ResponseStatus.Failed
+        return new OpenChestResponse(ResponseStatus.Failed)
     }
 
     static async purchaseChests(options: PurchaseChestsOptions) : Promise<ResponseStatus> {

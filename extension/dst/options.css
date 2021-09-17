@@ -5,3 +5,23 @@ body{
 tr{
     text-align: center;
 }
+
+.rarity-epic{
+    --bs-table-hover-bg: rgb(86, 0, 148);
+    --bs-table-accent-bg: indigo;
+}
+
+.rarity-rare{
+    --bs-table-hover-bg: rgb(52, 52, 255);
+    --bs-table-accent-bg: blue;
+}
+
+.rarity-uncommon{
+    --bs-table-hover-bg: rgb(0, 145, 0);
+    --bs-table-accent-bg: green;
+}
+
+.rarity-common{
+    --bs-table-hover-bg: rgb(150, 150, 150);
+    --bs-table-accent-bg: gray;
+}

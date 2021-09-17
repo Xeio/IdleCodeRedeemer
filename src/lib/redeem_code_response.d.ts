@@ -72,10 +72,10 @@ interface PurchaseChestResponse {
     apc_stats: ApcStats;
 }
 
-interface OpenChestResponse {
+interface OpenGenericChestResponse {
     success: boolean;
     failure_reason?: string;
-    loot_details?: (LootDetailsEntity)[] | null;
+    loot_details?: LootDetailsEntity[];
     chests_remaining: number;
     actions?: (ActionsEntity)[] | null;
     processing_time: string;
