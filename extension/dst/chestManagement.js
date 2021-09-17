@@ -332,11 +332,11 @@ function refreshClick() {
     });
 }
 function refreshInventory(userId, hash) {
-    var _a, _b;
+    var _a, _b, _c;
     return __awaiter(this, void 0, void 0, function () {
-        var _c;
-        return __generator(this, function (_d) {
-            switch (_d.label) {
+        var _d;
+        return __generator(this, function (_e) {
+            switch (_e.label) {
                 case 0:
                     if (!userId || userId.length == 0 || !hash || hash.length == 0) {
                         console.error("No credentials entered.");
@@ -346,9 +346,9 @@ function refreshInventory(userId, hash) {
                     if (!!server) return [3, 2];
                     return [4, IdleChampionsApi.getServer()];
                 case 1:
-                    server = _d.sent();
+                    server = _e.sent();
                     console.log("Got server " + server);
-                    _d.label = 2;
+                    _e.label = 2;
                 case 2:
                     if (!server) {
                         showError("Failed to get idle champions server.");
@@ -361,7 +361,7 @@ function refreshInventory(userId, hash) {
                             hash: hash
                         })];
                 case 3:
-                    userData = _d.sent();
+                    userData = _e.sent();
                     if (!userData) {
                         showError("Failed to retreive user data.");
                         console.error("Failed to retreive user data.");
@@ -370,10 +370,11 @@ function refreshInventory(userId, hash) {
                     console.log("Refreshed inventory data.");
                     console.debug(userData);
                     instanceId = userData.details.instance_id;
-                    chrome.storage.sync.set((_c = {}, _c[Globals.SETTING_INSTANCE_ID] = userData.details.instance_id, _c));
+                    chrome.storage.sync.set((_d = {}, _d[Globals.SETTING_INSTANCE_ID] = userData.details.instance_id, _d));
                     document.getElementById("gemCount").textContent = userData.details.red_rubies.toLocaleString();
-                    document.getElementById("silverChestCount").textContent = ((_a = userData.details.chests[1]) === null || _a === void 0 ? void 0 : _a.toLocaleString()) || "";
-                    document.getElementById("goldChestCount").textContent = ((_b = userData.details.chests[2]) === null || _b === void 0 ? void 0 : _b.toLocaleString()) || "";
+                    document.getElementById("silverChestCount").textContent = ((_a = userData.details.chests[1]) === null || _a === void 0 ? void 0 : _a.toLocaleString()) || "0";
+                    document.getElementById("goldChestCount").textContent = ((_b = userData.details.chests[2]) === null || _b === void 0 ? void 0 : _b.toLocaleString()) || "0";
+                    document.getElementById("electrumChestCount").textContent = ((_c = userData.details.chests[282]) === null || _c === void 0 ? void 0 : _c.toLocaleString()) || "0";
                     setMaximumValues();
                     document.getElementById("actionTabs").classList.add("show");
                     return [2];
@@ -382,11 +383,10 @@ function refreshInventory(userId, hash) {
     });
 }
 function setMaximumValues() {
+    var _a;
     if (!userData)
         return;
     var gems = userData.details.red_rubies;
-    var silverChests = userData.details.chests[1] || 0;
-    var goldChests = userData.details.chests[2] || 0;
     var buyMax = 0;
     switch (document.getElementById("buyChestType").value) {
         case 1..toString():
@@ -400,15 +400,8 @@ function setMaximumValues() {
     document.getElementById("buyCountRange").value = buyMax.toString();
     document.getElementById("buyCountNumber").max = buyMax.toString();
     document.getElementById("buyCountNumber").value = buyMax.toString();
-    var openMax = 0;
-    switch (document.getElementById("openChestType").value) {
-        case 1..toString():
-            openMax = silverChests;
-            break;
-        case 2..toString():
-            openMax = goldChests;
-            break;
-    }
+    var chestType = document.getElementById("openChestType").value;
+    var openMax = (_a = userData.details.chests[chestType]) !== null && _a !== void 0 ? _a : 0;
     document.getElementById("openCountRange").max = openMax.toString();
     document.getElementById("openCountRange").value = openMax.toString();
     document.getElementById("openCountNumber").max = openMax.toString();
@@ -585,6 +578,7 @@ function showSuccess(text) {
 }
 var LootAggregateResult = (function () {
     function LootAggregateResult() {
+        this.gems = 0;
         this.shinies = 0;
         this.commonBounties = 0;
         this.uncommonBounties = 0;
@@ -607,10 +601,12 @@ function aggregateResults(loot, aggregateResult) {
     aggregateResult.uncommonBlacksmith += loot.filter(function (l) { return l.add_inventory_buff_id == 32; }).length;
     aggregateResult.rareBlacksmith += loot.filter(function (l) { return l.add_inventory_buff_id == 33; }).length;
     aggregateResult.epicBlacksmith += loot.filter(function (l) { return l.add_inventory_buff_id == 34; }).length;
+    aggregateResult.gems += loot.reduce(function (count, l) { var _a; return count + ((_a = l.add_soft_currency) !== null && _a !== void 0 ? _a : 0); }, 0);
 }
 function displayLootResults(aggregateResult) {
     document.querySelector("#chestLoot tbody").innerHTML = "";
     addTableRow("Shinies", aggregateResult.shinies);
+    addTableRow("Gems", aggregateResult.gems);
     addTableRow("Tiny Bounty Contract", aggregateResult.commonBounties, "rarity-common");
     addTableRow("Small Bounty Contract", aggregateResult.uncommonBounties, "rarity-uncommon");
     addTableRow("Medium Bounty Contract", aggregateResult.rareBounties, "rarity-rare");

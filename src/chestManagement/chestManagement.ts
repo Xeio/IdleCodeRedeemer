@@ -102,8 +102,9 @@ async function refreshInventory(userId: string, hash: string) {
     chrome.storage.sync.set({[Globals.SETTING_INSTANCE_ID]: userData.details.instance_id})
 
     document.getElementById("gemCount")!.textContent = userData.details.red_rubies.toLocaleString()
-    document.getElementById("silverChestCount")!.textContent = userData.details.chests[ChestType.Silver]?.toLocaleString() || ""
-    document.getElementById("goldChestCount")!.textContent = userData.details.chests[ChestType.Gold]?.toLocaleString() || ""
+    document.getElementById("silverChestCount")!.textContent = userData.details.chests[ChestType.Silver]?.toLocaleString() || "0"
+    document.getElementById("goldChestCount")!.textContent = userData.details.chests[ChestType.Gold]?.toLocaleString() || "0"
+    document.getElementById("electrumChestCount")!.textContent = userData.details.chests[ChestType.Electrum]?.toLocaleString() || "0"
 
     setMaximumValues()
 
@@ -113,9 +114,7 @@ async function refreshInventory(userId: string, hash: string) {
 function setMaximumValues(){
     if(!userData) return
 
-    let gems = userData.details.red_rubies
-    let silverChests = userData.details.chests[ChestType.Silver] || 0
-    let goldChests = userData.details.chests[ChestType.Gold] || 0;
+    const gems = userData.details.red_rubies
 
     let buyMax = 0
     switch((document.getElementById("buyChestType") as HTMLSelectElement).value){
@@ -132,15 +131,8 @@ function setMaximumValues(){
     (document.getElementById("buyCountNumber") as HTMLInputElement).max = buyMax.toString();
     (document.getElementById("buyCountNumber") as HTMLInputElement).value = buyMax.toString();
 
-    let openMax = 0
-    switch((document.getElementById("openChestType") as HTMLSelectElement).value){
-        case ChestType.Silver.toString():
-            openMax = silverChests
-            break
-        case ChestType.Gold.toString():
-            openMax = goldChests
-            break
-    }
+    const chestType = (document.getElementById("openChestType") as HTMLSelectElement).value;
+    const openMax = userData.details.chests[chestType] ?? 0;
 
     (document.getElementById("openCountRange") as HTMLInputElement).max = openMax.toString();
     (document.getElementById("openCountRange") as HTMLInputElement).value = openMax.toString();
@@ -332,6 +324,7 @@ function showSuccess(text:string){
 }
 
 class LootAggregateResult{
+    gems = 0;
     shinies = 0;
     commonBounties = 0;
     uncommonBounties = 0;
@@ -355,12 +348,15 @@ function aggregateResults(loot:LootDetailsEntity[], aggregateResult:LootAggregat
     aggregateResult.uncommonBlacksmith += loot.filter(l => l.add_inventory_buff_id == 32).length;
     aggregateResult.rareBlacksmith += loot.filter(l => l.add_inventory_buff_id == 33).length;
     aggregateResult.epicBlacksmith += loot.filter(l => l.add_inventory_buff_id == 34).length;
+
+    aggregateResult.gems += loot.reduce((count, l) => count + (l.add_soft_currency ?? 0), 0)
 }
 
 function displayLootResults(aggregateResult:LootAggregateResult){
     document.querySelector("#chestLoot tbody")!.innerHTML = ""
 
     addTableRow("Shinies", aggregateResult.shinies)
+    addTableRow("Gems", aggregateResult.gems)
 
     addTableRow("Tiny Bounty Contract", aggregateResult.commonBounties, "rarity-common")
     addTableRow("Small Bounty Contract", aggregateResult.uncommonBounties, "rarity-uncommon")

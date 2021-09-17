@@ -97,6 +97,9 @@ interface LootDetailsEntity {
     disenchant_amount?: number | null;
     disenchant_item_id?: string | null;
     add_inventory_buff_id?: number | null;
+    add_soft_currency?: number | null;
+    before?: number | null;
+    after?: number | null;
 }
 
 interface ActionsEntity {
