@@ -38,15 +38,54 @@ function loaded(){
         userHashElement.value = userHash ?? ""
         userHashElement.addEventListener("blur", settingsUpdated)
     })
+
+    const userHashElement = document.getElementById("supportUrl") as HTMLInputElement
+    userHashElement.addEventListener("blur", parseSupportUrl)
 }
 
 function settingsUpdated(this: HTMLElement, ev: FocusEvent){
+    saveUpdatedSettings()
+}
+
+function saveUpdatedSettings(){
     chrome.storage.sync.set({
         [Globals.SETTING_USER_ID]: (document.getElementById("userId") as HTMLInputElement).value,
         [Globals.SETTING_USER_HASH]: (document.getElementById("userHash") as HTMLInputElement).value
     }, () => console.log("User settings saved"))
     document.getElementById("settingsInfo")!.classList.add("show")
     document.querySelector("#settingsInfo span")!.innerHTML = "After updating credentials, click browser extension button to launch new request."
+}
+
+function parseSupportUrl(this: HTMLElement, ev: FocusEvent){
+    const userIdElement = document.getElementById("userId") as HTMLInputElement
+    const userHashElement = document.getElementById("userHash") as HTMLInputElement
+    const supportUrlElement = document.getElementById("supportUrl") as HTMLInputElement
+
+    if(supportUrlElement.value == ""){
+        return
+    }
+
+    try{
+        const url = new URL(supportUrlElement.value)
+        var userId = url.searchParams.get("user_id")
+        var hash = url.searchParams.get("device_hash")
+        
+        if(!userId || !hash){
+            document.getElementById("settingsInfo")!.classList.add("show")
+            document.querySelector("#settingsInfo span")!.innerHTML = "Couldn't find user_id or device_hash parameters in URL."
+            return
+        }
+
+        userIdElement.value = userId
+        userHashElement.value = hash
+        supportUrlElement.value = ""
+
+        saveUpdatedSettings()
+    }
+    catch{
+        document.getElementById("settingsInfo")!.classList.add("show")
+        document.querySelector("#settingsInfo span")!.innerHTML = "Failed to parse URL. Make sure you are copying from the URL bar of the browser."
+    }
 }
 
 function hideMessages() {

@@ -44,8 +44,13 @@ function loaded() {
         userHashElement.value = userHash !== null && userHash !== void 0 ? userHash : "";
         userHashElement.addEventListener("blur", settingsUpdated);
     });
+    var userHashElement = document.getElementById("supportUrl");
+    userHashElement.addEventListener("blur", parseSupportUrl);
 }
 function settingsUpdated(ev) {
+    saveUpdatedSettings();
+}
+function saveUpdatedSettings() {
     var _a;
     chrome.storage.sync.set((_a = {},
         _a[Globals.SETTING_USER_ID] = document.getElementById("userId").value,
@@ -53,6 +58,32 @@ function settingsUpdated(ev) {
         _a), function () { return console.log("User settings saved"); });
     document.getElementById("settingsInfo").classList.add("show");
     document.querySelector("#settingsInfo span").innerHTML = "After updating credentials, click browser extension button to launch new request.";
+}
+function parseSupportUrl(ev) {
+    var userIdElement = document.getElementById("userId");
+    var userHashElement = document.getElementById("userHash");
+    var supportUrlElement = document.getElementById("supportUrl");
+    if (supportUrlElement.value == "") {
+        return;
+    }
+    try {
+        var url = new URL(supportUrlElement.value);
+        var userId = url.searchParams.get("user_id");
+        var hash = url.searchParams.get("device_hash");
+        if (!userId || !hash) {
+            document.getElementById("settingsInfo").classList.add("show");
+            document.querySelector("#settingsInfo span").innerHTML = "Couldn't find user_id or device_hash parameters in URL.";
+            return;
+        }
+        userIdElement.value = userId;
+        userHashElement.value = hash;
+        supportUrlElement.value = "";
+        saveUpdatedSettings();
+    }
+    catch (_a) {
+        document.getElementById("settingsInfo").classList.add("show");
+        document.querySelector("#settingsInfo span").innerHTML = "Failed to parse URL. Make sure you are copying from the URL bar of the browser.";
+    }
 }
 function hideMessages() {
     document.getElementById("error").classList.remove("show");
