@@ -198,7 +198,7 @@ var IdleChampionsApi = (function () {
     };
     IdleChampionsApi.openChests = function (options) {
         return __awaiter(this, void 0, void 0, function () {
-            var request, response, openChestResponse;
+            var request, response, openGenericChestResponse;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -223,12 +223,12 @@ var IdleChampionsApi = (function () {
                         if (!response.ok) return [3, 3];
                         return [4, response.json()];
                     case 2:
-                        openChestResponse = _a.sent();
-                        console.debug(openChestResponse);
-                        if (openChestResponse.success) {
-                            return [2, new OpenChestResponse(ResponseStatus.Success, openChestResponse.lootDetail)];
+                        openGenericChestResponse = _a.sent();
+                        console.debug(openGenericChestResponse);
+                        if (openGenericChestResponse.success) {
+                            return [2, new OpenChestResponse(ResponseStatus.Success, openGenericChestResponse.loot_details)];
                         }
-                        if (openChestResponse.failure_reason == "Outdated instance id") {
+                        if (openGenericChestResponse.failure_reason == "Outdated instance id") {
                             return [2, new OpenChestResponse(ResponseStatus.OutdatedInstanceId)];
                         }
                         _a.label = 3;
@@ -491,7 +491,7 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                                 console.log("Sucessfully redeemed: " + code);
                                 (_a = codeResponse.lootDetail) === null || _a === void 0 ? void 0 : _a.forEach(function (loot) {
                                     var _a;
-                                    switch (loot.loot_item) {
+                                    switch (loot.loot_action) {
                                         case "generic_chest":
                                             if (loot.chest_type_id && loot.count) {
                                                 chests[loot.chest_type_id] = ((_a = chests[loot.chest_type_id]) !== null && _a !== void 0 ? _a : 0) + loot.count;
