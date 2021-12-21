@@ -347,7 +347,7 @@ function refreshInventory(userId, hash) {
                     return [4, IdleChampionsApi.getServer()];
                 case 1:
                     server = _e.sent();
-                    console.log("Got server " + server);
+                    console.log("Got server ".concat(server));
                     _e.label = 2;
                 case 2:
                     if (!server) {
@@ -432,10 +432,10 @@ function purchaseChests(userId, hash) {
                     _a.label = 1;
                 case 1:
                     if (!(remainingChests > 0)) return [3, 5];
-                    showInfo("Purchasing... " + remainingChests + " chests remaining to purchase");
+                    showInfo("Purchasing... ".concat(remainingChests, " chests remaining to purchase"));
                     currentAmount = remainingChests > MAX_PURCHASE_AMOUNT ? MAX_PURCHASE_AMOUNT : remainingChests;
                     remainingChests -= currentAmount;
-                    console.log("Purchasing " + currentAmount + " chests");
+                    console.log("Purchasing ".concat(currentAmount, " chests"));
                     return [4, IdleChampionsApi.purchaseChests({
                             server: server,
                             user_id: userId,
@@ -464,7 +464,7 @@ function purchaseChests(userId, hash) {
                 case 5:
                     console.log("Completed purchase");
                     refreshInventory(userId, hash);
-                    showSuccess("Purchased " + chestAmount + " chests");
+                    showSuccess("Purchased ".concat(chestAmount, " chests"));
                     return [2];
             }
         });
@@ -503,10 +503,10 @@ function openChests(userId, hash) {
                     _b.label = 1;
                 case 1:
                     if (!(remainingChests > 0)) return [3, 5];
-                    showInfo("Opening... " + remainingChests + " chests remaining to open");
+                    showInfo("Opening... ".concat(remainingChests, " chests remaining to open"));
                     currentAmount = remainingChests > MAX_OPEN_AMOUNT ? MAX_OPEN_AMOUNT : remainingChests;
                     remainingChests -= currentAmount;
-                    console.log("Opening " + currentAmount + " chests");
+                    console.log("Opening ".concat(currentAmount, " chests"));
                     return [4, IdleChampionsApi.openChests({
                             server: server,
                             user_id: userId,
@@ -544,7 +544,7 @@ function openChests(userId, hash) {
                 case 5:
                     console.log("Completed opening");
                     refreshInventory(userId, hash);
-                    showSuccess("Opened " + chestAmount + " chests");
+                    showSuccess("Opened ".concat(chestAmount, " chests"));
                     return [2];
             }
         });

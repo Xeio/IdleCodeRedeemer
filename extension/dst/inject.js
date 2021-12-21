@@ -54,7 +54,7 @@ function getCodesList() {
             var codeMatch = markupElement.innerText.toUpperCase().match(regex);
             if (codeMatch === null || codeMatch === void 0 ? void 0 : codeMatch[0]) {
                 var code = codeMatch[0].replaceAll("-", "");
-                console.debug("Idle Code found: " + code);
+                console.debug("Idle Code found: ".concat(code));
                 codes.push(code);
             }
         }

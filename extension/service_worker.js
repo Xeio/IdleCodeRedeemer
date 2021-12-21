@@ -357,14 +357,14 @@ function handleDetectedCodes(redeemedCodes, pendingCodes, detectedCodes) {
     var detectedCode;
     while (detectedCode = detectedCodes.pop()) {
         if (!redeemedCodes.includes(detectedCode) && !pendingCodes.includes(detectedCode)) {
-            console.log("New code detected: " + detectedCode);
+            console.log("New code detected: ".concat(detectedCode));
             pendingCodes.push(detectedCode);
         }
         else if (pendingCodes.includes(detectedCode)) {
-            console.debug("Duplicate pending code: " + detectedCode);
+            console.debug("Duplicate pending code: ".concat(detectedCode));
         }
         else {
-            console.debug("Duplicate redeemed code: " + detectedCode);
+            console.debug("Duplicate redeemed code: ".concat(detectedCode));
         }
     }
     if (pendingCodes.length > 0) {
@@ -407,8 +407,8 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                         _optionsPort.postMessage({ messageType: "error", messageText: "Unable to connect to Idle Champions server." });
                         return [2];
                     }
-                    console.log("Got server " + server);
-                    _optionsPort.postMessage({ messageType: "info", messageText: "Upload starting, " + pendingCodes.length + " new codes to redeem. This may take a bit." });
+                    console.log("Got server ".concat(server));
+                    _optionsPort.postMessage({ messageType: "info", messageText: "Upload starting, ".concat(pendingCodes.length, " new codes to redeem. This may take a bit.") });
                     duplicates = 0, newCodes = 0, expired = 0, invalid = 0;
                     chests = {};
                     heroUnlocks = 0, skinUnlocks = 0;
@@ -418,7 +418,7 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                     return [4, new Promise(function (h) { return setTimeout(h, REQUEST_DELAY); })];
                 case 3:
                     _d.sent();
-                    console.log("Attempting to upload code: " + code);
+                    console.log("Attempting to upload code: ".concat(code));
                     return [4, IdleChampionsApi.submitCode({
                             server: server,
                             user_id: userId,
@@ -476,19 +476,19 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                         case CodeSubmitStatus.AlreadyRedeemed:
                         case CodeSubmitStatus.Success:
                             if (codeResponse.status == CodeSubmitStatus.AlreadyRedeemed) {
-                                console.log("Already redeemed code: " + code);
+                                console.log("Already redeemed code: ".concat(code));
                                 duplicates++;
                             }
                             else if (codeResponse.status == CodeSubmitStatus.NotValidCombo) {
-                                console.log("Invalid code: " + code);
+                                console.log("Invalid code: ".concat(code));
                                 invalid++;
                             }
                             else if (codeResponse.status == CodeSubmitStatus.Expired) {
-                                console.log("Expired code: " + code);
+                                console.log("Expired code: ".concat(code));
                                 expired++;
                             }
                             else {
-                                console.log("Sucessfully redeemed: " + code);
+                                console.log("Sucessfully redeemed: ".concat(code));
                                 (_a = codeResponse.lootDetail) === null || _a === void 0 ? void 0 : _a.forEach(function (loot) {
                                     var _a;
                                     switch (loot.loot_action) {
@@ -516,21 +516,21 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                             chrome.storage.sync.set((_c = {}, _c[Globals.SETTING_CODES] = reedemedCodes, _c[Globals.SETTING_PENDING] = pendingCodes, _c));
                             break;
                     }
-                    _optionsPort.postMessage({ messageType: "info", messageText: "Uploading... " + pendingCodes.length + " codes left. This may take a bit." });
+                    _optionsPort.postMessage({ messageType: "info", messageText: "Uploading... ".concat(pendingCodes.length, " codes left. This may take a bit.") });
                     return [3, 2];
                 case 10:
                     console.log("Redeem complete:");
-                    console.log(duplicates + " duplicate codes");
-                    console.log(newCodes + " new redemptions");
-                    console.log(expired + " expired");
-                    console.log(invalid + " invalid");
+                    console.log("".concat(duplicates, " duplicate codes"));
+                    console.log("".concat(newCodes, " new redemptions"));
+                    console.log("".concat(expired, " expired"));
+                    console.log("".concat(invalid, " invalid"));
                     console.log(chests);
                     _optionsPort.postMessage({
                         messageType: "success",
                         chests: chests,
                         heroUnlocks: heroUnlocks,
                         skinUnlocks: skinUnlocks,
-                        messageText: "Upload completed successfully:<br>\n                        " + (duplicates > 0 ? duplicates + " codes already redeemed<br>" : "") + "\n                        " + (expired > 0 ? expired + " expired codes<br>" : "") + "\n                        " + (invalid > 0 ? invalid + " invalid codes<br>" : "") + "\n                        " + newCodes + " codes redeemed"
+                        messageText: "Upload completed successfully:<br>\n                        ".concat(duplicates > 0 ? "".concat(duplicates, " codes already redeemed<br>") : "", "\n                        ").concat(expired > 0 ? "".concat(expired, " expired codes<br>") : "", "\n                        ").concat(invalid > 0 ? "".concat(invalid, " invalid codes<br>") : "", "\n                        ").concat(newCodes, " codes redeemed")
                     });
                     return [2];
             }
