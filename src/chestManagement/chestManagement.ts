@@ -214,7 +214,7 @@ function openClick(){
 }
 
 async function openChests(userId: string, hash: string){
-    const MAX_OPEN_AMOUNT = 50
+    const MAX_OPEN_AMOUNT = 99
 
     if(!server || !instanceId) return
 
