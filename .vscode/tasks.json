@@ -1,0 +1,53 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "watchChestManagement",
+			"type": "typescript",
+			"tsconfig": "src/chestManagement/tsconfig.json",
+			"option": "watch",
+			"problemMatcher": [
+				"$tsc-watch"
+			],
+			"group": "build",
+		},
+		{
+			"label": "watchInject",
+			"type": "typescript",
+			"tsconfig": "src/inject/tsconfig.json",
+			"option": "watch",
+			"problemMatcher": [
+				"$tsc-watch"
+			],
+			"group": "build",
+		},
+		{
+			"label": "watchOptions",
+			"type": "typescript",
+			"tsconfig": "src/options/tsconfig.json",
+			"option": "watch",
+			"problemMatcher": [
+				"$tsc-watch"
+			],
+			"group": "build",
+		},
+		{
+			"label": "watchServiceWorker",
+			"type": "typescript",
+			"tsconfig": "src/service_worker/tsconfig.json",
+			"option": "watch",
+			"problemMatcher": [
+				"$tsc-watch"
+			],
+			"group": "build"
+		},
+		{
+			"label": "watchAll",
+			"dependsOn": ["watchChestManagement", "watchInject", "watchOptions", "watchServiceWorker"],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+		}
+	]
+}
