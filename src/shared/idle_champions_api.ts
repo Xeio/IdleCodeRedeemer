@@ -45,10 +45,10 @@ interface UseBlacksmithOptions{
 }
 
 declare const enum ContractType{
-    White = 31,
-    Green = 32,
-    Blue = 33,
-    Purple = 34,
+    Tiny = 31,
+    Small = 32,
+    Medium = 33,
+    Large = 34,
 }
 
 class CodeSubmitResponse{

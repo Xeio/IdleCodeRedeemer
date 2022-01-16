@@ -128,10 +128,10 @@ async function refreshInventory(userId: string, hash: string) {
     document.getElementById("goldChestCount")!.textContent = userData.details.chests[ChestType.Gold]?.toLocaleString() || "0"
     document.getElementById("electrumChestCount")!.textContent = userData.details.chests[ChestType.Electrum]?.toLocaleString() || "0"
 
-    document.getElementById("whiteBlacksmithCount")!.textContent = findBuffCount(ContractType.White.toString()).toLocaleString() || "0"
-    document.getElementById("greenBlacksmithCount")!.textContent = findBuffCount(ContractType.Green.toString()).toLocaleString() || "0"
-    document.getElementById("blueBlacksmithCount")!.textContent = findBuffCount(ContractType.Blue.toString()).toLocaleString() || "0"
-    document.getElementById("purpleBlacksmithCount")!.textContent = findBuffCount(ContractType.Purple.toString()).toLocaleString() || "0"
+    document.getElementById("whiteBlacksmithCount")!.textContent = findBuffCount(ContractType.Tiny.toString()).toLocaleString() || "0"
+    document.getElementById("greenBlacksmithCount")!.textContent = findBuffCount(ContractType.Small.toString()).toLocaleString() || "0"
+    document.getElementById("blueBlacksmithCount")!.textContent = findBuffCount(ContractType.Medium.toString()).toLocaleString() || "0"
+    document.getElementById("purpleBlacksmithCount")!.textContent = findBuffCount(ContractType.Large.toString()).toLocaleString() || "0"
 
     setMaximumValues()
 
@@ -394,10 +394,10 @@ function aggregateOpenResults(loot:LootDetailsEntity[], aggregateResult:LootAggr
     aggregateResult.rareBounties += loot.filter(l => l.add_inventory_buff_id == 19).length;
     aggregateResult.epicBounties += loot.filter(l => l.add_inventory_buff_id == 20).length;
 
-    aggregateResult.commonBlacksmith += loot.filter(l => l.add_inventory_buff_id == ContractType.White).length;
-    aggregateResult.uncommonBlacksmith += loot.filter(l => l.add_inventory_buff_id == ContractType.Green).length;
-    aggregateResult.rareBlacksmith += loot.filter(l => l.add_inventory_buff_id == ContractType.Blue).length;
-    aggregateResult.epicBlacksmith += loot.filter(l => l.add_inventory_buff_id == ContractType.Purple).length;
+    aggregateResult.commonBlacksmith += loot.filter(l => l.add_inventory_buff_id == ContractType.Tiny).length;
+    aggregateResult.uncommonBlacksmith += loot.filter(l => l.add_inventory_buff_id == ContractType.Small).length;
+    aggregateResult.rareBlacksmith += loot.filter(l => l.add_inventory_buff_id == ContractType.Medium).length;
+    aggregateResult.epicBlacksmith += loot.filter(l => l.add_inventory_buff_id == ContractType.Large).length;
 
     aggregateResult.gems += loot.reduce((count, l) => count + (l.add_soft_currency ?? 0), 0)
 }
