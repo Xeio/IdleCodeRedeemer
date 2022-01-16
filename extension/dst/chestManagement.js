@@ -61,6 +61,13 @@ var OpenChestResponse = (function () {
     }
     return OpenChestResponse;
 }());
+var UseBlacksmithResponse = (function () {
+    function UseBlacksmithResponse(status, actions) {
+        this.status = status;
+        this.actions = actions;
+    }
+    return UseBlacksmithResponse;
+}());
 var CodeSubmitStatus;
 (function (CodeSubmitStatus) {
     CodeSubmitStatus[CodeSubmitStatus["Success"] = 0] = "Success";
@@ -277,6 +284,46 @@ var IdleChampionsApi = (function () {
             });
         });
     };
+    IdleChampionsApi.useBlacksmith = function (options) {
+        return __awaiter(this, void 0, void 0, function () {
+            var request, response, useServerBuffResponse;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        request = new URL(options.server);
+                        request.searchParams.append("call", "useServerBuff");
+                        request.searchParams.append("user_id", options.user_id);
+                        request.searchParams.append("hash", options.hash);
+                        request.searchParams.append("buff_id", options.contractType.toString());
+                        request.searchParams.append("hero_id", options.heroId);
+                        request.searchParams.append("num_uses", options.count.toString());
+                        request.searchParams.append("instance_id", options.instanceId);
+                        request.searchParams.append("game_instance_id", "1");
+                        request.searchParams.append("timestamp", "0");
+                        request.searchParams.append("request_id", "0");
+                        request.searchParams.append("language_id", IdleChampionsApi.LANGUAGE_ID);
+                        request.searchParams.append("network_id", IdleChampionsApi.NETWORK_ID);
+                        request.searchParams.append("localization_aware", "true");
+                        return [4, fetch(request.toString())];
+                    case 1:
+                        response = _a.sent();
+                        if (!response.ok) return [3, 3];
+                        return [4, response.json()];
+                    case 2:
+                        useServerBuffResponse = _a.sent();
+                        console.debug(useServerBuffResponse);
+                        if (useServerBuffResponse.success) {
+                            return [2, new UseBlacksmithResponse(ResponseStatus.Success, useServerBuffResponse.actions)];
+                        }
+                        if (useServerBuffResponse.failure_reason == "Outdated instance id") {
+                            return [2, new UseBlacksmithResponse(ResponseStatus.OutdatedInstanceId)];
+                        }
+                        _a.label = 3;
+                    case 3: return [2, new UseBlacksmithResponse(ResponseStatus.Failed)];
+                }
+            });
+        });
+    };
     IdleChampionsApi.CLIENT_VERSION = "999";
     IdleChampionsApi.NETWORK_ID = "21";
     IdleChampionsApi.LANGUAGE_ID = "1";
@@ -286,17 +333,20 @@ document.addEventListener("DOMContentLoaded", loaded);
 var REQUEST_DELAY = 4000;
 var buyCountRange, buyCountNumber;
 var openCountRange, openCountNumber;
+var blacksmithCountRange, blacksmithCountNumber;
 var server;
 var instanceId;
 var userData;
 var shownCloseClientWarning = false;
 function loaded() {
-    var _a, _b;
+    var _a, _b, _c;
     document.getElementById("refreshInventory").addEventListener('click', refreshClick);
     document.getElementById("purchaseButton").addEventListener('click', purchaseClick);
     document.getElementById("openButton").addEventListener('click', openClick);
+    document.getElementById("blacksmithButton").addEventListener('click', blacksmithClick);
     (_a = document.getElementById("buyChestType")) === null || _a === void 0 ? void 0 : _a.addEventListener('change', setMaximumValues);
     (_b = document.getElementById("openChestType")) === null || _b === void 0 ? void 0 : _b.addEventListener('change', setMaximumValues);
+    (_c = document.getElementById("blackithContracType")) === null || _c === void 0 ? void 0 : _c.addEventListener('change', setMaximumValues);
     buyCountRange = document.getElementById("buyCountRange");
     buyCountNumber = document.getElementById("buyCountNumber");
     buyCountRange.oninput = buyRangeChanged;
@@ -305,6 +355,11 @@ function loaded() {
     openCountNumber = document.getElementById("openCountNumber");
     openCountRange.oninput = openRangeChanged;
     openCountNumber.oninput = openNumberChanged;
+    blacksmithCountRange = document.getElementById("blacksmithCountRange");
+    blacksmithCountNumber = document.getElementById("blacksmithCountNumber");
+    blacksmithCountRange.oninput = blacksmithRangeChanged;
+    blacksmithCountNumber.oninput = blacksmithNumberChanged;
+    var blackithContracType = document.getElementById("blackithContracType");
 }
 function buyRangeChanged() {
     buyCountNumber.value = buyCountRange.value;
@@ -323,6 +378,15 @@ function openNumberChanged() {
         openCountNumber.value = openCountNumber.max;
     }
     openCountRange.value = openCountNumber.value;
+}
+function blacksmithRangeChanged() {
+    blacksmithCountNumber.value = blacksmithCountRange.value;
+}
+function blacksmithNumberChanged() {
+    if (parseInt(blacksmithCountNumber.value) > parseInt(blacksmithCountNumber.max)) {
+        blacksmithCountNumber.value = blacksmithCountNumber.max;
+    }
+    blacksmithCountRange.value = blacksmithCountNumber.value;
 }
 function refreshClick() {
     hideMessages();
@@ -375,12 +439,21 @@ function refreshInventory(userId, hash) {
                     document.getElementById("silverChestCount").textContent = ((_a = userData.details.chests[1]) === null || _a === void 0 ? void 0 : _a.toLocaleString()) || "0";
                     document.getElementById("goldChestCount").textContent = ((_b = userData.details.chests[2]) === null || _b === void 0 ? void 0 : _b.toLocaleString()) || "0";
                     document.getElementById("electrumChestCount").textContent = ((_c = userData.details.chests[282]) === null || _c === void 0 ? void 0 : _c.toLocaleString()) || "0";
+                    document.getElementById("whiteBlacksmithCount").textContent = findBuffCount(31..toString()).toLocaleString() || "0";
+                    document.getElementById("greenBlacksmithCount").textContent = findBuffCount(32..toString()).toLocaleString() || "0";
+                    document.getElementById("blueBlacksmithCount").textContent = findBuffCount(33..toString()).toLocaleString() || "0";
+                    document.getElementById("purpleBlacksmithCount").textContent = findBuffCount(34..toString()).toLocaleString() || "0";
                     setMaximumValues();
                     document.getElementById("actionTabs").classList.add("show");
                     return [2];
             }
         });
     });
+}
+function findBuffCount(buff_id) {
+    var _a, _b, _c;
+    var countString = (_c = (_b = (_a = userData === null || userData === void 0 ? void 0 : userData.details) === null || _a === void 0 ? void 0 : _a.buffs) === null || _b === void 0 ? void 0 : _b.find(function (b) { return b.buff_id == buff_id.toString(); })) === null || _c === void 0 ? void 0 : _c.inventory_amount;
+    return parseInt(countString !== null && countString !== void 0 ? countString : "0");
 }
 function setMaximumValues() {
     var _a;
@@ -406,6 +479,12 @@ function setMaximumValues() {
     document.getElementById("openCountRange").value = openMax.toString();
     document.getElementById("openCountNumber").max = openMax.toString();
     document.getElementById("openCountNumber").value = openMax.toString();
+    var contractType = document.getElementById("blackithContracType").value;
+    var blacksmithMax = findBuffCount(contractType);
+    document.getElementById("blacksmithCountRange").max = blacksmithMax.toString();
+    document.getElementById("blacksmithCountRange").value = blacksmithMax.toString();
+    document.getElementById("blacksmithCountNumber").max = blacksmithMax.toString();
+    document.getElementById("blacksmithCountNumber").value = blacksmithMax.toString();
 }
 function purchaseClick() {
     hideMessages();
@@ -477,6 +556,13 @@ function openClick() {
         openChests(userId, userHash);
     });
 }
+function blacksmithClick() {
+    hideMessages();
+    chrome.storage.sync.get([Globals.SETTING_USER_ID, Globals.SETTING_USER_HASH], function (_a) {
+        var userId = _a.userId, userHash = _a.userHash;
+        useBlacksmithContracts(userId, userHash);
+    });
+}
 function openChests(userId, hash) {
     var _a;
     return __awaiter(this, void 0, void 0, function () {
@@ -533,7 +619,7 @@ function openChests(userId, hash) {
                         showError("Purchase failed");
                         return [2];
                     }
-                    aggregateResults((_a = openResponse.lootDetail) !== null && _a !== void 0 ? _a : [], lootResults);
+                    aggregateOpenResults((_a = openResponse.lootDetail) !== null && _a !== void 0 ? _a : [], lootResults);
                     displayLootResults(lootResults);
                     if (!(remainingChests > 0)) return [3, 4];
                     return [4, new Promise(function (h) { return setTimeout(h, REQUEST_DELAY); })];
@@ -591,7 +677,7 @@ var LootAggregateResult = (function () {
     }
     return LootAggregateResult;
 }());
-function aggregateResults(loot, aggregateResult) {
+function aggregateOpenResults(loot, aggregateResult) {
     aggregateResult.shinies += loot.filter(function (l) { return l.gilded; }).length;
     aggregateResult.commonBounties += loot.filter(function (l) { return l.add_inventory_buff_id == 17; }).length;
     aggregateResult.uncommonBounties += loot.filter(function (l) { return l.add_inventory_buff_id == 18; }).length;
@@ -633,5 +719,123 @@ function buildTableRow(label, amount, style) {
     }
     row.appendChild(labelColumn);
     row.appendChild(amountColumn);
+    return row;
+}
+var BlacksmithAggregateResult = (function () {
+    function BlacksmithAggregateResult() {
+        this.slotResult = new Array(7);
+        this.slotEndValue = new Array(7);
+    }
+    return BlacksmithAggregateResult;
+}());
+function useBlacksmithContracts(userId, hash) {
+    var _a, _b, _c;
+    return __awaiter(this, void 0, void 0, function () {
+        var MAX_BLACKSMITH_AMOUNT, blacksmitResult, contractType, heroId, blacksmithAmount, remainingContracts, currentAmount, blacksmithResponse, lastInstanceId;
+        return __generator(this, function (_d) {
+            switch (_d.label) {
+                case 0:
+                    MAX_BLACKSMITH_AMOUNT = 50;
+                    if (!server || !instanceId)
+                        return [2];
+                    blacksmitResult = new BlacksmithAggregateResult();
+                    contractType = document.getElementById("blackithContracType").value;
+                    heroId = document.getElementById("heroId").value;
+                    blacksmithAmount = parseInt(blacksmithCountRange.value) || 0;
+                    (_b = (_a = userData === null || userData === void 0 ? void 0 : userData.details) === null || _a === void 0 ? void 0 : _a.loot) === null || _b === void 0 ? void 0 : _b.filter(function (l) { return l.hero_id == parseInt(heroId); }).forEach(function (lootItem) {
+                        blacksmitResult.slotEndValue[lootItem.slot_id] = lootItem.enchant + 1;
+                    });
+                    if (!contractType || !heroId || blacksmithAmount < 1) {
+                        return [2];
+                    }
+                    remainingContracts = blacksmithAmount;
+                    _d.label = 1;
+                case 1:
+                    if (!(remainingContracts > 0)) return [3, 5];
+                    showInfo("Smithing... ".concat(remainingContracts, " contracts remaining to use"));
+                    currentAmount = Math.min(remainingContracts, MAX_BLACKSMITH_AMOUNT);
+                    remainingContracts -= currentAmount;
+                    console.log("Using ".concat(currentAmount, " contracts"));
+                    return [4, IdleChampionsApi.useBlacksmith({
+                            server: server,
+                            user_id: userId,
+                            hash: hash,
+                            heroId: heroId,
+                            contractType: contractType,
+                            count: currentAmount,
+                            instanceId: instanceId
+                        })];
+                case 2:
+                    blacksmithResponse = _d.sent();
+                    if (blacksmithResponse.status == ResponseStatus.OutdatedInstanceId) {
+                        lastInstanceId = instanceId;
+                        console.log("Refreshing inventory for instance ID");
+                        refreshInventory(userId, hash);
+                        if (instanceId == lastInstanceId) {
+                            console.error("Failed to refresh instance id");
+                            showError("Failed to get updated instance ID. Check credentials.");
+                            return [2];
+                        }
+                        remainingContracts += currentAmount;
+                    }
+                    else if (blacksmithResponse.status == ResponseStatus.Failed) {
+                        console.error("Blacksmith API call failed");
+                        showError("Blacksmithing failed");
+                        return [2];
+                    }
+                    aggregateBlacksmithResults((_c = blacksmithResponse.actions) !== null && _c !== void 0 ? _c : [], blacksmitResult);
+                    displayBlacksmithResults(blacksmitResult);
+                    if (!(remainingContracts > 0)) return [3, 4];
+                    return [4, new Promise(function (h) { return setTimeout(h, REQUEST_DELAY); })];
+                case 3:
+                    _d.sent();
+                    _d.label = 4;
+                case 4: return [3, 1];
+                case 5:
+                    console.log("Completed blacksmithing");
+                    refreshInventory(userId, hash);
+                    showSuccess("Used ".concat(blacksmithAmount, " blacksmith contracts"));
+                    return [2];
+            }
+        });
+    });
+}
+function aggregateBlacksmithResults(blacksmithActions, aggregateResult) {
+    blacksmithActions.forEach(function (action) {
+        var _a;
+        if (action.action == "level_up_loot") {
+            var newLevels = parseInt(action.amount);
+            aggregateResult.slotResult[action.slot_id] = ((_a = aggregateResult.slotResult[action.slot_id]) !== null && _a !== void 0 ? _a : 0) + newLevels;
+            aggregateResult.slotEndValue[action.slot_id] = action.enchant_level + 1;
+        }
+    });
+}
+function displayBlacksmithResults(aggregateResult) {
+    document.querySelector("#blacksmithResults tbody").innerHTML = "";
+    addBlacksmithTableRow("Slot 1", aggregateResult.slotResult[1], aggregateResult.slotEndValue[1]);
+    addBlacksmithTableRow("Slot 2", aggregateResult.slotResult[2], aggregateResult.slotEndValue[2]);
+    addBlacksmithTableRow("Slot 3", aggregateResult.slotResult[3], aggregateResult.slotEndValue[6]);
+    addBlacksmithTableRow("Slot 4", aggregateResult.slotResult[4], aggregateResult.slotEndValue[4]);
+    addBlacksmithTableRow("Slot 5", aggregateResult.slotResult[5], aggregateResult.slotEndValue[5]);
+    addBlacksmithTableRow("Slot 6", aggregateResult.slotResult[6], aggregateResult.slotEndValue[6]);
+}
+function addBlacksmithTableRow(text, amount, newLevel, style) {
+    var tbody = document.querySelector("#blacksmithResults tbody");
+    tbody.append(buildBlacksmithTableRow(text, amount, newLevel, style));
+}
+function buildBlacksmithTableRow(slotName, addedLevels, newLevel, style) {
+    var slotColumn = document.createElement("td");
+    slotColumn.innerText = slotName;
+    var addedLevelsColumn = document.createElement("td");
+    addedLevelsColumn.innerText = (addedLevels === null || addedLevels === void 0 ? void 0 : addedLevels.toString()) || "0";
+    var newLevelColumn = document.createElement("td");
+    newLevelColumn.innerText = (newLevel === null || newLevel === void 0 ? void 0 : newLevel.toString()) || "0";
+    var row = document.createElement("tr");
+    if (style) {
+        row.classList.add(style);
+    }
+    row.appendChild(slotColumn);
+    row.appendChild(addedLevelsColumn);
+    row.appendChild(newLevelColumn);
     return row;
 }

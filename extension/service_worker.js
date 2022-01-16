@@ -61,6 +61,13 @@ var OpenChestResponse = (function () {
     }
     return OpenChestResponse;
 }());
+var UseBlacksmithResponse = (function () {
+    function UseBlacksmithResponse(status, actions) {
+        this.status = status;
+        this.actions = actions;
+    }
+    return UseBlacksmithResponse;
+}());
 var CodeSubmitStatus;
 (function (CodeSubmitStatus) {
     CodeSubmitStatus[CodeSubmitStatus["Success"] = 0] = "Success";
@@ -273,6 +280,46 @@ var IdleChampionsApi = (function () {
                         }
                         _a.label = 3;
                     case 3: return [2, ResponseStatus.Failed];
+                }
+            });
+        });
+    };
+    IdleChampionsApi.useBlacksmith = function (options) {
+        return __awaiter(this, void 0, void 0, function () {
+            var request, response, useServerBuffResponse;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        request = new URL(options.server);
+                        request.searchParams.append("call", "useServerBuff");
+                        request.searchParams.append("user_id", options.user_id);
+                        request.searchParams.append("hash", options.hash);
+                        request.searchParams.append("buff_id", options.contractType.toString());
+                        request.searchParams.append("hero_id", options.heroId);
+                        request.searchParams.append("num_uses", options.count.toString());
+                        request.searchParams.append("instance_id", options.instanceId);
+                        request.searchParams.append("game_instance_id", "1");
+                        request.searchParams.append("timestamp", "0");
+                        request.searchParams.append("request_id", "0");
+                        request.searchParams.append("language_id", IdleChampionsApi.LANGUAGE_ID);
+                        request.searchParams.append("network_id", IdleChampionsApi.NETWORK_ID);
+                        request.searchParams.append("localization_aware", "true");
+                        return [4, fetch(request.toString())];
+                    case 1:
+                        response = _a.sent();
+                        if (!response.ok) return [3, 3];
+                        return [4, response.json()];
+                    case 2:
+                        useServerBuffResponse = _a.sent();
+                        console.debug(useServerBuffResponse);
+                        if (useServerBuffResponse.success) {
+                            return [2, new UseBlacksmithResponse(ResponseStatus.Success, useServerBuffResponse.actions)];
+                        }
+                        if (useServerBuffResponse.failure_reason == "Outdated instance id") {
+                            return [2, new UseBlacksmithResponse(ResponseStatus.OutdatedInstanceId)];
+                        }
+                        _a.label = 3;
+                    case 3: return [2, new UseBlacksmithResponse(ResponseStatus.Failed)];
                 }
             });
         });

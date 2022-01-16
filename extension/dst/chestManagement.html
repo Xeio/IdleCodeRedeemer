@@ -3,7 +3,7 @@
 <link rel="stylesheet" type="text/css" href="bootstrap.min.css"/>
 <link rel="stylesheet" type="text/css" href="options.css"/>
 
-<div>
+<div style="width: 35em;">
     <div class="d-grid w-100 m-2">
         <div class="alert alert-danger collapse" id="error">
             <span>Default error text</span>
@@ -34,6 +34,22 @@
                 <td>Elecrum Chests</td>
                 <td id="electrumChestCount">0</td>
             </tr>
+            <tr>
+                <td>Tiny Blacksmith Contracts</td>
+                <td id="whiteBlacksmithCount">0</td>
+            </tr>
+            <tr>
+                <td>Small Blacksmith Contracts</td>
+                <td id="greenBlacksmithCount">0</td>
+            </tr>
+            <tr>
+                <td>Medium Blacksmith Contracts</td>
+                <td id="blueBlacksmithCount">0</td>
+            </tr>
+            <tr>
+                <td>Large Blacksmith Contracts</td>
+                <td id="purpleBlacksmithCount">0</td>
+            </tr>
         </tbody>
     </table>
     <div id="actionTabs" class="collapse">
@@ -43,6 +59,9 @@
             </li>
             <li class="nav-item">
                 <a class="nav-link" data-bs-toggle="tab" id="openTabButton" href="#open">Open Chests</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" id="blacksmithTabButton" href="#blacksmith">Blacksmith</a>
             </li>
         </ul>
         <div class="tab-content m-2 w-100">
@@ -80,6 +99,44 @@
                 </div>
                 <button class="btn btn-primary btn-lg w-100" id="openButton">Open Chests</button>
                 <table class="table table-hover my-2" id="chestLoot">
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+            <div class="tab-pane fade" id="blacksmith">
+                <div class="d-flex p-2">
+                    <label class="m-2">Hero</label>
+                    <select id="heroId" class="flex-fill">
+                        <option value="58">Briv</option>
+                        <option value="75">Hew Mann</option>
+                        <option value="91">Widdle</option>
+                        <option value="59">Melf</option>
+                        <option value="91">Widdle</option>
+                    </select>
+                </div>
+                <div class="d-flex p-2">
+                    <label class="m-2">Contract type</label>
+                    <select id="blackithContracType" class="flex-fill">
+                        <option value="31">White</option>
+                        <option value="32">Green</option>
+                        <option value="33">Blue</option>
+                        <option value="34">Purple</option>
+                    </select>
+                </div>
+                <div class="d-flex p-2">
+                    <label class="m-2">Blacksmith Count</label>
+                    <input class="flex-fill" id="blacksmithCountRange" type="range" min="0" max="0" step="1" value="0"/>
+                    <input class="w-25" id="blacksmithCountNumber" type="number" min="0" max="0" step="1" value="0"/>
+                </div>
+                <button class="btn btn-primary btn-lg w-100" id="blacksmithButton">Use Contracts</button>
+                <table class="table table-hover my-2" id="blacksmithResults">
+                    <thead>
+                        <tr>
+                            <th>Slot</th>
+                            <th>Added Levels</th>
+                            <th>New Level</th>
+                        </tr>
+                    </thead>
                     <tbody>
                     </tbody>
                 </table>

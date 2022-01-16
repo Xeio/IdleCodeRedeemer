@@ -1,6 +1,7 @@
 /// <reference path="./../lib/player_data.d.ts" />
 /// <reference path="./../lib/redeem_code_response.d.ts" />
 /// <reference path="./../lib/server_definitions.d.ts" />
+/// <reference path="./../lib/blacksmith_response.d.ts" />
 
 interface CodeSubmitOptions{
     server: string;
@@ -33,6 +34,23 @@ interface PurchaseChestsOptions{
     count: number;
 }
 
+interface UseBlacksmithOptions{
+    server: string;
+    user_id: string;
+    hash: string;
+    contractType: ContractType;
+    heroId: string;
+    count: number;
+    instanceId: string;
+}
+
+declare const enum ContractType{
+    White = 31,
+    Green = 32,
+    Blue = 33,
+    Purple = 34,
+}
+
 class CodeSubmitResponse{
     status: CodeSubmitStatus;
     lootDetail?: LootDetail[];
@@ -52,6 +70,17 @@ class OpenChestResponse{
         this.lootDetail = lootDetail
     }
 }
+
+class UseBlacksmithResponse{
+    status: ResponseStatus;
+    actions?: BlacksmithAction[];
+
+    constructor(status: ResponseStatus, actions?: BlacksmithAction[]){
+        this.status = status
+        this.actions = actions
+    }
+}
+
 
 enum CodeSubmitStatus{
     Success,
@@ -276,5 +305,36 @@ class IdleChampionsApi {
             }
         }
         return ResponseStatus.Failed
+    }
+
+    static async useBlacksmith(options: UseBlacksmithOptions) : Promise<UseBlacksmithResponse> {
+        const request = new URL(options.server)
+
+        request.searchParams.append("call", "useServerBuff")
+        request.searchParams.append("user_id", options.user_id)
+        request.searchParams.append("hash", options.hash)
+        request.searchParams.append("buff_id", options.contractType.toString())
+        request.searchParams.append("hero_id", options.heroId)
+        request.searchParams.append("num_uses", options.count.toString())
+        request.searchParams.append("instance_id", options.instanceId)
+        request.searchParams.append("game_instance_id", "1")
+        request.searchParams.append("timestamp", "0")
+        request.searchParams.append("request_id", "0")
+        request.searchParams.append("language_id", IdleChampionsApi.LANGUAGE_ID)
+        request.searchParams.append("network_id", IdleChampionsApi.NETWORK_ID)
+        request.searchParams.append("localization_aware", "true")
+
+        const response = await fetch(request.toString())
+        if(response.ok){
+            const useServerBuffResponse : UseServerBuffResponse = await response.json()
+            console.debug(useServerBuffResponse)
+            if(useServerBuffResponse.success){
+                return new UseBlacksmithResponse(ResponseStatus.Success, useServerBuffResponse.actions)
+            }
+            if(useServerBuffResponse.failure_reason == FailureReason.OutdatedInstanceId){
+                return new UseBlacksmithResponse(ResponseStatus.OutdatedInstanceId)
+            }
+        }
+        return new UseBlacksmithResponse(ResponseStatus.Failed)
     }
 }
