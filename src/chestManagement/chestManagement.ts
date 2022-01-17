@@ -16,14 +16,19 @@ let instanceId: string | undefined
 let userData: PlayerData | undefined
 let shownCloseClientWarning = false
 
+let blacksmithAggregate: BlacksmithAggregateResult
+
 function loaded(){
     document.getElementById("refreshInventory")!.addEventListener('click', refreshClick)
     document.getElementById("purchaseButton")!.addEventListener('click', purchaseClick)
     document.getElementById("openButton")!.addEventListener('click', openClick)
     document.getElementById("blacksmithButton")!.addEventListener('click', blacksmithClick)
+
     document.getElementById("buyChestType")?.addEventListener('change', setMaximumValues)
     document.getElementById("openChestType")?.addEventListener('change', setMaximumValues)
     document.getElementById("blackithContracType")?.addEventListener('change', setMaximumValues)
+
+    document.getElementById("heroId")?.addEventListener('change', updateSelectedHero)
 
     buyCountRange = document.getElementById("buyCountRange") as HTMLInputElement
     buyCountNumber = document.getElementById("buyCountNumber") as HTMLInputElement
@@ -134,6 +139,7 @@ async function refreshInventory(userId: string, hash: string) {
     document.getElementById("purpleBlacksmithCount")!.textContent = findBuffCount(ContractType.Large.toString()).toLocaleString() || "0"
 
     setMaximumValues()
+    updateSelectedHero()
 
     document.getElementById("actionTabs")!.classList.add("show")
 }
@@ -178,6 +184,19 @@ function setMaximumValues(){
     (document.getElementById("blacksmithCountRange") as HTMLInputElement).value = blacksmithMax.toString();
     (document.getElementById("blacksmithCountNumber") as HTMLInputElement).max = blacksmithMax.toString();
     (document.getElementById("blacksmithCountNumber") as HTMLInputElement).value = blacksmithMax.toString();
+}
+
+function updateSelectedHero(){
+    const heroId = (document.getElementById("heroId") as HTMLSelectElement).value
+
+    if(blacksmithAggregate?.heroId != heroId){
+        blacksmithAggregate = new BlacksmithAggregateResult(heroId)
+    }
+    else{
+        blacksmithAggregate.UpdateLevels()
+    }
+
+    displayBlacksmithResults(blacksmithAggregate)
 }
 
 function purchaseClick(){
@@ -445,8 +464,20 @@ function buildTableRow(label: string, amount: number, style?:string) : HTMLTable
 }
 
 class BlacksmithAggregateResult{
+    heroId: string;
     slotResult = new Array(7);
     slotEndValue = new Array(7);
+
+    constructor(heroId: string){
+        this.heroId = heroId
+        this.UpdateLevels()
+    }
+
+    public UpdateLevels(){
+        userData?.details?.loot?.filter(l => l.hero_id == parseInt(this.heroId)).forEach(lootItem => {
+            this.slotEndValue[lootItem.slot_id] = lootItem.enchant + 1
+        })
+    }
 }
 
 async function useBlacksmithContracts(userId: string, hash: string){
@@ -454,15 +485,13 @@ async function useBlacksmithContracts(userId: string, hash: string){
 
     if(!server || !instanceId) return
 
-    let blacksmitResult = new BlacksmithAggregateResult()
-
     const contractType = <any>(document.getElementById("blackithContracType") as HTMLSelectElement).value as ContractType
     const heroId = (document.getElementById("heroId") as HTMLSelectElement).value
     const blacksmithAmount = parseInt(blacksmithCountRange.value) || 0
 
-    userData?.details?.loot?.filter(l => l.hero_id == parseInt(heroId)).forEach(lootItem => {
-        blacksmitResult.slotEndValue[lootItem.slot_id] = lootItem.enchant + 1
-    })
+    if(blacksmithAggregate?.heroId != heroId){
+        blacksmithAggregate = new BlacksmithAggregateResult(heroId)
+    }
 
     if(!contractType || !heroId || blacksmithAmount < 1){
         return
@@ -506,9 +535,9 @@ async function useBlacksmithContracts(userId: string, hash: string){
             return
         }
         
-        aggregateBlacksmithResults(blacksmithResponse.actions ?? [], blacksmitResult)
+        aggregateBlacksmithResults(blacksmithResponse.actions ?? [], blacksmithAggregate)
 
-        displayBlacksmithResults(blacksmitResult)
+        displayBlacksmithResults(blacksmithAggregate)
 
         if(remainingContracts > 0){
             await new Promise(h => setTimeout(h, REQUEST_DELAY)) //Delay between requests

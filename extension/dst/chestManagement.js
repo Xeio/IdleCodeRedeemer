@@ -338,8 +338,9 @@ var server;
 var instanceId;
 var userData;
 var shownCloseClientWarning = false;
+var blacksmithAggregate;
 function loaded() {
-    var _a, _b, _c;
+    var _a, _b, _c, _d;
     document.getElementById("refreshInventory").addEventListener('click', refreshClick);
     document.getElementById("purchaseButton").addEventListener('click', purchaseClick);
     document.getElementById("openButton").addEventListener('click', openClick);
@@ -347,6 +348,7 @@ function loaded() {
     (_a = document.getElementById("buyChestType")) === null || _a === void 0 ? void 0 : _a.addEventListener('change', setMaximumValues);
     (_b = document.getElementById("openChestType")) === null || _b === void 0 ? void 0 : _b.addEventListener('change', setMaximumValues);
     (_c = document.getElementById("blackithContracType")) === null || _c === void 0 ? void 0 : _c.addEventListener('change', setMaximumValues);
+    (_d = document.getElementById("heroId")) === null || _d === void 0 ? void 0 : _d.addEventListener('change', updateSelectedHero);
     buyCountRange = document.getElementById("buyCountRange");
     buyCountNumber = document.getElementById("buyCountNumber");
     buyCountRange.oninput = buyRangeChanged;
@@ -444,6 +446,7 @@ function refreshInventory(userId, hash) {
                     document.getElementById("blueBlacksmithCount").textContent = findBuffCount(33..toString()).toLocaleString() || "0";
                     document.getElementById("purpleBlacksmithCount").textContent = findBuffCount(34..toString()).toLocaleString() || "0";
                     setMaximumValues();
+                    updateSelectedHero();
                     document.getElementById("actionTabs").classList.add("show");
                     return [2];
             }
@@ -485,6 +488,16 @@ function setMaximumValues() {
     document.getElementById("blacksmithCountRange").value = blacksmithMax.toString();
     document.getElementById("blacksmithCountNumber").max = blacksmithMax.toString();
     document.getElementById("blacksmithCountNumber").value = blacksmithMax.toString();
+}
+function updateSelectedHero() {
+    var heroId = document.getElementById("heroId").value;
+    if ((blacksmithAggregate === null || blacksmithAggregate === void 0 ? void 0 : blacksmithAggregate.heroId) != heroId) {
+        blacksmithAggregate = new BlacksmithAggregateResult(heroId);
+    }
+    else {
+        blacksmithAggregate.UpdateLevels();
+    }
+    displayBlacksmithResults(blacksmithAggregate);
 }
 function purchaseClick() {
     hideMessages();
@@ -722,34 +735,42 @@ function buildTableRow(label, amount, style) {
     return row;
 }
 var BlacksmithAggregateResult = (function () {
-    function BlacksmithAggregateResult() {
+    function BlacksmithAggregateResult(heroId) {
         this.slotResult = new Array(7);
         this.slotEndValue = new Array(7);
+        this.heroId = heroId;
+        this.UpdateLevels();
     }
+    BlacksmithAggregateResult.prototype.UpdateLevels = function () {
+        var _this = this;
+        var _a, _b;
+        (_b = (_a = userData === null || userData === void 0 ? void 0 : userData.details) === null || _a === void 0 ? void 0 : _a.loot) === null || _b === void 0 ? void 0 : _b.filter(function (l) { return l.hero_id == parseInt(_this.heroId); }).forEach(function (lootItem) {
+            _this.slotEndValue[lootItem.slot_id] = lootItem.enchant + 1;
+        });
+    };
     return BlacksmithAggregateResult;
 }());
 function useBlacksmithContracts(userId, hash) {
-    var _a, _b, _c;
+    var _a;
     return __awaiter(this, void 0, void 0, function () {
-        var MAX_BLACKSMITH_AMOUNT, blacksmitResult, contractType, heroId, blacksmithAmount, remainingContracts, currentAmount, blacksmithResponse, lastInstanceId;
-        return __generator(this, function (_d) {
-            switch (_d.label) {
+        var MAX_BLACKSMITH_AMOUNT, contractType, heroId, blacksmithAmount, remainingContracts, currentAmount, blacksmithResponse, lastInstanceId;
+        return __generator(this, function (_b) {
+            switch (_b.label) {
                 case 0:
                     MAX_BLACKSMITH_AMOUNT = 50;
                     if (!server || !instanceId)
                         return [2];
-                    blacksmitResult = new BlacksmithAggregateResult();
                     contractType = document.getElementById("blackithContracType").value;
                     heroId = document.getElementById("heroId").value;
                     blacksmithAmount = parseInt(blacksmithCountRange.value) || 0;
-                    (_b = (_a = userData === null || userData === void 0 ? void 0 : userData.details) === null || _a === void 0 ? void 0 : _a.loot) === null || _b === void 0 ? void 0 : _b.filter(function (l) { return l.hero_id == parseInt(heroId); }).forEach(function (lootItem) {
-                        blacksmitResult.slotEndValue[lootItem.slot_id] = lootItem.enchant + 1;
-                    });
+                    if ((blacksmithAggregate === null || blacksmithAggregate === void 0 ? void 0 : blacksmithAggregate.heroId) != heroId) {
+                        blacksmithAggregate = new BlacksmithAggregateResult(heroId);
+                    }
                     if (!contractType || !heroId || blacksmithAmount < 1) {
                         return [2];
                     }
                     remainingContracts = blacksmithAmount;
-                    _d.label = 1;
+                    _b.label = 1;
                 case 1:
                     if (!(remainingContracts > 0)) return [3, 5];
                     showInfo("Smithing... ".concat(remainingContracts, " contracts remaining to use"));
@@ -766,7 +787,7 @@ function useBlacksmithContracts(userId, hash) {
                             instanceId: instanceId
                         })];
                 case 2:
-                    blacksmithResponse = _d.sent();
+                    blacksmithResponse = _b.sent();
                     if (blacksmithResponse.status == ResponseStatus.OutdatedInstanceId) {
                         lastInstanceId = instanceId;
                         console.log("Refreshing inventory for instance ID");
@@ -783,13 +804,13 @@ function useBlacksmithContracts(userId, hash) {
                         showError("Blacksmithing failed");
                         return [2];
                     }
-                    aggregateBlacksmithResults((_c = blacksmithResponse.actions) !== null && _c !== void 0 ? _c : [], blacksmitResult);
-                    displayBlacksmithResults(blacksmitResult);
+                    aggregateBlacksmithResults((_a = blacksmithResponse.actions) !== null && _a !== void 0 ? _a : [], blacksmithAggregate);
+                    displayBlacksmithResults(blacksmithAggregate);
                     if (!(remainingContracts > 0)) return [3, 4];
                     return [4, new Promise(function (h) { return setTimeout(h, REQUEST_DELAY); })];
                 case 3:
-                    _d.sent();
-                    _d.label = 4;
+                    _b.sent();
+                    _b.label = 4;
                 case 4: return [3, 1];
                 case 5:
                     console.log("Completed blacksmithing");
