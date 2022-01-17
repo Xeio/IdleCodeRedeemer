@@ -7,16 +7,16 @@ document.addEventListener("DOMContentLoaded", loaded)
 
 const REQUEST_DELAY = 4000
 
-let buyCountRange: HTMLInputElement, buyCountNumber: HTMLInputElement
-let openCountRange: HTMLInputElement, openCountNumber: HTMLInputElement
-let blacksmithCountRange: HTMLInputElement, blacksmithCountNumber: HTMLInputElement
+let _buyCountRange: HTMLInputElement, _buyCountNumber: HTMLInputElement
+let _openCountRange: HTMLInputElement, _openCountNumber: HTMLInputElement
+let _blacksmithCountRange: HTMLInputElement, _blacksmithCountNumber: HTMLInputElement
 
-let server: string | undefined
-let instanceId: string | undefined
-let userData: PlayerData | undefined
-let shownCloseClientWarning = false
+let _server: string | undefined
+let _instanceId: string | undefined
+let _userData: PlayerData | undefined
+let _shownCloseClientWarning = false
 
-let blacksmithAggregate: BlacksmithAggregateResult
+let _blacksmithAggregate: BlacksmithAggregateResult
 
 function loaded(){
     document.getElementById("refreshInventory")!.addEventListener('click', refreshClick)
@@ -30,55 +30,53 @@ function loaded(){
 
     document.getElementById("heroId")?.addEventListener('change', updateSelectedHero)
 
-    buyCountRange = document.getElementById("buyCountRange") as HTMLInputElement
-    buyCountNumber = document.getElementById("buyCountNumber") as HTMLInputElement
-    buyCountRange.oninput = buyRangeChanged
-    buyCountNumber.oninput = buyNumberChanged
+    _buyCountRange = document.getElementById("buyCountRange") as HTMLInputElement
+    _buyCountNumber = document.getElementById("buyCountNumber") as HTMLInputElement
+    _buyCountRange.oninput = buyRangeChanged
+    _buyCountNumber.oninput = buyNumberChanged
 
-    openCountRange = document.getElementById("openCountRange") as HTMLInputElement
-    openCountNumber = document.getElementById("openCountNumber") as HTMLInputElement
-    openCountRange.oninput = openRangeChanged
-    openCountNumber.oninput = openNumberChanged
+    _openCountRange = document.getElementById("openCountRange") as HTMLInputElement
+    _openCountNumber = document.getElementById("openCountNumber") as HTMLInputElement
+    _openCountRange.oninput = openRangeChanged
+    _openCountNumber.oninput = openNumberChanged
 
-    blacksmithCountRange = document.getElementById("blacksmithCountRange") as HTMLInputElement
-    blacksmithCountNumber = document.getElementById("blacksmithCountNumber") as HTMLInputElement
-    blacksmithCountRange.oninput = blacksmithRangeChanged
-    blacksmithCountNumber.oninput = blacksmithNumberChanged
-
-    const blackithContracType  = document.getElementById("blackithContracType") as HTMLSelectElement
+    _blacksmithCountRange = document.getElementById("blacksmithCountRange") as HTMLInputElement
+    _blacksmithCountNumber = document.getElementById("blacksmithCountNumber") as HTMLInputElement
+    _blacksmithCountRange.oninput = blacksmithRangeChanged
+    _blacksmithCountNumber.oninput = blacksmithNumberChanged
 }
 
 function buyRangeChanged(){
-    buyCountNumber.value = buyCountRange.value
+    _buyCountNumber.value = _buyCountRange.value
 }
 
 function buyNumberChanged(){
-    if(parseInt(buyCountNumber.value) > parseInt(buyCountNumber.max)){
-      buyCountNumber.value = buyCountNumber.max
+    if(parseInt(_buyCountNumber.value) > parseInt(_buyCountNumber.max)){
+      _buyCountNumber.value = _buyCountNumber.max
     }
-    buyCountRange.value = buyCountNumber.value
+    _buyCountRange.value = _buyCountNumber.value
 }
 
 function openRangeChanged(){
-    openCountNumber.value = openCountRange.value
+    _openCountNumber.value = _openCountRange.value
 }
 
 function openNumberChanged(){
-    if(parseInt(openCountNumber.value) > parseInt(openCountNumber.max)){
-        openCountNumber.value = openCountNumber.max
+    if(parseInt(_openCountNumber.value) > parseInt(_openCountNumber.max)){
+        _openCountNumber.value = _openCountNumber.max
     }
-    openCountRange.value = openCountNumber.value
+    _openCountRange.value = _openCountNumber.value
 }
 
 function blacksmithRangeChanged(){
-    blacksmithCountNumber.value = blacksmithCountRange.value
+    _blacksmithCountNumber.value = _blacksmithCountRange.value
 }
 
 function blacksmithNumberChanged(){
-    if(parseInt(blacksmithCountNumber.value) > parseInt(blacksmithCountNumber.max)){
-        blacksmithCountNumber.value = blacksmithCountNumber.max
+    if(parseInt(_blacksmithCountNumber.value) > parseInt(_blacksmithCountNumber.max)){
+        _blacksmithCountNumber.value = _blacksmithCountNumber.max
     }
-    blacksmithCountRange.value = blacksmithCountNumber.value
+    _blacksmithCountRange.value = _blacksmithCountNumber.value
 }
 
 function refreshClick(){
@@ -98,40 +96,40 @@ async function refreshInventory(userId: string, hash: string) {
         return
     }
     
-    if(!server){
-        server = await IdleChampionsApi.getServer()
-        console.log(`Got server ${server}`)
+    if(!_server){
+        _server = await IdleChampionsApi.getServer()
+        console.log(`Got server ${_server}`)
     }
 
-    if(!server) {
+    if(!_server) {
         showError("Failed to get idle champions server.")
         console.error("Failed to get idle champions server.")
         return
     }
 
-    userData = await IdleChampionsApi.getUserDetails({
-        server: server,
+    _userData = await IdleChampionsApi.getUserDetails({
+        server: _server,
         user_id: userId,
         hash: hash,
     })
 
-    if(!userData) {
+    if(!_userData) {
         showError("Failed to retreive user data.")
         console.error("Failed to retreive user data.")
         return
     }
 
     console.log("Refreshed inventory data.")
-    console.debug(userData)
+    console.debug(_userData)
 
-    instanceId = userData.details.instance_id
-    chrome.storage.sync.set({[Globals.SETTING_INSTANCE_ID]: userData.details.instance_id})
+    _instanceId = _userData.details.instance_id
+    chrome.storage.sync.set({[Globals.SETTING_INSTANCE_ID]: _userData.details.instance_id})
 
-    document.getElementById("gemCount")!.textContent = userData.details.red_rubies.toLocaleString()
+    document.getElementById("gemCount")!.textContent = _userData.details.red_rubies.toLocaleString()
 
-    document.getElementById("silverChestCount")!.textContent = userData.details.chests[ChestType.Silver]?.toLocaleString() || "0"
-    document.getElementById("goldChestCount")!.textContent = userData.details.chests[ChestType.Gold]?.toLocaleString() || "0"
-    document.getElementById("electrumChestCount")!.textContent = userData.details.chests[ChestType.Electrum]?.toLocaleString() || "0"
+    document.getElementById("silverChestCount")!.textContent = _userData.details.chests[ChestType.Silver]?.toLocaleString() || "0"
+    document.getElementById("goldChestCount")!.textContent = _userData.details.chests[ChestType.Gold]?.toLocaleString() || "0"
+    document.getElementById("electrumChestCount")!.textContent = _userData.details.chests[ChestType.Electrum]?.toLocaleString() || "0"
 
     document.getElementById("whiteBlacksmithCount")!.textContent = findBuffCount(ContractType.Tiny.toString()).toLocaleString() || "0"
     document.getElementById("greenBlacksmithCount")!.textContent = findBuffCount(ContractType.Small.toString()).toLocaleString() || "0"
@@ -145,14 +143,14 @@ async function refreshInventory(userId: string, hash: string) {
 }
 
 function findBuffCount(buff_id: string) : number {
-    var countString = userData?.details?.buffs?.find(b => b.buff_id == buff_id.toString())?.inventory_amount
+    var countString = _userData?.details?.buffs?.find(b => b.buff_id == buff_id.toString())?.inventory_amount
     return parseInt(countString ?? "0")
 }
 
 function setMaximumValues(){
-    if(!userData) return
+    if(!_userData) return
 
-    const gems = userData.details.red_rubies
+    const gems = _userData.details.red_rubies
 
     let buyMax = 0
     switch((document.getElementById("buyChestType") as HTMLSelectElement).value){
@@ -170,7 +168,7 @@ function setMaximumValues(){
     (document.getElementById("buyCountNumber") as HTMLInputElement).value = buyMax.toString();
 
     const chestType = (document.getElementById("openChestType") as HTMLSelectElement).value;
-    const openMax = userData.details.chests[chestType] ?? 0;
+    const openMax = _userData.details.chests[chestType] ?? 0;
 
     (document.getElementById("openCountRange") as HTMLInputElement).max = openMax.toString();
     (document.getElementById("openCountRange") as HTMLInputElement).value = openMax.toString();
@@ -189,14 +187,14 @@ function setMaximumValues(){
 function updateSelectedHero(){
     const heroId = (document.getElementById("heroId") as HTMLSelectElement).value
 
-    if(blacksmithAggregate?.heroId != heroId){
-        blacksmithAggregate = new BlacksmithAggregateResult(heroId)
+    if(_blacksmithAggregate?.heroId != heroId){
+        _blacksmithAggregate = new BlacksmithAggregateResult(heroId, _userData)
     }
     else{
-        blacksmithAggregate.UpdateLevels()
+        _blacksmithAggregate.UpdateLevels(_userData)
     }
 
-    displayBlacksmithResults(blacksmithAggregate)
+    displayBlacksmithResults()
 }
 
 function purchaseClick(){
@@ -210,7 +208,7 @@ function purchaseClick(){
 }
 
 async function purchaseChests(userId: string, hash: string){
-    if(!server) return
+    if(!_server) return
 
     const MAX_PURCHASE_AMOUNT = 100
 
@@ -232,7 +230,7 @@ async function purchaseChests(userId: string, hash: string){
         console.log(`Purchasing ${currentAmount} chests`)
 
         const responseStatus = await IdleChampionsApi.purchaseChests({
-            server: server,
+            server: _server,
             user_id: userId,
             hash: hash,
             chestTypeId: chestType,
@@ -286,14 +284,14 @@ function blacksmithClick(){
 async function openChests(userId: string, hash: string){
     const MAX_OPEN_AMOUNT = 99
 
-    if(!server || !instanceId) return
+    if(!_server || !_instanceId) return
 
-    if(!shownCloseClientWarning){
+    if(!_shownCloseClientWarning){
         showOpenWarning("You MUST close the client before calling open chests. Click open again to confirm.")
-        shownCloseClientWarning = true
+        _shownCloseClientWarning = true
         return
     }
-    shownCloseClientWarning = false
+    _shownCloseClientWarning = false
 
     let lootResults = new LootAggregateResult()
 
@@ -315,19 +313,19 @@ async function openChests(userId: string, hash: string){
         console.log(`Opening ${currentAmount} chests`)
 
         const openResponse = await IdleChampionsApi.openChests({
-            server: server,
+            server: _server,
             user_id: userId,
             hash: hash,
             chestTypeId: chestType,
             count: currentAmount,
-            instanceId: instanceId,
+            instanceId: _instanceId,
         })
 
         if(openResponse.status == ResponseStatus.OutdatedInstanceId){
-            const lastInstanceId:string = instanceId
+            const lastInstanceId:string = _instanceId
             console.log("Refreshing inventory for instance ID")
             refreshInventory(userId, hash)
-            if(instanceId == lastInstanceId){
+            if(_instanceId == lastInstanceId){
                 console.error("Failed to refresh instance id")
                 showError("Failed to get updated instance ID. Check credentials.")
                 return
@@ -468,12 +466,12 @@ class BlacksmithAggregateResult{
     slotResult = new Array(7);
     slotEndValue = new Array(7);
 
-    constructor(heroId: string){
+    constructor(heroId: string, userData: PlayerData | undefined){
         this.heroId = heroId
-        this.UpdateLevels()
+        this.UpdateLevels(userData)
     }
 
-    public UpdateLevels(){
+    public UpdateLevels(userData: PlayerData | undefined){
         userData?.details?.loot?.filter(l => l.hero_id == parseInt(this.heroId)).forEach(lootItem => {
             this.slotEndValue[lootItem.slot_id] = lootItem.enchant + 1
         })
@@ -483,15 +481,13 @@ class BlacksmithAggregateResult{
 async function useBlacksmithContracts(userId: string, hash: string){
     const MAX_BLACKSMITH_AMOUNT = 50
 
-    if(!server || !instanceId) return
+    if(!_server || !_instanceId) return
 
     const contractType = <any>(document.getElementById("blackithContracType") as HTMLSelectElement).value as ContractType
     const heroId = (document.getElementById("heroId") as HTMLSelectElement).value
-    const blacksmithAmount = parseInt(blacksmithCountRange.value) || 0
+    const blacksmithAmount = parseInt(_blacksmithCountRange.value) || 0
 
-    if(blacksmithAggregate?.heroId != heroId){
-        blacksmithAggregate = new BlacksmithAggregateResult(heroId)
-    }
+    updateSelectedHero()
 
     if(!contractType || !heroId || blacksmithAmount < 1){
         return
@@ -508,20 +504,20 @@ async function useBlacksmithContracts(userId: string, hash: string){
         console.log(`Using ${currentAmount} contracts`)
 
         const blacksmithResponse = await IdleChampionsApi.useBlacksmith({
-            server: server,
+            server: _server,
             user_id: userId,
             hash: hash,
             heroId: heroId,
             contractType: contractType,
             count: currentAmount,
-            instanceId: instanceId,
+            instanceId: _instanceId,
         })
 
         if(blacksmithResponse.status == ResponseStatus.OutdatedInstanceId){
-            const lastInstanceId:string = instanceId
+            const lastInstanceId:string = _instanceId
             console.log("Refreshing inventory for instance ID")
             refreshInventory(userId, hash)
-            if(instanceId == lastInstanceId){
+            if(_instanceId == lastInstanceId){
                 console.error("Failed to refresh instance id")
                 showError("Failed to get updated instance ID. Check credentials.")
                 return
@@ -535,9 +531,9 @@ async function useBlacksmithContracts(userId: string, hash: string){
             return
         }
         
-        aggregateBlacksmithResults(blacksmithResponse.actions ?? [], blacksmithAggregate)
+        aggregateBlacksmithResults(blacksmithResponse.actions ?? [])
 
-        displayBlacksmithResults(blacksmithAggregate)
+        displayBlacksmithResults()
 
         if(remainingContracts > 0){
             await new Promise(h => setTimeout(h, REQUEST_DELAY)) //Delay between requests
@@ -551,25 +547,22 @@ async function useBlacksmithContracts(userId: string, hash: string){
     showSuccess(`Used ${blacksmithAmount} blacksmith contracts`)
 }
 
-function aggregateBlacksmithResults(blacksmithActions:BlacksmithAction[], aggregateResult:BlacksmithAggregateResult){
+function aggregateBlacksmithResults(blacksmithActions:BlacksmithAction[]){
     blacksmithActions.forEach(action => {
         if(action.action == "level_up_loot"){
             var newLevels = parseInt(action.amount)
-            aggregateResult.slotResult[action.slot_id] = (aggregateResult.slotResult[action.slot_id] ?? 0) + newLevels
-            aggregateResult.slotEndValue[action.slot_id] = action.enchant_level + 1
+            _blacksmithAggregate.slotResult[action.slot_id] = (_blacksmithAggregate.slotResult[action.slot_id] ?? 0) + newLevels
+            _blacksmithAggregate.slotEndValue[action.slot_id] = action.enchant_level + 1
         }
     })
 }
 
-function displayBlacksmithResults(aggregateResult:BlacksmithAggregateResult){
+function displayBlacksmithResults(){
     document.querySelector("#blacksmithResults tbody")!.innerHTML = ""
 
-    addBlacksmithTableRow("Slot 1", aggregateResult.slotResult[1], aggregateResult.slotEndValue[1])
-    addBlacksmithTableRow("Slot 2", aggregateResult.slotResult[2], aggregateResult.slotEndValue[2])
-    addBlacksmithTableRow("Slot 3", aggregateResult.slotResult[3], aggregateResult.slotEndValue[6])
-    addBlacksmithTableRow("Slot 4", aggregateResult.slotResult[4], aggregateResult.slotEndValue[4])
-    addBlacksmithTableRow("Slot 5", aggregateResult.slotResult[5], aggregateResult.slotEndValue[5])
-    addBlacksmithTableRow("Slot 6", aggregateResult.slotResult[6], aggregateResult.slotEndValue[6])
+    for(let i = 1; i <= 6; i++){
+        addBlacksmithTableRow("Slot " + i, _blacksmithAggregate.slotResult[i], _blacksmithAggregate.slotEndValue[i])
+    }
 }
 
 function addBlacksmithTableRow(text:string, amount:number, newLevel: number, style?:string){

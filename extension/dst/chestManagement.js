@@ -331,14 +331,14 @@ var IdleChampionsApi = (function () {
 }());
 document.addEventListener("DOMContentLoaded", loaded);
 var REQUEST_DELAY = 4000;
-var buyCountRange, buyCountNumber;
-var openCountRange, openCountNumber;
-var blacksmithCountRange, blacksmithCountNumber;
-var server;
-var instanceId;
-var userData;
-var shownCloseClientWarning = false;
-var blacksmithAggregate;
+var _buyCountRange, _buyCountNumber;
+var _openCountRange, _openCountNumber;
+var _blacksmithCountRange, _blacksmithCountNumber;
+var _server;
+var _instanceId;
+var _userData;
+var _shownCloseClientWarning = false;
+var _blacksmithAggregate;
 function loaded() {
     var _a, _b, _c, _d;
     document.getElementById("refreshInventory").addEventListener('click', refreshClick);
@@ -349,46 +349,45 @@ function loaded() {
     (_b = document.getElementById("openChestType")) === null || _b === void 0 ? void 0 : _b.addEventListener('change', setMaximumValues);
     (_c = document.getElementById("blackithContracType")) === null || _c === void 0 ? void 0 : _c.addEventListener('change', setMaximumValues);
     (_d = document.getElementById("heroId")) === null || _d === void 0 ? void 0 : _d.addEventListener('change', updateSelectedHero);
-    buyCountRange = document.getElementById("buyCountRange");
-    buyCountNumber = document.getElementById("buyCountNumber");
-    buyCountRange.oninput = buyRangeChanged;
-    buyCountNumber.oninput = buyNumberChanged;
-    openCountRange = document.getElementById("openCountRange");
-    openCountNumber = document.getElementById("openCountNumber");
-    openCountRange.oninput = openRangeChanged;
-    openCountNumber.oninput = openNumberChanged;
-    blacksmithCountRange = document.getElementById("blacksmithCountRange");
-    blacksmithCountNumber = document.getElementById("blacksmithCountNumber");
-    blacksmithCountRange.oninput = blacksmithRangeChanged;
-    blacksmithCountNumber.oninput = blacksmithNumberChanged;
-    var blackithContracType = document.getElementById("blackithContracType");
+    _buyCountRange = document.getElementById("buyCountRange");
+    _buyCountNumber = document.getElementById("buyCountNumber");
+    _buyCountRange.oninput = buyRangeChanged;
+    _buyCountNumber.oninput = buyNumberChanged;
+    _openCountRange = document.getElementById("openCountRange");
+    _openCountNumber = document.getElementById("openCountNumber");
+    _openCountRange.oninput = openRangeChanged;
+    _openCountNumber.oninput = openNumberChanged;
+    _blacksmithCountRange = document.getElementById("blacksmithCountRange");
+    _blacksmithCountNumber = document.getElementById("blacksmithCountNumber");
+    _blacksmithCountRange.oninput = blacksmithRangeChanged;
+    _blacksmithCountNumber.oninput = blacksmithNumberChanged;
 }
 function buyRangeChanged() {
-    buyCountNumber.value = buyCountRange.value;
+    _buyCountNumber.value = _buyCountRange.value;
 }
 function buyNumberChanged() {
-    if (parseInt(buyCountNumber.value) > parseInt(buyCountNumber.max)) {
-        buyCountNumber.value = buyCountNumber.max;
+    if (parseInt(_buyCountNumber.value) > parseInt(_buyCountNumber.max)) {
+        _buyCountNumber.value = _buyCountNumber.max;
     }
-    buyCountRange.value = buyCountNumber.value;
+    _buyCountRange.value = _buyCountNumber.value;
 }
 function openRangeChanged() {
-    openCountNumber.value = openCountRange.value;
+    _openCountNumber.value = _openCountRange.value;
 }
 function openNumberChanged() {
-    if (parseInt(openCountNumber.value) > parseInt(openCountNumber.max)) {
-        openCountNumber.value = openCountNumber.max;
+    if (parseInt(_openCountNumber.value) > parseInt(_openCountNumber.max)) {
+        _openCountNumber.value = _openCountNumber.max;
     }
-    openCountRange.value = openCountNumber.value;
+    _openCountRange.value = _openCountNumber.value;
 }
 function blacksmithRangeChanged() {
-    blacksmithCountNumber.value = blacksmithCountRange.value;
+    _blacksmithCountNumber.value = _blacksmithCountRange.value;
 }
 function blacksmithNumberChanged() {
-    if (parseInt(blacksmithCountNumber.value) > parseInt(blacksmithCountNumber.max)) {
-        blacksmithCountNumber.value = blacksmithCountNumber.max;
+    if (parseInt(_blacksmithCountNumber.value) > parseInt(_blacksmithCountNumber.max)) {
+        _blacksmithCountNumber.value = _blacksmithCountNumber.max;
     }
-    blacksmithCountRange.value = blacksmithCountNumber.value;
+    _blacksmithCountRange.value = _blacksmithCountNumber.value;
 }
 function refreshClick() {
     hideMessages();
@@ -409,38 +408,38 @@ function refreshInventory(userId, hash) {
                         showError("No credentials entered.");
                         return [2];
                     }
-                    if (!!server) return [3, 2];
+                    if (!!_server) return [3, 2];
                     return [4, IdleChampionsApi.getServer()];
                 case 1:
-                    server = _e.sent();
-                    console.log("Got server ".concat(server));
+                    _server = _e.sent();
+                    console.log("Got server ".concat(_server));
                     _e.label = 2;
                 case 2:
-                    if (!server) {
+                    if (!_server) {
                         showError("Failed to get idle champions server.");
                         console.error("Failed to get idle champions server.");
                         return [2];
                     }
                     return [4, IdleChampionsApi.getUserDetails({
-                            server: server,
+                            server: _server,
                             user_id: userId,
                             hash: hash
                         })];
                 case 3:
-                    userData = _e.sent();
-                    if (!userData) {
+                    _userData = _e.sent();
+                    if (!_userData) {
                         showError("Failed to retreive user data.");
                         console.error("Failed to retreive user data.");
                         return [2];
                     }
                     console.log("Refreshed inventory data.");
-                    console.debug(userData);
-                    instanceId = userData.details.instance_id;
-                    chrome.storage.sync.set((_d = {}, _d[Globals.SETTING_INSTANCE_ID] = userData.details.instance_id, _d));
-                    document.getElementById("gemCount").textContent = userData.details.red_rubies.toLocaleString();
-                    document.getElementById("silverChestCount").textContent = ((_a = userData.details.chests[1]) === null || _a === void 0 ? void 0 : _a.toLocaleString()) || "0";
-                    document.getElementById("goldChestCount").textContent = ((_b = userData.details.chests[2]) === null || _b === void 0 ? void 0 : _b.toLocaleString()) || "0";
-                    document.getElementById("electrumChestCount").textContent = ((_c = userData.details.chests[282]) === null || _c === void 0 ? void 0 : _c.toLocaleString()) || "0";
+                    console.debug(_userData);
+                    _instanceId = _userData.details.instance_id;
+                    chrome.storage.sync.set((_d = {}, _d[Globals.SETTING_INSTANCE_ID] = _userData.details.instance_id, _d));
+                    document.getElementById("gemCount").textContent = _userData.details.red_rubies.toLocaleString();
+                    document.getElementById("silverChestCount").textContent = ((_a = _userData.details.chests[1]) === null || _a === void 0 ? void 0 : _a.toLocaleString()) || "0";
+                    document.getElementById("goldChestCount").textContent = ((_b = _userData.details.chests[2]) === null || _b === void 0 ? void 0 : _b.toLocaleString()) || "0";
+                    document.getElementById("electrumChestCount").textContent = ((_c = _userData.details.chests[282]) === null || _c === void 0 ? void 0 : _c.toLocaleString()) || "0";
                     document.getElementById("whiteBlacksmithCount").textContent = findBuffCount(31..toString()).toLocaleString() || "0";
                     document.getElementById("greenBlacksmithCount").textContent = findBuffCount(32..toString()).toLocaleString() || "0";
                     document.getElementById("blueBlacksmithCount").textContent = findBuffCount(33..toString()).toLocaleString() || "0";
@@ -455,14 +454,14 @@ function refreshInventory(userId, hash) {
 }
 function findBuffCount(buff_id) {
     var _a, _b, _c;
-    var countString = (_c = (_b = (_a = userData === null || userData === void 0 ? void 0 : userData.details) === null || _a === void 0 ? void 0 : _a.buffs) === null || _b === void 0 ? void 0 : _b.find(function (b) { return b.buff_id == buff_id.toString(); })) === null || _c === void 0 ? void 0 : _c.inventory_amount;
+    var countString = (_c = (_b = (_a = _userData === null || _userData === void 0 ? void 0 : _userData.details) === null || _a === void 0 ? void 0 : _a.buffs) === null || _b === void 0 ? void 0 : _b.find(function (b) { return b.buff_id == buff_id.toString(); })) === null || _c === void 0 ? void 0 : _c.inventory_amount;
     return parseInt(countString !== null && countString !== void 0 ? countString : "0");
 }
 function setMaximumValues() {
     var _a;
-    if (!userData)
+    if (!_userData)
         return;
-    var gems = userData.details.red_rubies;
+    var gems = _userData.details.red_rubies;
     var buyMax = 0;
     switch (document.getElementById("buyChestType").value) {
         case 1..toString():
@@ -477,7 +476,7 @@ function setMaximumValues() {
     document.getElementById("buyCountNumber").max = buyMax.toString();
     document.getElementById("buyCountNumber").value = buyMax.toString();
     var chestType = document.getElementById("openChestType").value;
-    var openMax = (_a = userData.details.chests[chestType]) !== null && _a !== void 0 ? _a : 0;
+    var openMax = (_a = _userData.details.chests[chestType]) !== null && _a !== void 0 ? _a : 0;
     document.getElementById("openCountRange").max = openMax.toString();
     document.getElementById("openCountRange").value = openMax.toString();
     document.getElementById("openCountNumber").max = openMax.toString();
@@ -491,13 +490,13 @@ function setMaximumValues() {
 }
 function updateSelectedHero() {
     var heroId = document.getElementById("heroId").value;
-    if ((blacksmithAggregate === null || blacksmithAggregate === void 0 ? void 0 : blacksmithAggregate.heroId) != heroId) {
-        blacksmithAggregate = new BlacksmithAggregateResult(heroId);
+    if ((_blacksmithAggregate === null || _blacksmithAggregate === void 0 ? void 0 : _blacksmithAggregate.heroId) != heroId) {
+        _blacksmithAggregate = new BlacksmithAggregateResult(heroId, _userData);
     }
     else {
-        blacksmithAggregate.UpdateLevels();
+        _blacksmithAggregate.UpdateLevels(_userData);
     }
-    displayBlacksmithResults(blacksmithAggregate);
+    displayBlacksmithResults();
 }
 function purchaseClick() {
     hideMessages();
@@ -512,7 +511,7 @@ function purchaseChests(userId, hash) {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    if (!server)
+                    if (!_server)
                         return [2];
                     MAX_PURCHASE_AMOUNT = 100;
                     chestType = document.getElementById("buyChestType").value;
@@ -529,7 +528,7 @@ function purchaseChests(userId, hash) {
                     remainingChests -= currentAmount;
                     console.log("Purchasing ".concat(currentAmount, " chests"));
                     return [4, IdleChampionsApi.purchaseChests({
-                            server: server,
+                            server: _server,
                             user_id: userId,
                             hash: hash,
                             chestTypeId: chestType,
@@ -584,14 +583,14 @@ function openChests(userId, hash) {
             switch (_b.label) {
                 case 0:
                     MAX_OPEN_AMOUNT = 99;
-                    if (!server || !instanceId)
+                    if (!_server || !_instanceId)
                         return [2];
-                    if (!shownCloseClientWarning) {
+                    if (!_shownCloseClientWarning) {
                         showOpenWarning("You MUST close the client before calling open chests. Click open again to confirm.");
-                        shownCloseClientWarning = true;
+                        _shownCloseClientWarning = true;
                         return [2];
                     }
-                    shownCloseClientWarning = false;
+                    _shownCloseClientWarning = false;
                     lootResults = new LootAggregateResult();
                     chestType = document.getElementById("openChestType").value;
                     chestAmount = parseInt(document.getElementById("openCountRange").value) || 0;
@@ -607,20 +606,20 @@ function openChests(userId, hash) {
                     remainingChests -= currentAmount;
                     console.log("Opening ".concat(currentAmount, " chests"));
                     return [4, IdleChampionsApi.openChests({
-                            server: server,
+                            server: _server,
                             user_id: userId,
                             hash: hash,
                             chestTypeId: chestType,
                             count: currentAmount,
-                            instanceId: instanceId
+                            instanceId: _instanceId
                         })];
                 case 2:
                     openResponse = _b.sent();
                     if (openResponse.status == ResponseStatus.OutdatedInstanceId) {
-                        lastInstanceId = instanceId;
+                        lastInstanceId = _instanceId;
                         console.log("Refreshing inventory for instance ID");
                         refreshInventory(userId, hash);
-                        if (instanceId == lastInstanceId) {
+                        if (_instanceId == lastInstanceId) {
                             console.error("Failed to refresh instance id");
                             showError("Failed to get updated instance ID. Check credentials.");
                             return [2];
@@ -735,13 +734,13 @@ function buildTableRow(label, amount, style) {
     return row;
 }
 var BlacksmithAggregateResult = (function () {
-    function BlacksmithAggregateResult(heroId) {
+    function BlacksmithAggregateResult(heroId, userData) {
         this.slotResult = new Array(7);
         this.slotEndValue = new Array(7);
         this.heroId = heroId;
-        this.UpdateLevels();
+        this.UpdateLevels(userData);
     }
-    BlacksmithAggregateResult.prototype.UpdateLevels = function () {
+    BlacksmithAggregateResult.prototype.UpdateLevels = function (userData) {
         var _this = this;
         var _a, _b;
         (_b = (_a = userData === null || userData === void 0 ? void 0 : userData.details) === null || _a === void 0 ? void 0 : _a.loot) === null || _b === void 0 ? void 0 : _b.filter(function (l) { return l.hero_id == parseInt(_this.heroId); }).forEach(function (lootItem) {
@@ -758,14 +757,12 @@ function useBlacksmithContracts(userId, hash) {
             switch (_b.label) {
                 case 0:
                     MAX_BLACKSMITH_AMOUNT = 50;
-                    if (!server || !instanceId)
+                    if (!_server || !_instanceId)
                         return [2];
                     contractType = document.getElementById("blackithContracType").value;
                     heroId = document.getElementById("heroId").value;
-                    blacksmithAmount = parseInt(blacksmithCountRange.value) || 0;
-                    if ((blacksmithAggregate === null || blacksmithAggregate === void 0 ? void 0 : blacksmithAggregate.heroId) != heroId) {
-                        blacksmithAggregate = new BlacksmithAggregateResult(heroId);
-                    }
+                    blacksmithAmount = parseInt(_blacksmithCountRange.value) || 0;
+                    updateSelectedHero();
                     if (!contractType || !heroId || blacksmithAmount < 1) {
                         return [2];
                     }
@@ -778,21 +775,21 @@ function useBlacksmithContracts(userId, hash) {
                     remainingContracts -= currentAmount;
                     console.log("Using ".concat(currentAmount, " contracts"));
                     return [4, IdleChampionsApi.useBlacksmith({
-                            server: server,
+                            server: _server,
                             user_id: userId,
                             hash: hash,
                             heroId: heroId,
                             contractType: contractType,
                             count: currentAmount,
-                            instanceId: instanceId
+                            instanceId: _instanceId
                         })];
                 case 2:
                     blacksmithResponse = _b.sent();
                     if (blacksmithResponse.status == ResponseStatus.OutdatedInstanceId) {
-                        lastInstanceId = instanceId;
+                        lastInstanceId = _instanceId;
                         console.log("Refreshing inventory for instance ID");
                         refreshInventory(userId, hash);
-                        if (instanceId == lastInstanceId) {
+                        if (_instanceId == lastInstanceId) {
                             console.error("Failed to refresh instance id");
                             showError("Failed to get updated instance ID. Check credentials.");
                             return [2];
@@ -804,8 +801,8 @@ function useBlacksmithContracts(userId, hash) {
                         showError("Blacksmithing failed");
                         return [2];
                     }
-                    aggregateBlacksmithResults((_a = blacksmithResponse.actions) !== null && _a !== void 0 ? _a : [], blacksmithAggregate);
-                    displayBlacksmithResults(blacksmithAggregate);
+                    aggregateBlacksmithResults((_a = blacksmithResponse.actions) !== null && _a !== void 0 ? _a : []);
+                    displayBlacksmithResults();
                     if (!(remainingContracts > 0)) return [3, 4];
                     return [4, new Promise(function (h) { return setTimeout(h, REQUEST_DELAY); })];
                 case 3:
@@ -821,24 +818,21 @@ function useBlacksmithContracts(userId, hash) {
         });
     });
 }
-function aggregateBlacksmithResults(blacksmithActions, aggregateResult) {
+function aggregateBlacksmithResults(blacksmithActions) {
     blacksmithActions.forEach(function (action) {
         var _a;
         if (action.action == "level_up_loot") {
             var newLevels = parseInt(action.amount);
-            aggregateResult.slotResult[action.slot_id] = ((_a = aggregateResult.slotResult[action.slot_id]) !== null && _a !== void 0 ? _a : 0) + newLevels;
-            aggregateResult.slotEndValue[action.slot_id] = action.enchant_level + 1;
+            _blacksmithAggregate.slotResult[action.slot_id] = ((_a = _blacksmithAggregate.slotResult[action.slot_id]) !== null && _a !== void 0 ? _a : 0) + newLevels;
+            _blacksmithAggregate.slotEndValue[action.slot_id] = action.enchant_level + 1;
         }
     });
 }
-function displayBlacksmithResults(aggregateResult) {
+function displayBlacksmithResults() {
     document.querySelector("#blacksmithResults tbody").innerHTML = "";
-    addBlacksmithTableRow("Slot 1", aggregateResult.slotResult[1], aggregateResult.slotEndValue[1]);
-    addBlacksmithTableRow("Slot 2", aggregateResult.slotResult[2], aggregateResult.slotEndValue[2]);
-    addBlacksmithTableRow("Slot 3", aggregateResult.slotResult[3], aggregateResult.slotEndValue[6]);
-    addBlacksmithTableRow("Slot 4", aggregateResult.slotResult[4], aggregateResult.slotEndValue[4]);
-    addBlacksmithTableRow("Slot 5", aggregateResult.slotResult[5], aggregateResult.slotEndValue[5]);
-    addBlacksmithTableRow("Slot 6", aggregateResult.slotResult[6], aggregateResult.slotEndValue[6]);
+    for (var i = 1; i <= 6; i++) {
+        addBlacksmithTableRow("Slot " + i, _blacksmithAggregate.slotResult[i], _blacksmithAggregate.slotEndValue[i]);
+    }
 }
 function addBlacksmithTableRow(text, amount, newLevel, style) {
     var tbody = document.querySelector("#blacksmithResults tbody");
