@@ -157,23 +157,23 @@ class IdleChampionsApi {
                 return new CodeSubmitResponse(CodeSubmitStatus.Failed)
             }
             console.debug(redeemResponse)
-            if(redeemResponse.success && redeemResponse.failure_reason === FailureReason.AlreadyRedeemed){
+            if(redeemResponse.failure_reason === FailureReason.AlreadyRedeemed){
                 return new CodeSubmitResponse(CodeSubmitStatus.AlreadyRedeemed)
             }
-            if(redeemResponse.success && redeemResponse.failure_reason === FailureReason.Expired){
+            if(redeemResponse.failure_reason === FailureReason.Expired){
                 return new CodeSubmitResponse(CodeSubmitStatus.Expired)
             }
-            if(redeemResponse.success && redeemResponse.failure_reason === FailureReason.NotValidCombo){
+            if(redeemResponse.failure_reason === FailureReason.NotValidCombo){
                 return new CodeSubmitResponse(CodeSubmitStatus.NotValidCombo)
             }
-            if (redeemResponse.success){
-                return new CodeSubmitResponse(CodeSubmitStatus.Success, redeemResponse?.loot_details)
-            }
-            if(!redeemResponse.success && redeemResponse.failure_reason === FailureReason.OutdatedInstanceId){
+            if(redeemResponse.failure_reason === FailureReason.OutdatedInstanceId){
                 return new CodeSubmitResponse(CodeSubmitStatus.OutdatedInstanceId)
             }
-            if(!redeemResponse.success && redeemResponse.failure_reason === FailureReason.InvalidParameters){
+            if(redeemResponse.failure_reason === FailureReason.InvalidParameters){
                 return new CodeSubmitResponse(CodeSubmitStatus.InvalidParameters)
+            }
+            if (redeemResponse.success && redeemResponse.okay){
+                return new CodeSubmitResponse(CodeSubmitStatus.Success, redeemResponse?.loot_details)
             }
             console.error("Unknown failure reason")
             return new CodeSubmitResponse(CodeSubmitStatus.Failed)
@@ -252,11 +252,11 @@ class IdleChampionsApi {
         if(response.ok){
             const openGenericChestResponse : OpenGenericChestResponse = await response.json()
             console.debug(openGenericChestResponse)
-            if(openGenericChestResponse.success){
-                return new OpenChestResponse(ResponseStatus.Success, openGenericChestResponse.loot_details)
-            }
             if(openGenericChestResponse.failure_reason == FailureReason.OutdatedInstanceId){
                 return new OpenChestResponse(ResponseStatus.OutdatedInstanceId)
+            }
+            if(openGenericChestResponse.success){
+                return new OpenChestResponse(ResponseStatus.Success, openGenericChestResponse.loot_details)
             }
         }
         return new OpenChestResponse(ResponseStatus.Failed)
@@ -297,11 +297,11 @@ class IdleChampionsApi {
         if(response.ok){
             const purchaseResponse : PurchaseChestResponse = await response.json()
             console.debug(purchaseResponse)
-            if(purchaseResponse.success){
-                return ResponseStatus.Success
-            }
             if(purchaseResponse.failure_reason == FailureReason.NotEnoughCurrency){
                 return ResponseStatus.InsuficcientCurrency
+            }
+            if(purchaseResponse.success && purchaseResponse.okay){
+                return ResponseStatus.Success
             }
         }
         return ResponseStatus.Failed
@@ -328,11 +328,11 @@ class IdleChampionsApi {
         if(response.ok){
             const useServerBuffResponse : UseServerBuffResponse = await response.json()
             console.debug(useServerBuffResponse)
-            if(useServerBuffResponse.success){
-                return new UseBlacksmithResponse(ResponseStatus.Success, useServerBuffResponse.actions)
-            }
             if(useServerBuffResponse.failure_reason == FailureReason.OutdatedInstanceId){
                 return new UseBlacksmithResponse(ResponseStatus.OutdatedInstanceId)
+            }
+            if(useServerBuffResponse.success && useServerBuffResponse.okay){
+                return new UseBlacksmithResponse(ResponseStatus.Success, useServerBuffResponse.actions)
             }
         }
         return new UseBlacksmithResponse(ResponseStatus.Failed)

@@ -255,7 +255,7 @@ async function purchaseChests(userId: string, hash: string){
 
     console.log("Completed purchase")
 
-    refreshInventory(userId, hash)
+    await refreshInventory(userId, hash)
 
     showSuccess(`Purchased ${chestAmount} chests`)
 }
@@ -324,7 +324,7 @@ async function openChests(userId: string, hash: string){
         if(openResponse.status == ResponseStatus.OutdatedInstanceId){
             const lastInstanceId:string = _instanceId
             console.log("Refreshing inventory for instance ID")
-            refreshInventory(userId, hash)
+            await refreshInventory(userId, hash)
             if(_instanceId == lastInstanceId){
                 console.error("Failed to refresh instance id")
                 showError("Failed to get updated instance ID. Check credentials.")
@@ -350,7 +350,7 @@ async function openChests(userId: string, hash: string){
 
     console.log("Completed opening")
 
-    refreshInventory(userId, hash)
+    await refreshInventory(userId, hash)
 
     showSuccess(`Opened ${chestAmount} chests`)
 }
@@ -516,7 +516,7 @@ async function useBlacksmithContracts(userId: string, hash: string){
         if(blacksmithResponse.status == ResponseStatus.OutdatedInstanceId){
             const lastInstanceId:string = _instanceId
             console.log("Refreshing inventory for instance ID")
-            refreshInventory(userId, hash)
+            await refreshInventory(userId, hash)
             if(_instanceId == lastInstanceId){
                 console.error("Failed to refresh instance id")
                 showError("Failed to get updated instance ID. Check credentials.")
@@ -542,7 +542,7 @@ async function useBlacksmithContracts(userId: string, hash: string){
 
     console.log("Completed blacksmithing")
 
-    refreshInventory(userId, hash)
+    await refreshInventory(userId, hash)
 
     showSuccess(`Used ${blacksmithAmount} blacksmith contracts`)
 }

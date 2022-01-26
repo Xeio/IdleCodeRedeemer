@@ -144,23 +144,23 @@ var IdleChampionsApi = (function () {
                             return [2, new CodeSubmitResponse(CodeSubmitStatus.Failed)];
                         }
                         console.debug(redeemResponse);
-                        if (redeemResponse.success && redeemResponse.failure_reason === "you_already_redeemed_combination") {
+                        if (redeemResponse.failure_reason === "you_already_redeemed_combination") {
                             return [2, new CodeSubmitResponse(CodeSubmitStatus.AlreadyRedeemed)];
                         }
-                        if (redeemResponse.success && redeemResponse.failure_reason === "offer_has_expired") {
+                        if (redeemResponse.failure_reason === "offer_has_expired") {
                             return [2, new CodeSubmitResponse(CodeSubmitStatus.Expired)];
                         }
-                        if (redeemResponse.success && redeemResponse.failure_reason === "not_valid_combination") {
+                        if (redeemResponse.failure_reason === "not_valid_combination") {
                             return [2, new CodeSubmitResponse(CodeSubmitStatus.NotValidCombo)];
                         }
-                        if (redeemResponse.success) {
-                            return [2, new CodeSubmitResponse(CodeSubmitStatus.Success, redeemResponse === null || redeemResponse === void 0 ? void 0 : redeemResponse.loot_details)];
-                        }
-                        if (!redeemResponse.success && redeemResponse.failure_reason === "Outdated instance id") {
+                        if (redeemResponse.failure_reason === "Outdated instance id") {
                             return [2, new CodeSubmitResponse(CodeSubmitStatus.OutdatedInstanceId)];
                         }
-                        if (!redeemResponse.success && redeemResponse.failure_reason === "Invalid or incomplete parameters") {
+                        if (redeemResponse.failure_reason === "Invalid or incomplete parameters") {
                             return [2, new CodeSubmitResponse(CodeSubmitStatus.InvalidParameters)];
+                        }
+                        if (redeemResponse.success && redeemResponse.okay) {
+                            return [2, new CodeSubmitResponse(CodeSubmitStatus.Success, redeemResponse === null || redeemResponse === void 0 ? void 0 : redeemResponse.loot_details)];
                         }
                         console.error("Unknown failure reason");
                         return [2, new CodeSubmitResponse(CodeSubmitStatus.Failed)];
@@ -232,11 +232,11 @@ var IdleChampionsApi = (function () {
                     case 2:
                         openGenericChestResponse = _a.sent();
                         console.debug(openGenericChestResponse);
-                        if (openGenericChestResponse.success) {
-                            return [2, new OpenChestResponse(ResponseStatus.Success, openGenericChestResponse.loot_details)];
-                        }
                         if (openGenericChestResponse.failure_reason == "Outdated instance id") {
                             return [2, new OpenChestResponse(ResponseStatus.OutdatedInstanceId)];
+                        }
+                        if (openGenericChestResponse.success) {
+                            return [2, new OpenChestResponse(ResponseStatus.Success, openGenericChestResponse.loot_details)];
                         }
                         _a.label = 3;
                     case 3: return [2, new OpenChestResponse(ResponseStatus.Failed)];
@@ -272,11 +272,11 @@ var IdleChampionsApi = (function () {
                     case 2:
                         purchaseResponse = _a.sent();
                         console.debug(purchaseResponse);
-                        if (purchaseResponse.success) {
-                            return [2, ResponseStatus.Success];
-                        }
                         if (purchaseResponse.failure_reason == "Not enough currency") {
                             return [2, ResponseStatus.InsuficcientCurrency];
+                        }
+                        if (purchaseResponse.success && purchaseResponse.okay) {
+                            return [2, ResponseStatus.Success];
                         }
                         _a.label = 3;
                     case 3: return [2, ResponseStatus.Failed];
@@ -312,11 +312,11 @@ var IdleChampionsApi = (function () {
                     case 2:
                         useServerBuffResponse = _a.sent();
                         console.debug(useServerBuffResponse);
-                        if (useServerBuffResponse.success) {
-                            return [2, new UseBlacksmithResponse(ResponseStatus.Success, useServerBuffResponse.actions)];
-                        }
                         if (useServerBuffResponse.failure_reason == "Outdated instance id") {
                             return [2, new UseBlacksmithResponse(ResponseStatus.OutdatedInstanceId)];
+                        }
+                        if (useServerBuffResponse.success && useServerBuffResponse.okay) {
+                            return [2, new UseBlacksmithResponse(ResponseStatus.Success, useServerBuffResponse.actions)];
                         }
                         _a.label = 3;
                     case 3: return [2, new UseBlacksmithResponse(ResponseStatus.Failed)];
