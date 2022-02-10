@@ -346,7 +346,7 @@ var IdleChampionsApi = (function () {
     return IdleChampionsApi;
 }());
 document.addEventListener("DOMContentLoaded", loaded);
-var REQUEST_DELAY = 4000;
+var REQUEST_DELAY = 2000;
 var _buyCountRange, _buyCountNumber;
 var _openCountRange, _openCountNumber;
 var _blacksmithCountRange, _blacksmithCountNumber;

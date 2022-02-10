@@ -5,7 +5,7 @@
 
 document.addEventListener("DOMContentLoaded", loaded)
 
-const REQUEST_DELAY = 4000
+const REQUEST_DELAY = 2000
 
 let _buyCountRange: HTMLInputElement, _buyCountNumber: HTMLInputElement
 let _openCountRange: HTMLInputElement, _openCountNumber: HTMLInputElement

@@ -345,7 +345,7 @@ var IdleChampionsApi = (function () {
     IdleChampionsApi.LANGUAGE_ID = "1";
     return IdleChampionsApi;
 }());
-var REQUEST_DELAY = 3000;
+var REQUEST_DELAY = 2000;
 var _waitingForPagePort = false;
 var _optionsPort;
 chrome.runtime.onConnect.addListener(function (port) {

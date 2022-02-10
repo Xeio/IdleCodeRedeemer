@@ -5,7 +5,7 @@
 /// <reference path="./../shared/globals.ts" />
 /// <reference path="./../shared/idle_champions_api.ts" />
 
-const REQUEST_DELAY = 3000
+const REQUEST_DELAY = 2000
 
 let _waitingForPagePort = false
 let _optionsPort: chrome.runtime.Port
