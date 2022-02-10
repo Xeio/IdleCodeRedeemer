@@ -21,6 +21,8 @@
 // / <reference types="filesystem" />
 // / <reference path="./har-format/index.d.ts" />
 
+/// <reference path="./../shared/globals.ts" />
+
 ////////////////////
 // Global object
 ////////////////////

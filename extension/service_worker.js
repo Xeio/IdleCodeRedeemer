@@ -47,23 +47,28 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-var CodeSubmitResponse = (function () {
-    function CodeSubmitResponse(status, lootDetail) {
+var GenericResponse = (function () {
+    function GenericResponse(status, newServer) {
         this.status = status;
+        this.newServer = newServer ? newServer + "post.php" : undefined;
+    }
+    return GenericResponse;
+}());
+var CodeSubmitResponse = (function () {
+    function CodeSubmitResponse(codeStatus, lootDetail) {
+        this.codeStatus = codeStatus;
         this.lootDetail = lootDetail;
     }
     return CodeSubmitResponse;
 }());
 var OpenChestResponse = (function () {
-    function OpenChestResponse(status, lootDetail) {
-        this.status = status;
+    function OpenChestResponse(lootDetail) {
         this.lootDetail = lootDetail;
     }
     return OpenChestResponse;
 }());
 var UseBlacksmithResponse = (function () {
-    function UseBlacksmithResponse(status, actions) {
-        this.status = status;
+    function UseBlacksmithResponse(actions) {
         this.actions = actions;
     }
     return UseBlacksmithResponse;
@@ -71,12 +76,10 @@ var UseBlacksmithResponse = (function () {
 var CodeSubmitStatus;
 (function (CodeSubmitStatus) {
     CodeSubmitStatus[CodeSubmitStatus["Success"] = 0] = "Success";
-    CodeSubmitStatus[CodeSubmitStatus["OutdatedInstanceId"] = 1] = "OutdatedInstanceId";
-    CodeSubmitStatus[CodeSubmitStatus["AlreadyRedeemed"] = 2] = "AlreadyRedeemed";
-    CodeSubmitStatus[CodeSubmitStatus["InvalidParameters"] = 3] = "InvalidParameters";
-    CodeSubmitStatus[CodeSubmitStatus["NotValidCombo"] = 4] = "NotValidCombo";
-    CodeSubmitStatus[CodeSubmitStatus["Expired"] = 5] = "Expired";
-    CodeSubmitStatus[CodeSubmitStatus["Failed"] = 6] = "Failed";
+    CodeSubmitStatus[CodeSubmitStatus["AlreadyRedeemed"] = 1] = "AlreadyRedeemed";
+    CodeSubmitStatus[CodeSubmitStatus["InvalidParameters"] = 2] = "InvalidParameters";
+    CodeSubmitStatus[CodeSubmitStatus["NotValidCombo"] = 3] = "NotValidCombo";
+    CodeSubmitStatus[CodeSubmitStatus["Expired"] = 4] = "Expired";
 })(CodeSubmitStatus || (CodeSubmitStatus = {}));
 var ResponseStatus;
 (function (ResponseStatus) {
@@ -84,6 +87,7 @@ var ResponseStatus;
     ResponseStatus[ResponseStatus["OutdatedInstanceId"] = 1] = "OutdatedInstanceId";
     ResponseStatus[ResponseStatus["Failed"] = 2] = "Failed";
     ResponseStatus[ResponseStatus["InsuficcientCurrency"] = 3] = "InsuficcientCurrency";
+    ResponseStatus[ResponseStatus["SwitchServer"] = 4] = "SwitchServer";
 })(ResponseStatus || (ResponseStatus = {}));
 var IdleChampionsApi = (function () {
     function IdleChampionsApi() {
@@ -141,9 +145,12 @@ var IdleChampionsApi = (function () {
                         redeemResponse = _a.sent();
                         if (!redeemResponse) {
                             console.error("No json response");
-                            return [2, new CodeSubmitResponse(CodeSubmitStatus.Failed)];
+                            return [2, new GenericResponse(ResponseStatus.Failed)];
                         }
                         console.debug(redeemResponse);
+                        if (redeemResponse.switch_play_server) {
+                            return [2, new GenericResponse(ResponseStatus.SwitchServer, redeemResponse.switch_play_server)];
+                        }
                         if (redeemResponse.failure_reason === "you_already_redeemed_combination") {
                             return [2, new CodeSubmitResponse(CodeSubmitStatus.AlreadyRedeemed)];
                         }
@@ -154,7 +161,7 @@ var IdleChampionsApi = (function () {
                             return [2, new CodeSubmitResponse(CodeSubmitStatus.NotValidCombo)];
                         }
                         if (redeemResponse.failure_reason === "Outdated instance id") {
-                            return [2, new CodeSubmitResponse(CodeSubmitStatus.OutdatedInstanceId)];
+                            return [2, new GenericResponse(ResponseStatus.OutdatedInstanceId)];
                         }
                         if (redeemResponse.failure_reason === "Invalid or incomplete parameters") {
                             return [2, new CodeSubmitResponse(CodeSubmitStatus.InvalidParameters)];
@@ -163,8 +170,8 @@ var IdleChampionsApi = (function () {
                             return [2, new CodeSubmitResponse(CodeSubmitStatus.Success, redeemResponse === null || redeemResponse === void 0 ? void 0 : redeemResponse.loot_details)];
                         }
                         console.error("Unknown failure reason");
-                        return [2, new CodeSubmitResponse(CodeSubmitStatus.Failed)];
-                    case 3: return [2, new CodeSubmitResponse(CodeSubmitStatus.Failed)];
+                        return [2, new GenericResponse(ResponseStatus.Failed)];
+                    case 3: return [2, new GenericResponse(ResponseStatus.Failed)];
                 }
             });
         });
@@ -232,14 +239,17 @@ var IdleChampionsApi = (function () {
                     case 2:
                         openGenericChestResponse = _a.sent();
                         console.debug(openGenericChestResponse);
-                        if (openGenericChestResponse.failure_reason == "Outdated instance id") {
-                            return [2, new OpenChestResponse(ResponseStatus.OutdatedInstanceId)];
+                        if (openGenericChestResponse.switch_play_server) {
+                            return [2, new GenericResponse(ResponseStatus.SwitchServer, openGenericChestResponse.switch_play_server)];
                         }
-                        if (openGenericChestResponse.success) {
-                            return [2, new OpenChestResponse(ResponseStatus.Success, openGenericChestResponse.loot_details)];
+                        if (openGenericChestResponse.failure_reason == "Outdated instance id") {
+                            return [2, new GenericResponse(ResponseStatus.OutdatedInstanceId)];
+                        }
+                        if (openGenericChestResponse.success && openGenericChestResponse.loot_details) {
+                            return [2, new OpenChestResponse(openGenericChestResponse.loot_details)];
                         }
                         _a.label = 3;
-                    case 3: return [2, new OpenChestResponse(ResponseStatus.Failed)];
+                    case 3: return [2, new GenericResponse(ResponseStatus.Failed)];
                 }
             });
         });
@@ -272,14 +282,17 @@ var IdleChampionsApi = (function () {
                     case 2:
                         purchaseResponse = _a.sent();
                         console.debug(purchaseResponse);
+                        if (purchaseResponse.switch_play_server) {
+                            return [2, new GenericResponse(ResponseStatus.SwitchServer, purchaseResponse.switch_play_server)];
+                        }
                         if (purchaseResponse.failure_reason == "Not enough currency") {
-                            return [2, ResponseStatus.InsuficcientCurrency];
+                            return [2, new GenericResponse(ResponseStatus.InsuficcientCurrency)];
                         }
                         if (purchaseResponse.success && purchaseResponse.okay) {
-                            return [2, ResponseStatus.Success];
+                            return [2, new GenericResponse(ResponseStatus.Success)];
                         }
                         _a.label = 3;
-                    case 3: return [2, ResponseStatus.Failed];
+                    case 3: return [2, new GenericResponse(ResponseStatus.Failed)];
                 }
             });
         });
@@ -312,14 +325,17 @@ var IdleChampionsApi = (function () {
                     case 2:
                         useServerBuffResponse = _a.sent();
                         console.debug(useServerBuffResponse);
+                        if (useServerBuffResponse.switch_play_server) {
+                            return [2, new GenericResponse(ResponseStatus.SwitchServer, useServerBuffResponse.switch_play_server)];
+                        }
                         if (useServerBuffResponse.failure_reason == "Outdated instance id") {
-                            return [2, new UseBlacksmithResponse(ResponseStatus.OutdatedInstanceId)];
+                            return [2, new GenericResponse(ResponseStatus.OutdatedInstanceId)];
                         }
                         if (useServerBuffResponse.success && useServerBuffResponse.okay) {
-                            return [2, new UseBlacksmithResponse(ResponseStatus.Success, useServerBuffResponse.actions)];
+                            return [2, new UseBlacksmithResponse(useServerBuffResponse.actions)];
                         }
                         _a.label = 3;
-                    case 3: return [2, new UseBlacksmithResponse(ResponseStatus.Failed)];
+                    case 3: return [2, new GenericResponse(ResponseStatus.Failed)];
                 }
             });
         });
@@ -461,7 +477,7 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                     heroUnlocks = 0, skinUnlocks = 0;
                     _d.label = 2;
                 case 2:
-                    if (!(code = pendingCodes.pop())) return [3, 10];
+                    if (!(code = pendingCodes.pop())) return [3, 12];
                     return [4, new Promise(function (h) { return setTimeout(h, REQUEST_DELAY); })];
                 case 3:
                     _d.sent();
@@ -475,17 +491,32 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                         })];
                 case 4:
                     codeResponse = _d.sent();
-                    if (!(codeResponse.status == CodeSubmitStatus.OutdatedInstanceId)) return [3, 9];
+                    if (!("status" in codeResponse)) return [3, 11];
+                    if (!(codeResponse.status == ResponseStatus.SwitchServer && codeResponse.newServer)) return [3, 6];
+                    console.log("Switching server");
+                    server = codeResponse.newServer;
+                    return [4, IdleChampionsApi.submitCode({
+                            server: server,
+                            user_id: userId,
+                            hash: hash,
+                            instanceId: instanceId,
+                            code: code
+                        })];
+                case 5:
+                    codeResponse = _d.sent();
+                    return [3, 11];
+                case 6:
+                    if (!(codeResponse.status == ResponseStatus.OutdatedInstanceId)) return [3, 11];
                     console.log("Instance ID outdated, refreshing.");
                     return [4, new Promise(function (h) { return setTimeout(h, REQUEST_DELAY); })];
-                case 5:
+                case 7:
                     _d.sent();
                     return [4, IdleChampionsApi.getUserDetails({
                             server: server,
                             user_id: userId,
                             hash: hash
                         })];
-                case 6:
+                case 8:
                     userData = _d.sent();
                     if (!userData) {
                         console.log("Failed to retreive user data.");
@@ -495,7 +526,7 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                     instanceId = userData.details.instance_id;
                     chrome.storage.sync.set((_b = {}, _b[Globals.SETTING_INSTANCE_ID] = instanceId, _b));
                     return [4, new Promise(function (h) { return setTimeout(h, REQUEST_DELAY); })];
-                case 7:
+                case 9:
                     _d.sent();
                     return [4, IdleChampionsApi.submitCode({
                             server: server,
@@ -504,68 +535,70 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                             instanceId: instanceId,
                             code: code
                         })];
-                case 8:
+                case 10:
                     codeResponse = _d.sent();
-                    _d.label = 9;
-                case 9:
-                    switch (codeResponse.status) {
-                        case CodeSubmitStatus.OutdatedInstanceId:
-                        case CodeSubmitStatus.Failed:
-                            console.error("Unable to submit code, aborting upload process.");
-                            _optionsPort.postMessage({ messageType: "error", messageText: "Failed to submit code for unknown reason." });
-                            return [2];
-                        case CodeSubmitStatus.InvalidParameters:
-                            console.error("Unable to submit code due to invalid parameters.");
-                            _optionsPort.postMessage({ messageType: "error", messageText: "Failed to submit code, check user/hash on settings tab." });
-                            return [2];
-                        case CodeSubmitStatus.Expired:
-                        case CodeSubmitStatus.NotValidCombo:
-                        case CodeSubmitStatus.AlreadyRedeemed:
-                        case CodeSubmitStatus.Success:
-                            if (codeResponse.status == CodeSubmitStatus.AlreadyRedeemed) {
-                                console.log("Already redeemed code: ".concat(code));
-                                duplicates++;
-                            }
-                            else if (codeResponse.status == CodeSubmitStatus.NotValidCombo) {
-                                console.log("Invalid code: ".concat(code));
-                                invalid++;
-                            }
-                            else if (codeResponse.status == CodeSubmitStatus.Expired) {
-                                console.log("Expired code: ".concat(code));
-                                expired++;
-                            }
-                            else {
-                                console.log("Sucessfully redeemed: ".concat(code));
-                                (_a = codeResponse.lootDetail) === null || _a === void 0 ? void 0 : _a.forEach(function (loot) {
-                                    var _a;
-                                    switch (loot.loot_action) {
-                                        case "generic_chest":
-                                            if (loot.chest_type_id && loot.count) {
-                                                chests[loot.chest_type_id] = ((_a = chests[loot.chest_type_id]) !== null && _a !== void 0 ? _a : 0) + loot.count;
-                                            }
-                                            break;
-                                        case "unlock_hero":
-                                            heroUnlocks++;
-                                            break;
-                                        case "claim":
-                                            if (loot.unlock_hero_skin) {
-                                                skinUnlocks++;
-                                            }
-                                            break;
-                                    }
-                                });
-                                newCodes++;
-                            }
-                            reedemedCodes.push(code);
-                            if (reedemedCodes.length > 300) {
-                                reedemedCodes.shift();
-                            }
-                            chrome.storage.sync.set((_c = {}, _c[Globals.SETTING_CODES] = reedemedCodes, _c[Globals.SETTING_PENDING] = pendingCodes, _c));
-                            break;
+                    _d.label = 11;
+                case 11:
+                    if ("status" in codeResponse) {
+                        console.error("Unable to submit code, aborting upload process.");
+                        _optionsPort.postMessage({ messageType: "error", messageText: "Failed to submit code for unknown reason." });
+                        return [2];
+                    }
+                    else if ("codeStatus" in codeResponse) {
+                        switch (codeResponse.codeStatus) {
+                            case CodeSubmitStatus.InvalidParameters:
+                                console.error("Unable to submit code due to invalid parameters.");
+                                _optionsPort.postMessage({ messageType: "error", messageText: "Failed to submit code, check user/hash on settings tab." });
+                                return [2];
+                            case CodeSubmitStatus.Expired:
+                            case CodeSubmitStatus.NotValidCombo:
+                            case CodeSubmitStatus.AlreadyRedeemed:
+                            case CodeSubmitStatus.Success:
+                                if (codeResponse.codeStatus == CodeSubmitStatus.AlreadyRedeemed) {
+                                    console.log("Already redeemed code: ".concat(code));
+                                    duplicates++;
+                                }
+                                else if (codeResponse.codeStatus == CodeSubmitStatus.NotValidCombo) {
+                                    console.log("Invalid code: ".concat(code));
+                                    invalid++;
+                                }
+                                else if (codeResponse.codeStatus == CodeSubmitStatus.Expired) {
+                                    console.log("Expired code: ".concat(code));
+                                    expired++;
+                                }
+                                else {
+                                    console.log("Sucessfully redeemed: ".concat(code));
+                                    (_a = codeResponse.lootDetail) === null || _a === void 0 ? void 0 : _a.forEach(function (loot) {
+                                        var _a;
+                                        switch (loot.loot_action) {
+                                            case "generic_chest":
+                                                if (loot.chest_type_id && loot.count) {
+                                                    chests[loot.chest_type_id] = ((_a = chests[loot.chest_type_id]) !== null && _a !== void 0 ? _a : 0) + loot.count;
+                                                }
+                                                break;
+                                            case "unlock_hero":
+                                                heroUnlocks++;
+                                                break;
+                                            case "claim":
+                                                if (loot.unlock_hero_skin) {
+                                                    skinUnlocks++;
+                                                }
+                                                break;
+                                        }
+                                    });
+                                    newCodes++;
+                                }
+                                reedemedCodes.push(code);
+                                if (reedemedCodes.length > 300) {
+                                    reedemedCodes.shift();
+                                }
+                                chrome.storage.sync.set((_c = {}, _c[Globals.SETTING_CODES] = reedemedCodes, _c[Globals.SETTING_PENDING] = pendingCodes, _c));
+                                break;
+                        }
                     }
                     _optionsPort.postMessage({ messageType: "info", messageText: "Uploading... ".concat(pendingCodes.length, " codes left. This may take a bit.") });
                     return [3, 2];
-                case 10:
+                case 12:
                     console.log("Redeem complete:");
                     console.log("".concat(duplicates, " duplicate codes"));
                     console.log("".concat(newCodes, " new redemptions"));

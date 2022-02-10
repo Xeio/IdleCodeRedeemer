@@ -1,3 +1,5 @@
+/// <reference path="./redeem_code_response.d.ts" />
+
 interface UseServerBuffResponse {
     success:            boolean;
     failure_reason?:    FailureReason;
@@ -8,6 +10,7 @@ interface UseServerBuffResponse {
     memory_usage:       string;
     apc_stats:          ApcStats;
     db_stats:           { [key: string]: boolean };
+    switch_play_server?:string;
 }
 
 interface BlacksmithAction {

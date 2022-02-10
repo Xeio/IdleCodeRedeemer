@@ -134,7 +134,7 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
         return
     }
     
-    const server = await IdleChampionsApi.getServer()
+    let server = await IdleChampionsApi.getServer()
 
     if(!server) { 
         console.error("Failed to get idle champions server.")
@@ -156,7 +156,7 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
 
         console.log(`Attempting to upload code: ${code}`)
 
-        let codeResponse = await IdleChampionsApi.submitCode({
+        let codeResponse: GenericResponse | CodeSubmitResponse = await IdleChampionsApi.submitCode({
             server: server,
             user_id: userId, 
             hash: hash,
@@ -164,93 +164,112 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
             code: code 
         })
 
-        if(codeResponse.status == CodeSubmitStatus.OutdatedInstanceId){
-            console.log("Instance ID outdated, refreshing.")
+        if("status" in codeResponse)
+        {
+            if(codeResponse.status == ResponseStatus.SwitchServer && codeResponse.newServer){
+                console.log("Switching server")
 
-            await new Promise(h => setTimeout(h, REQUEST_DELAY)) //Delay between requests
-            
-            const userData = await IdleChampionsApi.getUserDetails({
-                server: server,
-                user_id: userId,
-                hash: hash,
-            })
+                server = codeResponse.newServer
 
-            if(!userData) {
-                console.log("Failed to retreive user data.")
-                _optionsPort.postMessage({messageType: MessageType.Error, messageText:"Failed to retreieve user data, check user ID and hash."})
-                return
+                codeResponse = await IdleChampionsApi.submitCode({
+                    server: server,
+                    user_id: userId, 
+                    hash: hash,
+                    instanceId: instanceId,
+                    code: code 
+                })
             }
-
-            instanceId = userData.details.instance_id
-            chrome.storage.sync.set({[Globals.SETTING_INSTANCE_ID]: instanceId})
-
-            await new Promise(h => setTimeout(h, REQUEST_DELAY)) //Delay between requests
-
-            codeResponse = await IdleChampionsApi.submitCode({
-                server: server,
-                user_id: userId, 
-                hash: hash,
-                instanceId: instanceId,
-                code: code 
-            })
+            else if(codeResponse.status == ResponseStatus.OutdatedInstanceId){
+                console.log("Instance ID outdated, refreshing.")
+    
+                await new Promise(h => setTimeout(h, REQUEST_DELAY)) //Delay between requests
+                
+                const userData = await IdleChampionsApi.getUserDetails({
+                    server: server,
+                    user_id: userId,
+                    hash: hash,
+                })
+    
+                if(!userData) {
+                    console.log("Failed to retreive user data.")
+                    _optionsPort.postMessage({messageType: MessageType.Error, messageText:"Failed to retreieve user data, check user ID and hash."})
+                    return
+                }
+    
+                instanceId = userData.details.instance_id
+                chrome.storage.sync.set({[Globals.SETTING_INSTANCE_ID]: instanceId})
+    
+                await new Promise(h => setTimeout(h, REQUEST_DELAY)) //Delay between requests
+    
+                codeResponse = await IdleChampionsApi.submitCode({
+                    server: server,
+                    user_id: userId, 
+                    hash: hash,
+                    instanceId: instanceId,
+                    code: code 
+                })
+            }
         }
 
-        switch(codeResponse.status){
-            case CodeSubmitStatus.OutdatedInstanceId:
-            case CodeSubmitStatus.Failed:
-                console.error("Unable to submit code, aborting upload process.")
-                _optionsPort.postMessage({messageType: MessageType.Error, messageText:"Failed to submit code for unknown reason."})
-                return
-            case CodeSubmitStatus.InvalidParameters:
-                console.error("Unable to submit code due to invalid parameters.")
-                _optionsPort.postMessage({messageType: MessageType.Error, messageText:"Failed to submit code, check user/hash on settings tab."})
-                return
-            case CodeSubmitStatus.Expired:
-            case CodeSubmitStatus.NotValidCombo:
-            case CodeSubmitStatus.AlreadyRedeemed:
-            case CodeSubmitStatus.Success:
-                if(codeResponse.status == CodeSubmitStatus.AlreadyRedeemed) {
-                    console.log(`Already redeemed code: ${code}`)
-                    duplicates++
-                }
-                else if(codeResponse.status == CodeSubmitStatus.NotValidCombo) {
-                    console.log(`Invalid code: ${code}`)
-                    invalid++
-                }
-                else if(codeResponse.status == CodeSubmitStatus.Expired) {
-                    console.log(`Expired code: ${code}`)
-                    expired++
-                }
-                else{
-                    console.log(`Sucessfully redeemed: ${code}`)
-                    codeResponse.lootDetail?.forEach(loot => {
-                        switch(loot.loot_action){
-                            case LootType.Chest:
-                                if(loot.chest_type_id && loot.count){
-                                    chests[loot.chest_type_id] = (chests[loot.chest_type_id] ?? 0) + loot.count
-                                }
-                                break
-                            case LootType.HeroUnlock:
-                                heroUnlocks++
-                                break
-                            case LootType.Claim:
-                                if(loot.unlock_hero_skin){
-                                    skinUnlocks++
-                                }
-                                break
-                        }
-                    })
-                    newCodes++
-                }
+        if("status" in codeResponse){
+            //Failed for a second time in a row for some reason (or for some un-handled failure type), just abort
+            console.error("Unable to submit code, aborting upload process.")
+            _optionsPort.postMessage({messageType: MessageType.Error, messageText:"Failed to submit code for unknown reason."})
+            return
+        }
+        else if("codeStatus" in codeResponse){
+            switch(codeResponse.codeStatus){
+                case CodeSubmitStatus.InvalidParameters:
+                    console.error("Unable to submit code due to invalid parameters.")
+                    _optionsPort.postMessage({messageType: MessageType.Error, messageText:"Failed to submit code, check user/hash on settings tab."})
+                    return
+                case CodeSubmitStatus.Expired:
+                case CodeSubmitStatus.NotValidCombo:
+                case CodeSubmitStatus.AlreadyRedeemed:
+                case CodeSubmitStatus.Success:
+                    if(codeResponse.codeStatus == CodeSubmitStatus.AlreadyRedeemed) {
+                        console.log(`Already redeemed code: ${code}`)
+                        duplicates++
+                    }
+                    else if(codeResponse.codeStatus == CodeSubmitStatus.NotValidCombo) {
+                        console.log(`Invalid code: ${code}`)
+                        invalid++
+                    }
+                    else if(codeResponse.codeStatus == CodeSubmitStatus.Expired) {
+                        console.log(`Expired code: ${code}`)
+                        expired++
+                    }
+                    else{
+                        console.log(`Sucessfully redeemed: ${code}`)
+                        codeResponse.lootDetail?.forEach(loot => {
+                            switch(loot.loot_action){
+                                case LootType.Chest:
+                                    if(loot.chest_type_id && loot.count){
+                                        chests[loot.chest_type_id] = (chests[loot.chest_type_id] ?? 0) + loot.count
+                                    }
+                                    break
+                                case LootType.HeroUnlock:
+                                    heroUnlocks++
+                                    break
+                                case LootType.Claim:
+                                    if(loot.unlock_hero_skin){
+                                        skinUnlocks++
+                                    }
+                                    break
+                            }
+                        })
+                        newCodes++
+                    }
 
-                reedemedCodes.push(code)
-                if(reedemedCodes.length > 300){
-                    //Trim codes so our storage doesn't eventually exceed browser quotas
-                    reedemedCodes.shift()
-                }
-                chrome.storage.sync.set({[Globals.SETTING_CODES]: reedemedCodes, [Globals.SETTING_PENDING]: pendingCodes})
-                
-                break
+                    reedemedCodes.push(code)
+                    if(reedemedCodes.length > 300){
+                        //Trim codes so our storage doesn't eventually exceed browser quotas
+                        reedemedCodes.shift()
+                    }
+                    chrome.storage.sync.set({[Globals.SETTING_CODES]: reedemedCodes, [Globals.SETTING_PENDING]: pendingCodes})
+                    
+                    break
+            }
         }
 
         _optionsPort.postMessage({messageType: MessageType.Info, messageText:`Uploading... ${pendingCodes.length} codes left. This may take a bit.` })

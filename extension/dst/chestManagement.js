@@ -47,23 +47,28 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-var CodeSubmitResponse = (function () {
-    function CodeSubmitResponse(status, lootDetail) {
+var GenericResponse = (function () {
+    function GenericResponse(status, newServer) {
         this.status = status;
+        this.newServer = newServer ? newServer + "post.php" : undefined;
+    }
+    return GenericResponse;
+}());
+var CodeSubmitResponse = (function () {
+    function CodeSubmitResponse(codeStatus, lootDetail) {
+        this.codeStatus = codeStatus;
         this.lootDetail = lootDetail;
     }
     return CodeSubmitResponse;
 }());
 var OpenChestResponse = (function () {
-    function OpenChestResponse(status, lootDetail) {
-        this.status = status;
+    function OpenChestResponse(lootDetail) {
         this.lootDetail = lootDetail;
     }
     return OpenChestResponse;
 }());
 var UseBlacksmithResponse = (function () {
-    function UseBlacksmithResponse(status, actions) {
-        this.status = status;
+    function UseBlacksmithResponse(actions) {
         this.actions = actions;
     }
     return UseBlacksmithResponse;
@@ -71,12 +76,10 @@ var UseBlacksmithResponse = (function () {
 var CodeSubmitStatus;
 (function (CodeSubmitStatus) {
     CodeSubmitStatus[CodeSubmitStatus["Success"] = 0] = "Success";
-    CodeSubmitStatus[CodeSubmitStatus["OutdatedInstanceId"] = 1] = "OutdatedInstanceId";
-    CodeSubmitStatus[CodeSubmitStatus["AlreadyRedeemed"] = 2] = "AlreadyRedeemed";
-    CodeSubmitStatus[CodeSubmitStatus["InvalidParameters"] = 3] = "InvalidParameters";
-    CodeSubmitStatus[CodeSubmitStatus["NotValidCombo"] = 4] = "NotValidCombo";
-    CodeSubmitStatus[CodeSubmitStatus["Expired"] = 5] = "Expired";
-    CodeSubmitStatus[CodeSubmitStatus["Failed"] = 6] = "Failed";
+    CodeSubmitStatus[CodeSubmitStatus["AlreadyRedeemed"] = 1] = "AlreadyRedeemed";
+    CodeSubmitStatus[CodeSubmitStatus["InvalidParameters"] = 2] = "InvalidParameters";
+    CodeSubmitStatus[CodeSubmitStatus["NotValidCombo"] = 3] = "NotValidCombo";
+    CodeSubmitStatus[CodeSubmitStatus["Expired"] = 4] = "Expired";
 })(CodeSubmitStatus || (CodeSubmitStatus = {}));
 var ResponseStatus;
 (function (ResponseStatus) {
@@ -84,6 +87,7 @@ var ResponseStatus;
     ResponseStatus[ResponseStatus["OutdatedInstanceId"] = 1] = "OutdatedInstanceId";
     ResponseStatus[ResponseStatus["Failed"] = 2] = "Failed";
     ResponseStatus[ResponseStatus["InsuficcientCurrency"] = 3] = "InsuficcientCurrency";
+    ResponseStatus[ResponseStatus["SwitchServer"] = 4] = "SwitchServer";
 })(ResponseStatus || (ResponseStatus = {}));
 var IdleChampionsApi = (function () {
     function IdleChampionsApi() {
@@ -141,9 +145,12 @@ var IdleChampionsApi = (function () {
                         redeemResponse = _a.sent();
                         if (!redeemResponse) {
                             console.error("No json response");
-                            return [2, new CodeSubmitResponse(CodeSubmitStatus.Failed)];
+                            return [2, new GenericResponse(ResponseStatus.Failed)];
                         }
                         console.debug(redeemResponse);
+                        if (redeemResponse.switch_play_server) {
+                            return [2, new GenericResponse(ResponseStatus.SwitchServer, redeemResponse.switch_play_server)];
+                        }
                         if (redeemResponse.failure_reason === "you_already_redeemed_combination") {
                             return [2, new CodeSubmitResponse(CodeSubmitStatus.AlreadyRedeemed)];
                         }
@@ -154,7 +161,7 @@ var IdleChampionsApi = (function () {
                             return [2, new CodeSubmitResponse(CodeSubmitStatus.NotValidCombo)];
                         }
                         if (redeemResponse.failure_reason === "Outdated instance id") {
-                            return [2, new CodeSubmitResponse(CodeSubmitStatus.OutdatedInstanceId)];
+                            return [2, new GenericResponse(ResponseStatus.OutdatedInstanceId)];
                         }
                         if (redeemResponse.failure_reason === "Invalid or incomplete parameters") {
                             return [2, new CodeSubmitResponse(CodeSubmitStatus.InvalidParameters)];
@@ -163,8 +170,8 @@ var IdleChampionsApi = (function () {
                             return [2, new CodeSubmitResponse(CodeSubmitStatus.Success, redeemResponse === null || redeemResponse === void 0 ? void 0 : redeemResponse.loot_details)];
                         }
                         console.error("Unknown failure reason");
-                        return [2, new CodeSubmitResponse(CodeSubmitStatus.Failed)];
-                    case 3: return [2, new CodeSubmitResponse(CodeSubmitStatus.Failed)];
+                        return [2, new GenericResponse(ResponseStatus.Failed)];
+                    case 3: return [2, new GenericResponse(ResponseStatus.Failed)];
                 }
             });
         });
@@ -232,14 +239,17 @@ var IdleChampionsApi = (function () {
                     case 2:
                         openGenericChestResponse = _a.sent();
                         console.debug(openGenericChestResponse);
-                        if (openGenericChestResponse.failure_reason == "Outdated instance id") {
-                            return [2, new OpenChestResponse(ResponseStatus.OutdatedInstanceId)];
+                        if (openGenericChestResponse.switch_play_server) {
+                            return [2, new GenericResponse(ResponseStatus.SwitchServer, openGenericChestResponse.switch_play_server)];
                         }
-                        if (openGenericChestResponse.success) {
-                            return [2, new OpenChestResponse(ResponseStatus.Success, openGenericChestResponse.loot_details)];
+                        if (openGenericChestResponse.failure_reason == "Outdated instance id") {
+                            return [2, new GenericResponse(ResponseStatus.OutdatedInstanceId)];
+                        }
+                        if (openGenericChestResponse.success && openGenericChestResponse.loot_details) {
+                            return [2, new OpenChestResponse(openGenericChestResponse.loot_details)];
                         }
                         _a.label = 3;
-                    case 3: return [2, new OpenChestResponse(ResponseStatus.Failed)];
+                    case 3: return [2, new GenericResponse(ResponseStatus.Failed)];
                 }
             });
         });
@@ -272,14 +282,17 @@ var IdleChampionsApi = (function () {
                     case 2:
                         purchaseResponse = _a.sent();
                         console.debug(purchaseResponse);
+                        if (purchaseResponse.switch_play_server) {
+                            return [2, new GenericResponse(ResponseStatus.SwitchServer, purchaseResponse.switch_play_server)];
+                        }
                         if (purchaseResponse.failure_reason == "Not enough currency") {
-                            return [2, ResponseStatus.InsuficcientCurrency];
+                            return [2, new GenericResponse(ResponseStatus.InsuficcientCurrency)];
                         }
                         if (purchaseResponse.success && purchaseResponse.okay) {
-                            return [2, ResponseStatus.Success];
+                            return [2, new GenericResponse(ResponseStatus.Success)];
                         }
                         _a.label = 3;
-                    case 3: return [2, ResponseStatus.Failed];
+                    case 3: return [2, new GenericResponse(ResponseStatus.Failed)];
                 }
             });
         });
@@ -312,14 +325,17 @@ var IdleChampionsApi = (function () {
                     case 2:
                         useServerBuffResponse = _a.sent();
                         console.debug(useServerBuffResponse);
+                        if (useServerBuffResponse.switch_play_server) {
+                            return [2, new GenericResponse(ResponseStatus.SwitchServer, useServerBuffResponse.switch_play_server)];
+                        }
                         if (useServerBuffResponse.failure_reason == "Outdated instance id") {
-                            return [2, new UseBlacksmithResponse(ResponseStatus.OutdatedInstanceId)];
+                            return [2, new GenericResponse(ResponseStatus.OutdatedInstanceId)];
                         }
                         if (useServerBuffResponse.success && useServerBuffResponse.okay) {
-                            return [2, new UseBlacksmithResponse(ResponseStatus.Success, useServerBuffResponse.actions)];
+                            return [2, new UseBlacksmithResponse(useServerBuffResponse.actions)];
                         }
                         _a.label = 3;
-                    case 3: return [2, new UseBlacksmithResponse(ResponseStatus.Failed)];
+                    case 3: return [2, new GenericResponse(ResponseStatus.Failed)];
                 }
             });
         });
@@ -536,12 +552,17 @@ function purchaseChests(userId, hash) {
                         })];
                 case 2:
                     responseStatus = _a.sent();
-                    if (responseStatus == ResponseStatus.InsuficcientCurrency) {
+                    if (responseStatus.status == ResponseStatus.SwitchServer && responseStatus.newServer) {
+                        _server = responseStatus.newServer;
+                        remainingChests += currentAmount;
+                        console.log("Switching server");
+                    }
+                    if (responseStatus.status == ResponseStatus.InsuficcientCurrency) {
                         console.error("Insufficient currency error");
                         showError("Insufficient gems remaining");
                         return [2];
                     }
-                    else if (responseStatus == ResponseStatus.Failed) {
+                    else if (responseStatus.status == ResponseStatus.Failed) {
                         console.error("Purchase API call failed");
                         showError("Purchase failed");
                         return [2];
@@ -578,11 +599,10 @@ function blacksmithClick() {
     });
 }
 function openChests(userId, hash) {
-    var _a;
     return __awaiter(this, void 0, void 0, function () {
         var MAX_OPEN_AMOUNT, lootResults, chestType, chestAmount, remainingChests, currentAmount, openResponse, lastInstanceId;
-        return __generator(this, function (_b) {
-            switch (_b.label) {
+        return __generator(this, function (_a) {
+            switch (_a.label) {
                 case 0:
                     MAX_OPEN_AMOUNT = 99;
                     if (!_server || !_instanceId)
@@ -600,7 +620,7 @@ function openChests(userId, hash) {
                         return [2];
                     }
                     remainingChests = chestAmount;
-                    _b.label = 1;
+                    _a.label = 1;
                 case 1:
                     if (!(remainingChests > 0)) return [3, 8];
                     showInfo("Opening... ".concat(remainingChests, " chests remaining to open"));
@@ -616,13 +636,19 @@ function openChests(userId, hash) {
                             instanceId: _instanceId
                         })];
                 case 2:
-                    openResponse = _b.sent();
+                    openResponse = _a.sent();
+                    if (!("status" in openResponse)) return [3, 5];
+                    if (openResponse.status == ResponseStatus.SwitchServer && openResponse.newServer) {
+                        _server = openResponse.newServer;
+                        remainingChests += currentAmount;
+                        console.log("Switching server");
+                    }
                     if (!(openResponse.status == ResponseStatus.OutdatedInstanceId)) return [3, 4];
                     lastInstanceId = _instanceId;
                     console.log("Refreshing inventory for instance ID");
                     return [4, refreshInventory(userId, hash)];
                 case 3:
-                    _b.sent();
+                    _a.sent();
                     if (_instanceId == lastInstanceId) {
                         console.error("Failed to refresh instance id");
                         showError("Failed to get updated instance ID. Check credentials.");
@@ -636,21 +662,23 @@ function openChests(userId, hash) {
                         showError("Purchase failed");
                         return [2];
                     }
-                    _b.label = 5;
+                    _a.label = 5;
                 case 5:
-                    aggregateOpenResults((_a = openResponse.lootDetail) !== null && _a !== void 0 ? _a : [], lootResults);
+                    if ("lootDetail" in openResponse) {
+                        aggregateOpenResults(openResponse.lootDetail, lootResults);
+                    }
                     displayLootResults(lootResults);
                     if (!(remainingChests > 0)) return [3, 7];
                     return [4, new Promise(function (h) { return setTimeout(h, REQUEST_DELAY); })];
                 case 6:
-                    _b.sent();
-                    _b.label = 7;
+                    _a.sent();
+                    _a.label = 7;
                 case 7: return [3, 1];
                 case 8:
                     console.log("Completed opening");
                     return [4, refreshInventory(userId, hash)];
                 case 9:
-                    _b.sent();
+                    _a.sent();
                     showSuccess("Opened ".concat(chestAmount, " chests"));
                     return [2];
             }
@@ -759,11 +787,10 @@ var BlacksmithAggregateResult = (function () {
     return BlacksmithAggregateResult;
 }());
 function useBlacksmithContracts(userId, hash) {
-    var _a;
     return __awaiter(this, void 0, void 0, function () {
         var MAX_BLACKSMITH_AMOUNT, contractType, heroId, blacksmithAmount, remainingContracts, currentAmount, blacksmithResponse, lastInstanceId;
-        return __generator(this, function (_b) {
-            switch (_b.label) {
+        return __generator(this, function (_a) {
+            switch (_a.label) {
                 case 0:
                     MAX_BLACKSMITH_AMOUNT = 50;
                     if (!_server || !_instanceId)
@@ -776,7 +803,7 @@ function useBlacksmithContracts(userId, hash) {
                         return [2];
                     }
                     remainingContracts = blacksmithAmount;
-                    _b.label = 1;
+                    _a.label = 1;
                 case 1:
                     if (!(remainingContracts > 0)) return [3, 8];
                     showInfo("Smithing... ".concat(remainingContracts, " contracts remaining to use"));
@@ -793,13 +820,19 @@ function useBlacksmithContracts(userId, hash) {
                             instanceId: _instanceId
                         })];
                 case 2:
-                    blacksmithResponse = _b.sent();
+                    blacksmithResponse = _a.sent();
+                    if (!("status" in blacksmithResponse)) return [3, 5];
+                    if (blacksmithResponse.status == ResponseStatus.SwitchServer && blacksmithResponse.newServer) {
+                        _server = blacksmithResponse.newServer;
+                        remainingContracts += currentAmount;
+                        console.log("Switching server");
+                    }
                     if (!(blacksmithResponse.status == ResponseStatus.OutdatedInstanceId)) return [3, 4];
                     lastInstanceId = _instanceId;
                     console.log("Refreshing inventory for instance ID");
                     return [4, refreshInventory(userId, hash)];
                 case 3:
-                    _b.sent();
+                    _a.sent();
                     if (_instanceId == lastInstanceId) {
                         console.error("Failed to refresh instance id");
                         showError("Failed to get updated instance ID. Check credentials.");
@@ -813,21 +846,23 @@ function useBlacksmithContracts(userId, hash) {
                         showError("Blacksmithing failed");
                         return [2];
                     }
-                    _b.label = 5;
+                    _a.label = 5;
                 case 5:
-                    aggregateBlacksmithResults((_a = blacksmithResponse.actions) !== null && _a !== void 0 ? _a : []);
+                    if ("actions" in blacksmithResponse) {
+                        aggregateBlacksmithResults(blacksmithResponse.actions);
+                    }
                     displayBlacksmithResults();
                     if (!(remainingContracts > 0)) return [3, 7];
                     return [4, new Promise(function (h) { return setTimeout(h, REQUEST_DELAY); })];
                 case 6:
-                    _b.sent();
-                    _b.label = 7;
+                    _a.sent();
+                    _a.label = 7;
                 case 7: return [3, 1];
                 case 8:
                     console.log("Completed blacksmithing");
                     return [4, refreshInventory(userId, hash)];
                 case 9:
-                    _b.sent();
+                    _a.sent();
                     showSuccess("Used ".concat(blacksmithAmount, " blacksmith contracts"));
                     return [2];
             }

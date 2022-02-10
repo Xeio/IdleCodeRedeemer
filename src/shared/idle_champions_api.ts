@@ -51,45 +51,49 @@ declare const enum ContractType{
     Large = 34,
 }
 
-class CodeSubmitResponse{
-    status: CodeSubmitStatus;
+class GenericResponse
+{
+    status: ResponseStatus;
+    newServer?: string;
+
+    constructor(status: ResponseStatus, newServer?: string){
+        this.status = status
+        this.newServer = newServer ? newServer + "post.php" : undefined
+    }
+}
+
+class CodeSubmitResponse {
+    codeStatus: CodeSubmitStatus;
     lootDetail?: LootDetail[];
 
-    constructor(status: CodeSubmitStatus, lootDetail?: LootDetail[]){
-        this.status = status
+    constructor(codeStatus: CodeSubmitStatus, lootDetail?: LootDetail[]){
+        this.codeStatus = codeStatus
         this.lootDetail = lootDetail
     }
 }
 
-class OpenChestResponse{
-    status: ResponseStatus;
-    lootDetail?: LootDetailsEntity[];
+class OpenChestResponse {
+    lootDetail: LootDetailsEntity[];
 
-    constructor(status: ResponseStatus, lootDetail?: LootDetailsEntity[]){
-        this.status = status
+    constructor(lootDetail: LootDetailsEntity[]){
         this.lootDetail = lootDetail
     }
 }
 
-class UseBlacksmithResponse{
-    status: ResponseStatus;
-    actions?: BlacksmithAction[];
+class UseBlacksmithResponse {
+    actions: BlacksmithAction[];
 
-    constructor(status: ResponseStatus, actions?: BlacksmithAction[]){
-        this.status = status
+    constructor(actions: BlacksmithAction[]){
         this.actions = actions
     }
 }
 
-
 enum CodeSubmitStatus{
     Success,
-    OutdatedInstanceId,
     AlreadyRedeemed,
     InvalidParameters,
     NotValidCombo,
     Expired,
-    Failed,
 }
 
 enum ResponseStatus{
@@ -97,6 +101,7 @@ enum ResponseStatus{
     OutdatedInstanceId,
     Failed,
     InsuficcientCurrency,
+    SwitchServer,
 }
 
 class IdleChampionsApi {
@@ -122,7 +127,7 @@ class IdleChampionsApi {
         return undefined
     }
 
-    static async submitCode(options: CodeSubmitOptions) : Promise<CodeSubmitResponse> {
+    static async submitCode(options: CodeSubmitOptions) : Promise<GenericResponse | CodeSubmitResponse> {
         const request = new URL(options.server)
 
         request.searchParams.append("call", "redeemcoupon")
@@ -154,9 +159,12 @@ class IdleChampionsApi {
             const redeemResponse : RedeemCodeResponse = await response.json()
             if(!redeemResponse){
                 console.error("No json response")
-                return new CodeSubmitResponse(CodeSubmitStatus.Failed)
+                return new GenericResponse(ResponseStatus.Failed)
             }
             console.debug(redeemResponse)
+            if(redeemResponse.switch_play_server){
+                return new GenericResponse(ResponseStatus.SwitchServer, redeemResponse.switch_play_server)
+            }
             if(redeemResponse.failure_reason === FailureReason.AlreadyRedeemed){
                 return new CodeSubmitResponse(CodeSubmitStatus.AlreadyRedeemed)
             }
@@ -167,7 +175,7 @@ class IdleChampionsApi {
                 return new CodeSubmitResponse(CodeSubmitStatus.NotValidCombo)
             }
             if(redeemResponse.failure_reason === FailureReason.OutdatedInstanceId){
-                return new CodeSubmitResponse(CodeSubmitStatus.OutdatedInstanceId)
+                return new GenericResponse(ResponseStatus.OutdatedInstanceId)
             }
             if(redeemResponse.failure_reason === FailureReason.InvalidParameters){
                 return new CodeSubmitResponse(CodeSubmitStatus.InvalidParameters)
@@ -176,9 +184,9 @@ class IdleChampionsApi {
                 return new CodeSubmitResponse(CodeSubmitStatus.Success, redeemResponse?.loot_details)
             }
             console.error("Unknown failure reason")
-            return new CodeSubmitResponse(CodeSubmitStatus.Failed)
+            return new GenericResponse(ResponseStatus.Failed)
         }
-        return new CodeSubmitResponse(CodeSubmitStatus.Failed)
+        return new GenericResponse(ResponseStatus.Failed)
     }
 
     static async getUserDetails(options: GetuserdetailsOptions) : Promise<PlayerData | undefined> {
@@ -219,7 +227,7 @@ class IdleChampionsApi {
         return undefined
     }
 
-    static async openChests(options: OpenChestsOptions) : Promise<OpenChestResponse> {
+    static async openChests(options: OpenChestsOptions) : Promise<GenericResponse | OpenChestResponse> {
         const request = new URL(options.server)
 
         request.searchParams.append("call", "openGenericChest")
@@ -252,17 +260,20 @@ class IdleChampionsApi {
         if(response.ok){
             const openGenericChestResponse : OpenGenericChestResponse = await response.json()
             console.debug(openGenericChestResponse)
-            if(openGenericChestResponse.failure_reason == FailureReason.OutdatedInstanceId){
-                return new OpenChestResponse(ResponseStatus.OutdatedInstanceId)
+            if(openGenericChestResponse.switch_play_server){
+                return new GenericResponse(ResponseStatus.SwitchServer, openGenericChestResponse.switch_play_server)
             }
-            if(openGenericChestResponse.success){
-                return new OpenChestResponse(ResponseStatus.Success, openGenericChestResponse.loot_details)
+            if(openGenericChestResponse.failure_reason == FailureReason.OutdatedInstanceId){
+                return new GenericResponse(ResponseStatus.OutdatedInstanceId)
+            }
+            if(openGenericChestResponse.success && openGenericChestResponse.loot_details){
+                return new OpenChestResponse(openGenericChestResponse.loot_details)
             }
         }
-        return new OpenChestResponse(ResponseStatus.Failed)
+        return new GenericResponse(ResponseStatus.Failed)
     }
 
-    static async purchaseChests(options: PurchaseChestsOptions) : Promise<ResponseStatus> {
+    static async purchaseChests(options: PurchaseChestsOptions) : Promise<GenericResponse> {
         const request = new URL(options.server)
 
         if(options.count > 100) throw new Error("Limited to 100 chests purchased per call.")
@@ -297,17 +308,20 @@ class IdleChampionsApi {
         if(response.ok){
             const purchaseResponse : PurchaseChestResponse = await response.json()
             console.debug(purchaseResponse)
+            if(purchaseResponse.switch_play_server){
+                return new GenericResponse(ResponseStatus.SwitchServer, purchaseResponse.switch_play_server)
+            }
             if(purchaseResponse.failure_reason == FailureReason.NotEnoughCurrency){
-                return ResponseStatus.InsuficcientCurrency
+                return new GenericResponse(ResponseStatus.InsuficcientCurrency)
             }
             if(purchaseResponse.success && purchaseResponse.okay){
-                return ResponseStatus.Success
+                return new GenericResponse(ResponseStatus.Success)
             }
         }
-        return ResponseStatus.Failed
+        return new GenericResponse(ResponseStatus.Failed)
     }
 
-    static async useBlacksmith(options: UseBlacksmithOptions) : Promise<UseBlacksmithResponse> {
+    static async useBlacksmith(options: UseBlacksmithOptions) : Promise<GenericResponse | UseBlacksmithResponse> {
         const request = new URL(options.server)
 
         request.searchParams.append("call", "useServerBuff")
@@ -328,13 +342,16 @@ class IdleChampionsApi {
         if(response.ok){
             const useServerBuffResponse : UseServerBuffResponse = await response.json()
             console.debug(useServerBuffResponse)
+            if(useServerBuffResponse.switch_play_server){
+                return new GenericResponse(ResponseStatus.SwitchServer, useServerBuffResponse.switch_play_server)
+            }
             if(useServerBuffResponse.failure_reason == FailureReason.OutdatedInstanceId){
-                return new UseBlacksmithResponse(ResponseStatus.OutdatedInstanceId)
+                return new GenericResponse(ResponseStatus.OutdatedInstanceId)
             }
             if(useServerBuffResponse.success && useServerBuffResponse.okay){
-                return new UseBlacksmithResponse(ResponseStatus.Success, useServerBuffResponse.actions)
+                return new UseBlacksmithResponse(useServerBuffResponse.actions)
             }
         }
-        return new UseBlacksmithResponse(ResponseStatus.Failed)
+        return new GenericResponse(ResponseStatus.Failed)
     }
 }

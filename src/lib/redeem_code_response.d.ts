@@ -10,6 +10,7 @@ interface RedeemCodeResponse {
     apc_stats:          ApcStats;
     db_stats:           { [key: string]: boolean };
     loot_details?:      LootDetail[];
+    switch_play_server?:string;
 }
 
 interface Action {
@@ -70,6 +71,7 @@ interface PurchaseChestResponse {
     processing_time: string;
     memory_usage: string;
     apc_stats: ApcStats;
+    switch_play_server: string;
 }
 
 interface OpenGenericChestResponse {
@@ -81,6 +83,7 @@ interface OpenGenericChestResponse {
     processing_time: string;
     memory_usage: string;
     apc_stats: ApcStats;
+    switch_play_server?: string;
 }
 
 interface LootDetailsEntity {

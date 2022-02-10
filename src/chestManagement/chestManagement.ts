@@ -229,7 +229,7 @@ async function purchaseChests(userId: string, hash: string){
 
         console.log(`Purchasing ${currentAmount} chests`)
 
-        const responseStatus = await IdleChampionsApi.purchaseChests({
+        const responseStatus : GenericResponse = await IdleChampionsApi.purchaseChests({
             server: _server,
             user_id: userId,
             hash: hash,
@@ -237,12 +237,17 @@ async function purchaseChests(userId: string, hash: string){
             count: currentAmount
         })
 
-        if(responseStatus == ResponseStatus.InsuficcientCurrency){
+        if(responseStatus.status == ResponseStatus.SwitchServer && responseStatus.newServer){
+            _server = responseStatus.newServer
+            remainingChests += currentAmount
+            console.log("Switching server")
+        }
+        if(responseStatus.status == ResponseStatus.InsuficcientCurrency){
             console.error("Insufficient currency error")
             showError("Insufficient gems remaining")
             return
         }
-        else if(responseStatus == ResponseStatus.Failed){
+        else if(responseStatus.status == ResponseStatus.Failed){
             console.error("Purchase API call failed")
             showError("Purchase failed")
             return
@@ -312,7 +317,7 @@ async function openChests(userId: string, hash: string){
 
         console.log(`Opening ${currentAmount} chests`)
 
-        const openResponse = await IdleChampionsApi.openChests({
+        const openResponse: GenericResponse | OpenChestResponse = await IdleChampionsApi.openChests({
             server: _server,
             user_id: userId,
             hash: hash,
@@ -321,25 +326,34 @@ async function openChests(userId: string, hash: string){
             instanceId: _instanceId,
         })
 
-        if(openResponse.status == ResponseStatus.OutdatedInstanceId){
-            const lastInstanceId:string = _instanceId
-            console.log("Refreshing inventory for instance ID")
-            await refreshInventory(userId, hash)
-            if(_instanceId == lastInstanceId){
-                console.error("Failed to refresh instance id")
-                showError("Failed to get updated instance ID. Check credentials.")
+        if("status" in openResponse){
+            if(openResponse.status == ResponseStatus.SwitchServer && openResponse.newServer){
+                _server = openResponse.newServer
+                remainingChests += currentAmount
+                console.log("Switching server")
+            }
+            if(openResponse.status == ResponseStatus.OutdatedInstanceId){
+                const lastInstanceId:string = _instanceId
+                console.log("Refreshing inventory for instance ID")
+                await refreshInventory(userId, hash)
+                if(_instanceId == lastInstanceId){
+                    console.error("Failed to refresh instance id")
+                    showError("Failed to get updated instance ID. Check credentials.")
+                    return
+                }
+
+                remainingChests += currentAmount
+            }
+            else if(openResponse.status == ResponseStatus.Failed){
+                console.error("Purchase API call failed")
+                showError("Purchase failed")
                 return
             }
-
-            remainingChests += currentAmount
-        }
-        else if(openResponse.status == ResponseStatus.Failed){
-            console.error("Purchase API call failed")
-            showError("Purchase failed")
-            return
         }
         
-        aggregateOpenResults(openResponse.lootDetail ?? [], lootResults)
+        if("lootDetail" in openResponse){
+            aggregateOpenResults(openResponse.lootDetail, lootResults)
+        }
 
         displayLootResults(lootResults)
 
@@ -503,7 +517,7 @@ async function useBlacksmithContracts(userId: string, hash: string){
 
         console.log(`Using ${currentAmount} contracts`)
 
-        const blacksmithResponse = await IdleChampionsApi.useBlacksmith({
+        const blacksmithResponse: GenericResponse | UseBlacksmithResponse = await IdleChampionsApi.useBlacksmith({
             server: _server,
             user_id: userId,
             hash: hash,
@@ -513,25 +527,34 @@ async function useBlacksmithContracts(userId: string, hash: string){
             instanceId: _instanceId,
         })
 
-        if(blacksmithResponse.status == ResponseStatus.OutdatedInstanceId){
-            const lastInstanceId:string = _instanceId
-            console.log("Refreshing inventory for instance ID")
-            await refreshInventory(userId, hash)
-            if(_instanceId == lastInstanceId){
-                console.error("Failed to refresh instance id")
-                showError("Failed to get updated instance ID. Check credentials.")
+        if("status" in blacksmithResponse){
+            if(blacksmithResponse.status == ResponseStatus.SwitchServer && blacksmithResponse.newServer){
+                _server = blacksmithResponse.newServer
+                remainingContracts += currentAmount
+                console.log("Switching server")
+            }
+            if(blacksmithResponse.status == ResponseStatus.OutdatedInstanceId){
+                const lastInstanceId:string = _instanceId
+                console.log("Refreshing inventory for instance ID")
+                await refreshInventory(userId, hash)
+                if(_instanceId == lastInstanceId){
+                    console.error("Failed to refresh instance id")
+                    showError("Failed to get updated instance ID. Check credentials.")
+                    return
+                }
+
+                remainingContracts += currentAmount
+            }
+            else if(blacksmithResponse.status == ResponseStatus.Failed){
+                console.error("Blacksmith API call failed")
+                showError("Blacksmithing failed")
                 return
             }
-
-            remainingContracts += currentAmount
-        }
-        else if(blacksmithResponse.status == ResponseStatus.Failed){
-            console.error("Blacksmith API call failed")
-            showError("Blacksmithing failed")
-            return
         }
         
-        aggregateBlacksmithResults(blacksmithResponse.actions ?? [])
+        if("actions" in blacksmithResponse){
+            aggregateBlacksmithResults(blacksmithResponse.actions)
+        }
 
         displayBlacksmithResults()
 
