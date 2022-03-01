@@ -34,6 +34,7 @@ declare const enum FailureReason {
     NotValidCombo = "not_valid_combination",
     Expired = "offer_has_expired",
     NotEnoughCurrency = "Not enough currency",
+    CannotRedeem = "can_not_redeem_combination",
 }
 
 interface LootDetail {

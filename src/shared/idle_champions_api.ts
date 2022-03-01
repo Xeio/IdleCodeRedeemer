@@ -94,6 +94,7 @@ enum CodeSubmitStatus{
     InvalidParameters,
     NotValidCombo,
     Expired,
+    CannotRedeem,
 }
 
 enum ResponseStatus{
@@ -179,6 +180,9 @@ class IdleChampionsApi {
             }
             if(redeemResponse.failure_reason === FailureReason.InvalidParameters){
                 return new CodeSubmitResponse(CodeSubmitStatus.InvalidParameters)
+            }
+            if(redeemResponse.failure_reason === FailureReason.CannotRedeem){
+                return new CodeSubmitResponse(CodeSubmitStatus.CannotRedeem)
             }
             if (redeemResponse.success && redeemResponse.okay){
                 return new CodeSubmitResponse(CodeSubmitStatus.Success, redeemResponse?.loot_details)

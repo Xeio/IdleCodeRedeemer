@@ -80,6 +80,7 @@ var CodeSubmitStatus;
     CodeSubmitStatus[CodeSubmitStatus["InvalidParameters"] = 2] = "InvalidParameters";
     CodeSubmitStatus[CodeSubmitStatus["NotValidCombo"] = 3] = "NotValidCombo";
     CodeSubmitStatus[CodeSubmitStatus["Expired"] = 4] = "Expired";
+    CodeSubmitStatus[CodeSubmitStatus["CannotRedeem"] = 5] = "CannotRedeem";
 })(CodeSubmitStatus || (CodeSubmitStatus = {}));
 var ResponseStatus;
 (function (ResponseStatus) {
@@ -165,6 +166,9 @@ var IdleChampionsApi = (function () {
                         }
                         if (redeemResponse.failure_reason === "Invalid or incomplete parameters") {
                             return [2, new CodeSubmitResponse(CodeSubmitStatus.InvalidParameters)];
+                        }
+                        if (redeemResponse.failure_reason === "can_not_redeem_combination") {
+                            return [2, new CodeSubmitResponse(CodeSubmitStatus.CannotRedeem)];
                         }
                         if (redeemResponse.success && redeemResponse.okay) {
                             return [2, new CodeSubmitResponse(CodeSubmitStatus.Success, redeemResponse === null || redeemResponse === void 0 ? void 0 : redeemResponse.loot_details)];

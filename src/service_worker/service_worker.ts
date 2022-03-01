@@ -146,7 +146,7 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
 
     _optionsPort.postMessage({messageType: MessageType.Info, messageText:`Upload starting, ${pendingCodes.length} new codes to redeem. This may take a bit.` })
 
-    let duplicates = 0, newCodes = 0, expired = 0, invalid = 0
+    let duplicates = 0, newCodes = 0, expired = 0, invalid = 0, cannotRedeem = 0
     const chests: {[chestType: number]: number} = {}
     let heroUnlocks = 0, skinUnlocks = 0
 
@@ -227,6 +227,7 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
                 case CodeSubmitStatus.NotValidCombo:
                 case CodeSubmitStatus.AlreadyRedeemed:
                 case CodeSubmitStatus.Success:
+                case CodeSubmitStatus.CannotRedeem:
                     if(codeResponse.codeStatus == CodeSubmitStatus.AlreadyRedeemed) {
                         console.log(`Already redeemed code: ${code}`)
                         duplicates++
@@ -238,6 +239,10 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
                     else if(codeResponse.codeStatus == CodeSubmitStatus.Expired) {
                         console.log(`Expired code: ${code}`)
                         expired++
+                    }
+                    if(codeResponse.codeStatus == CodeSubmitStatus.CannotRedeem) {
+                        console.log(`Cannot redeem: ${code}`)
+                        cannotRedeem++
                     }
                     else{
                         console.log(`Sucessfully redeemed: ${code}`)
@@ -280,6 +285,7 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
     console.log(`${newCodes} new redemptions`)
     console.log(`${expired} expired`)
     console.log(`${invalid} invalid`)
+    console.log(`${cannotRedeem} unable to be redeemed`)
     console.log(chests)
     _optionsPort.postMessage({
         messageType: MessageType.Success,
@@ -290,6 +296,7 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
                         ${duplicates > 0 ? `${duplicates} codes already redeemed<br>` : ""}
                         ${expired > 0 ? `${expired} expired codes<br>` : ""}
                         ${invalid > 0 ? `${invalid} invalid codes<br>` : ""}
+                        ${cannotRedeem > 0 ? `${cannotRedeem} unable to be redeemed<br>` : ""}
                         ${newCodes} codes redeemed`
     })
 }

@@ -80,6 +80,7 @@ var CodeSubmitStatus;
     CodeSubmitStatus[CodeSubmitStatus["InvalidParameters"] = 2] = "InvalidParameters";
     CodeSubmitStatus[CodeSubmitStatus["NotValidCombo"] = 3] = "NotValidCombo";
     CodeSubmitStatus[CodeSubmitStatus["Expired"] = 4] = "Expired";
+    CodeSubmitStatus[CodeSubmitStatus["CannotRedeem"] = 5] = "CannotRedeem";
 })(CodeSubmitStatus || (CodeSubmitStatus = {}));
 var ResponseStatus;
 (function (ResponseStatus) {
@@ -165,6 +166,9 @@ var IdleChampionsApi = (function () {
                         }
                         if (redeemResponse.failure_reason === "Invalid or incomplete parameters") {
                             return [2, new CodeSubmitResponse(CodeSubmitStatus.InvalidParameters)];
+                        }
+                        if (redeemResponse.failure_reason === "can_not_redeem_combination") {
+                            return [2, new CodeSubmitResponse(CodeSubmitStatus.CannotRedeem)];
                         }
                         if (redeemResponse.success && redeemResponse.okay) {
                             return [2, new CodeSubmitResponse(CodeSubmitStatus.Success, redeemResponse === null || redeemResponse === void 0 ? void 0 : redeemResponse.loot_details)];
@@ -452,7 +456,7 @@ function startUploadProcess() {
 function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
     var _a;
     return __awaiter(this, void 0, void 0, function () {
-        var server, duplicates, newCodes, expired, invalid, chests, heroUnlocks, skinUnlocks, code, codeResponse, userData;
+        var server, duplicates, newCodes, expired, invalid, cannotRedeem, chests, heroUnlocks, skinUnlocks, code, codeResponse, userData;
         var _b, _c;
         return __generator(this, function (_d) {
             switch (_d.label) {
@@ -472,7 +476,7 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                     }
                     console.log("Got server ".concat(server));
                     _optionsPort.postMessage({ messageType: "info", messageText: "Upload starting, ".concat(pendingCodes.length, " new codes to redeem. This may take a bit.") });
-                    duplicates = 0, newCodes = 0, expired = 0, invalid = 0;
+                    duplicates = 0, newCodes = 0, expired = 0, invalid = 0, cannotRedeem = 0;
                     chests = {};
                     heroUnlocks = 0, skinUnlocks = 0;
                     _d.label = 2;
@@ -554,6 +558,7 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                             case CodeSubmitStatus.NotValidCombo:
                             case CodeSubmitStatus.AlreadyRedeemed:
                             case CodeSubmitStatus.Success:
+                            case CodeSubmitStatus.CannotRedeem:
                                 if (codeResponse.codeStatus == CodeSubmitStatus.AlreadyRedeemed) {
                                     console.log("Already redeemed code: ".concat(code));
                                     duplicates++;
@@ -565,6 +570,10 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                                 else if (codeResponse.codeStatus == CodeSubmitStatus.Expired) {
                                     console.log("Expired code: ".concat(code));
                                     expired++;
+                                }
+                                if (codeResponse.codeStatus == CodeSubmitStatus.CannotRedeem) {
+                                    console.log("Cannot redeem: ".concat(code));
+                                    cannotRedeem++;
                                 }
                                 else {
                                     console.log("Sucessfully redeemed: ".concat(code));
@@ -604,13 +613,14 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                     console.log("".concat(newCodes, " new redemptions"));
                     console.log("".concat(expired, " expired"));
                     console.log("".concat(invalid, " invalid"));
+                    console.log("".concat(cannotRedeem, " unable to be redeemed"));
                     console.log(chests);
                     _optionsPort.postMessage({
                         messageType: "success",
                         chests: chests,
                         heroUnlocks: heroUnlocks,
                         skinUnlocks: skinUnlocks,
-                        messageText: "Upload completed successfully:<br>\n                        ".concat(duplicates > 0 ? "".concat(duplicates, " codes already redeemed<br>") : "", "\n                        ").concat(expired > 0 ? "".concat(expired, " expired codes<br>") : "", "\n                        ").concat(invalid > 0 ? "".concat(invalid, " invalid codes<br>") : "", "\n                        ").concat(newCodes, " codes redeemed")
+                        messageText: "Upload completed successfully:<br>\n                        ".concat(duplicates > 0 ? "".concat(duplicates, " codes already redeemed<br>") : "", "\n                        ").concat(expired > 0 ? "".concat(expired, " expired codes<br>") : "", "\n                        ").concat(invalid > 0 ? "".concat(invalid, " invalid codes<br>") : "", "\n                        ").concat(cannotRedeem > 0 ? "".concat(cannotRedeem, " unable to be redeemed<br>") : "", "\n                        ").concat(newCodes, " codes redeemed")
                     });
                     return [2];
             }
