@@ -164,51 +164,48 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
             code: code 
         })
 
-        if("status" in codeResponse)
-        {
-            if(codeResponse.status == ResponseStatus.SwitchServer && codeResponse.newServer){
-                console.log("Switching server")
+        if("status" in codeResponse && codeResponse.status == ResponseStatus.SwitchServer && codeResponse.newServer){
+            console.log("Switching server")
 
-                server = codeResponse.newServer
+            server = codeResponse.newServer
 
-                codeResponse = await IdleChampionsApi.submitCode({
-                    server: server,
-                    user_id: userId, 
-                    hash: hash,
-                    instanceId: instanceId,
-                    code: code 
-                })
+            codeResponse = await IdleChampionsApi.submitCode({
+                server: server,
+                user_id: userId, 
+                hash: hash,
+                instanceId: instanceId,
+                code: code 
+            })
+        }
+        if("status" in codeResponse && codeResponse.status == ResponseStatus.OutdatedInstanceId){
+            console.log("Instance ID outdated, refreshing.")
+
+            await new Promise(h => setTimeout(h, REQUEST_DELAY)) //Delay between requests
+            
+            const userData = await IdleChampionsApi.getUserDetails({
+                server: server,
+                user_id: userId,
+                hash: hash,
+            })
+
+            if(!userData) {
+                console.log("Failed to retreive user data.")
+                _optionsPort.postMessage({messageType: MessageType.Error, messageText:"Failed to retreieve user data, check user ID and hash."})
+                return
             }
-            else if(codeResponse.status == ResponseStatus.OutdatedInstanceId){
-                console.log("Instance ID outdated, refreshing.")
-    
-                await new Promise(h => setTimeout(h, REQUEST_DELAY)) //Delay between requests
-                
-                const userData = await IdleChampionsApi.getUserDetails({
-                    server: server,
-                    user_id: userId,
-                    hash: hash,
-                })
-    
-                if(!userData) {
-                    console.log("Failed to retreive user data.")
-                    _optionsPort.postMessage({messageType: MessageType.Error, messageText:"Failed to retreieve user data, check user ID and hash."})
-                    return
-                }
-    
-                instanceId = userData.details.instance_id
-                chrome.storage.sync.set({[Globals.SETTING_INSTANCE_ID]: instanceId})
-    
-                await new Promise(h => setTimeout(h, REQUEST_DELAY)) //Delay between requests
-    
-                codeResponse = await IdleChampionsApi.submitCode({
-                    server: server,
-                    user_id: userId, 
-                    hash: hash,
-                    instanceId: instanceId,
-                    code: code 
-                })
-            }
+
+            instanceId = userData.details.instance_id
+            chrome.storage.sync.set({[Globals.SETTING_INSTANCE_ID]: instanceId})
+
+            await new Promise(h => setTimeout(h, REQUEST_DELAY)) //Delay between requests
+
+            codeResponse = await IdleChampionsApi.submitCode({
+                server: server,
+                user_id: userId, 
+                hash: hash,
+                instanceId: instanceId,
+                code: code 
+            })
         }
 
         if("status" in codeResponse){

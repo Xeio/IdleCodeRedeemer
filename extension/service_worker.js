@@ -495,8 +495,7 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                         })];
                 case 4:
                     codeResponse = _d.sent();
-                    if (!("status" in codeResponse)) return [3, 11];
-                    if (!(codeResponse.status == ResponseStatus.SwitchServer && codeResponse.newServer)) return [3, 6];
+                    if (!("status" in codeResponse && codeResponse.status == ResponseStatus.SwitchServer && codeResponse.newServer)) return [3, 6];
                     console.log("Switching server");
                     server = codeResponse.newServer;
                     return [4, IdleChampionsApi.submitCode({
@@ -508,9 +507,9 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                         })];
                 case 5:
                     codeResponse = _d.sent();
-                    return [3, 11];
+                    _d.label = 6;
                 case 6:
-                    if (!(codeResponse.status == ResponseStatus.OutdatedInstanceId)) return [3, 11];
+                    if (!("status" in codeResponse && codeResponse.status == ResponseStatus.OutdatedInstanceId)) return [3, 11];
                     console.log("Instance ID outdated, refreshing.");
                     return [4, new Promise(function (h) { return setTimeout(h, REQUEST_DELAY); })];
                 case 7:
