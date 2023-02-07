@@ -91,7 +91,6 @@ function refreshClick(){
 
 async function refreshInventory(userId: string, hash: string) {
     if(!userId || userId.length == 0 || !hash || hash.length == 0){
-        console.error("No credentials entered.")
         showError("No credentials entered.")
         return
     }
@@ -103,7 +102,6 @@ async function refreshInventory(userId: string, hash: string) {
 
     if(!_server) {
         showError("Failed to get idle champions server.")
-        console.error("Failed to get idle champions server.")
         return
     }
 
@@ -115,7 +113,6 @@ async function refreshInventory(userId: string, hash: string) {
 
     if(!_userData) {
         showError("Failed to retreive user data.")
-        console.error("Failed to retreive user data.")
         return
     }
 
@@ -243,12 +240,10 @@ async function purchaseChests(userId: string, hash: string){
             console.log("Switching server")
         }
         if(responseStatus.status == ResponseStatus.InsuficcientCurrency){
-            console.error("Insufficient currency error")
             showError("Insufficient gems remaining")
             return
         }
         else if(responseStatus.status == ResponseStatus.Failed){
-            console.error("Purchase API call failed")
             showError("Purchase failed")
             return
         }
@@ -337,7 +332,6 @@ async function openChests(userId: string, hash: string){
                 console.log("Refreshing inventory for instance ID")
                 await refreshInventory(userId, hash)
                 if(_instanceId == lastInstanceId){
-                    console.error("Failed to refresh instance id")
                     showError("Failed to get updated instance ID. Check credentials.")
                     return
                 }
@@ -345,7 +339,6 @@ async function openChests(userId: string, hash: string){
                 remainingChests += currentAmount
             }
             else if(openResponse.status == ResponseStatus.Failed){
-                console.error("Purchase API call failed")
                 showError("Purchase failed")
                 return
             }
@@ -377,6 +370,8 @@ function hideMessages() {
 }
 
 function showError(text:string){
+    console.error(text)
+
     hideMessages()
 
     document.getElementById("error")!.classList.add("show")
@@ -538,7 +533,6 @@ async function useBlacksmithContracts(userId: string, hash: string){
                 console.log("Refreshing inventory for instance ID")
                 await refreshInventory(userId, hash)
                 if(_instanceId == lastInstanceId){
-                    console.error("Failed to refresh instance id")
                     showError("Failed to get updated instance ID. Check credentials.")
                     return
                 }
@@ -546,7 +540,6 @@ async function useBlacksmithContracts(userId: string, hash: string){
                 remainingContracts += currentAmount
             }
             else if(blacksmithResponse.status == ResponseStatus.Failed){
-                console.error("Blacksmith API call failed")
                 showError("Blacksmithing failed")
                 return
             }
