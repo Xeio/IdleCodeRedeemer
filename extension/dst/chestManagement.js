@@ -152,7 +152,8 @@ var IdleChampionsApi = (function () {
                         if (redeemResponse.switch_play_server) {
                             return [2, new GenericResponse(ResponseStatus.SwitchServer, redeemResponse.switch_play_server)];
                         }
-                        if (redeemResponse.failure_reason === "you_already_redeemed_combination") {
+                        if (redeemResponse.failure_reason === "you_already_redeemed_combination" ||
+                            redeemResponse.failure_reason === "someone_already_redeemed_combination") {
                             return [2, new CodeSubmitResponse(CodeSubmitStatus.AlreadyRedeemed)];
                         }
                         if (redeemResponse.failure_reason === "offer_has_expired") {

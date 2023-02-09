@@ -166,7 +166,8 @@ class IdleChampionsApi {
             if(redeemResponse.switch_play_server){
                 return new GenericResponse(ResponseStatus.SwitchServer, redeemResponse.switch_play_server)
             }
-            if(redeemResponse.failure_reason === FailureReason.AlreadyRedeemed){
+            if(redeemResponse.failure_reason === FailureReason.AlreadyRedeemed ||
+                redeemResponse.failure_reason === FailureReason.SomeoneAlreadyRedeemed){
                 return new CodeSubmitResponse(CodeSubmitStatus.AlreadyRedeemed)
             }
             if(redeemResponse.failure_reason === FailureReason.Expired){
