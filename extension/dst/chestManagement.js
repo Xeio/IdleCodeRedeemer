@@ -424,7 +424,6 @@ function refreshInventory(userId, hash) {
             switch (_e.label) {
                 case 0:
                     if (!userId || userId.length == 0 || !hash || hash.length == 0) {
-                        console.error("No credentials entered.");
                         showError("No credentials entered.");
                         return [2];
                     }
@@ -437,7 +436,6 @@ function refreshInventory(userId, hash) {
                 case 2:
                     if (!_server) {
                         showError("Failed to get idle champions server.");
-                        console.error("Failed to get idle champions server.");
                         return [2];
                     }
                     return [4, IdleChampionsApi.getUserDetails({
@@ -449,7 +447,6 @@ function refreshInventory(userId, hash) {
                     _userData = _e.sent();
                     if (!_userData) {
                         showError("Failed to retreive user data.");
-                        console.error("Failed to retreive user data.");
                         return [2];
                     }
                     console.log("Refreshed inventory data.");
@@ -562,12 +559,10 @@ function purchaseChests(userId, hash) {
                         console.log("Switching server");
                     }
                     if (responseStatus.status == ResponseStatus.InsuficcientCurrency) {
-                        console.error("Insufficient currency error");
                         showError("Insufficient gems remaining");
                         return [2];
                     }
                     else if (responseStatus.status == ResponseStatus.Failed) {
-                        console.error("Purchase API call failed");
                         showError("Purchase failed");
                         return [2];
                     }
@@ -654,7 +649,6 @@ function openChests(userId, hash) {
                 case 3:
                     _a.sent();
                     if (_instanceId == lastInstanceId) {
-                        console.error("Failed to refresh instance id");
                         showError("Failed to get updated instance ID. Check credentials.");
                         return [2];
                     }
@@ -662,7 +656,6 @@ function openChests(userId, hash) {
                     return [3, 5];
                 case 4:
                     if (openResponse.status == ResponseStatus.Failed) {
-                        console.error("Purchase API call failed");
                         showError("Purchase failed");
                         return [2];
                     }
@@ -696,6 +689,7 @@ function hideMessages() {
     document.getElementById("info").classList.remove("show");
 }
 function showError(text) {
+    console.error(text);
     hideMessages();
     document.getElementById("error").classList.add("show");
     document.querySelector("#error span").innerHTML = text;
@@ -838,7 +832,6 @@ function useBlacksmithContracts(userId, hash) {
                 case 3:
                     _a.sent();
                     if (_instanceId == lastInstanceId) {
-                        console.error("Failed to refresh instance id");
                         showError("Failed to get updated instance ID. Check credentials.");
                         return [2];
                     }
@@ -846,7 +839,6 @@ function useBlacksmithContracts(userId, hash) {
                     return [3, 5];
                 case 4:
                     if (blacksmithResponse.status == ResponseStatus.Failed) {
-                        console.error("Blacksmith API call failed");
                         showError("Blacksmithing failed");
                         return [2];
                     }
