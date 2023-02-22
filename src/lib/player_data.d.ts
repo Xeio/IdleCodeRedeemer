@@ -13,6 +13,7 @@ interface PlayerData {
     memory_usage:             string;
     apc_stats:                ApcStats;
     db_stats:                 { [key: string]: boolean };
+    switch_play_server:       string;
 }
 
 interface Action {

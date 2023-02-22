@@ -450,6 +450,22 @@ function refreshInventory(userId, hash) {
                         showError("Failed to retreive user data.");
                         return [2];
                     }
+                    if (!_userData.switch_play_server) return [3, 5];
+                    console.log("Got switch server to '".concat(_userData.switch_play_server, "'."));
+                    _server = _userData.switch_play_server;
+                    return [4, IdleChampionsApi.getUserDetails({
+                            server: _server,
+                            user_id: userId,
+                            hash: hash
+                        })];
+                case 4:
+                    _userData = _e.sent();
+                    if (!_userData) {
+                        showError("Failed to retreive user data.");
+                        return [2];
+                    }
+                    _e.label = 5;
+                case 5:
                     console.log("Refreshed inventory data.");
                     console.debug(_userData);
                     _instanceId = _userData.details.instance_id;

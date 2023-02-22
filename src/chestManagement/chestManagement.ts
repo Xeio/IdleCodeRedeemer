@@ -116,6 +116,24 @@ async function refreshInventory(userId: string, hash: string) {
         return
     }
 
+    if(_userData.switch_play_server)
+    {
+        console.log(`Got switch server to '${_userData.switch_play_server}'.`)
+
+        _server = _userData.switch_play_server;
+
+        _userData = await IdleChampionsApi.getUserDetails({
+            server: _server,
+            user_id: userId,
+            hash: hash,
+        })
+
+        if(!_userData) {
+            showError("Failed to retreive user data.")
+            return
+        }
+    }
+
     console.log("Refreshed inventory data.")
     console.debug(_userData)
 
