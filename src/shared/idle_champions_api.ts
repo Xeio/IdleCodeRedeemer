@@ -122,8 +122,10 @@ class IdleChampionsApi {
 
         const response = await fetch(request.toString())
         if(response.ok){
-            const serverDefs : ServerDefinitions = await response.json()
-            return serverDefs.play_server + "post.php"
+            const serverDefs : ServerDefinitions = await IdleChampionsApi.tryToJson(response)
+            if(serverDefs){
+                return serverDefs.play_server + "post.php"
+            }
         }
         return undefined
     }
@@ -157,9 +159,8 @@ class IdleChampionsApi {
 
         const response = await fetch(request.toString())
         if(response.ok){
-            const redeemResponse : RedeemCodeResponse = await response.json()
+            const redeemResponse : RedeemCodeResponse = await IdleChampionsApi.tryToJson(response)
             if(!redeemResponse){
-                console.error("No json response")
                 return new GenericResponse(ResponseStatus.Failed)
             }
             console.debug(redeemResponse)
@@ -224,8 +225,8 @@ class IdleChampionsApi {
 
         const response = await fetch(request.toString())
         if(response.ok){
-            const playerData : PlayerData = await response.json()
-            if(playerData.success){
+            const playerData : PlayerData = await IdleChampionsApi.tryToJson(response)
+            if(playerData?.success){
                 return playerData
             }
         }
@@ -263,7 +264,10 @@ class IdleChampionsApi {
 
         const response = await fetch(request.toString())
         if(response.ok){
-            const openGenericChestResponse : OpenGenericChestResponse = await response.json()
+            const openGenericChestResponse : OpenGenericChestResponse = await IdleChampionsApi.tryToJson(response)
+            if(!openGenericChestResponse){
+                return new GenericResponse(ResponseStatus.Failed)
+            }
             console.debug(openGenericChestResponse)
             if(openGenericChestResponse.switch_play_server){
                 return new GenericResponse(ResponseStatus.SwitchServer, openGenericChestResponse.switch_play_server)
@@ -311,7 +315,10 @@ class IdleChampionsApi {
 
         const response = await fetch(request.toString())
         if(response.ok){
-            const purchaseResponse : PurchaseChestResponse = await response.json()
+            const purchaseResponse : PurchaseChestResponse = await IdleChampionsApi.tryToJson(response)
+            if(!purchaseResponse){
+                return new GenericResponse(ResponseStatus.Failed)
+            }
             console.debug(purchaseResponse)
             if(purchaseResponse.switch_play_server){
                 return new GenericResponse(ResponseStatus.SwitchServer, purchaseResponse.switch_play_server)
@@ -345,7 +352,10 @@ class IdleChampionsApi {
 
         const response = await fetch(request.toString())
         if(response.ok){
-            const useServerBuffResponse : UseServerBuffResponse = await response.json()
+            const useServerBuffResponse : UseServerBuffResponse = await IdleChampionsApi.tryToJson(response)
+            if(!useServerBuffResponse){
+                return new GenericResponse(ResponseStatus.Failed)
+            }
             console.debug(useServerBuffResponse)
             if(useServerBuffResponse.switch_play_server){
                 return new GenericResponse(ResponseStatus.SwitchServer, useServerBuffResponse.switch_play_server)
@@ -358,5 +368,15 @@ class IdleChampionsApi {
             }
         }
         return new GenericResponse(ResponseStatus.Failed)
+    }
+
+    static async tryToJson(response: Response) : Promise<any> {
+        try{
+            return await response.json()
+        }
+        catch(e){
+            console.error(e)
+            return null
+        }
     }
 }

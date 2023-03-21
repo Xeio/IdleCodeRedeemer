@@ -110,10 +110,13 @@ var IdleChampionsApi = (function () {
                     case 1:
                         response = _a.sent();
                         if (!response.ok) return [3, 3];
-                        return [4, response.json()];
+                        return [4, IdleChampionsApi.tryToJson(response)];
                     case 2:
                         serverDefs = _a.sent();
-                        return [2, serverDefs.play_server + "post.php"];
+                        if (serverDefs) {
+                            return [2, serverDefs.play_server + "post.php"];
+                        }
+                        _a.label = 3;
                     case 3: return [2, undefined];
                 }
             });
@@ -141,11 +144,10 @@ var IdleChampionsApi = (function () {
                     case 1:
                         response = _a.sent();
                         if (!response.ok) return [3, 3];
-                        return [4, response.json()];
+                        return [4, IdleChampionsApi.tryToJson(response)];
                     case 2:
                         redeemResponse = _a.sent();
                         if (!redeemResponse) {
-                            console.error("No json response");
                             return [2, new GenericResponse(ResponseStatus.Failed)];
                         }
                         console.debug(redeemResponse);
@@ -203,10 +205,10 @@ var IdleChampionsApi = (function () {
                     case 1:
                         response = _a.sent();
                         if (!response.ok) return [3, 3];
-                        return [4, response.json()];
+                        return [4, IdleChampionsApi.tryToJson(response)];
                     case 2:
                         playerData = _a.sent();
-                        if (playerData.success) {
+                        if (playerData === null || playerData === void 0 ? void 0 : playerData.success) {
                             return [2, playerData];
                         }
                         _a.label = 3;
@@ -240,9 +242,12 @@ var IdleChampionsApi = (function () {
                     case 1:
                         response = _a.sent();
                         if (!response.ok) return [3, 3];
-                        return [4, response.json()];
+                        return [4, IdleChampionsApi.tryToJson(response)];
                     case 2:
                         openGenericChestResponse = _a.sent();
+                        if (!openGenericChestResponse) {
+                            return [2, new GenericResponse(ResponseStatus.Failed)];
+                        }
                         console.debug(openGenericChestResponse);
                         if (openGenericChestResponse.switch_play_server) {
                             return [2, new GenericResponse(ResponseStatus.SwitchServer, openGenericChestResponse.switch_play_server)];
@@ -283,9 +288,12 @@ var IdleChampionsApi = (function () {
                     case 1:
                         response = _a.sent();
                         if (!response.ok) return [3, 3];
-                        return [4, response.json()];
+                        return [4, IdleChampionsApi.tryToJson(response)];
                     case 2:
                         purchaseResponse = _a.sent();
+                        if (!purchaseResponse) {
+                            return [2, new GenericResponse(ResponseStatus.Failed)];
+                        }
                         console.debug(purchaseResponse);
                         if (purchaseResponse.switch_play_server) {
                             return [2, new GenericResponse(ResponseStatus.SwitchServer, purchaseResponse.switch_play_server)];
@@ -326,9 +334,12 @@ var IdleChampionsApi = (function () {
                     case 1:
                         response = _a.sent();
                         if (!response.ok) return [3, 3];
-                        return [4, response.json()];
+                        return [4, IdleChampionsApi.tryToJson(response)];
                     case 2:
                         useServerBuffResponse = _a.sent();
+                        if (!useServerBuffResponse) {
+                            return [2, new GenericResponse(ResponseStatus.Failed)];
+                        }
                         console.debug(useServerBuffResponse);
                         if (useServerBuffResponse.switch_play_server) {
                             return [2, new GenericResponse(ResponseStatus.SwitchServer, useServerBuffResponse.switch_play_server)];
@@ -341,6 +352,24 @@ var IdleChampionsApi = (function () {
                         }
                         _a.label = 3;
                     case 3: return [2, new GenericResponse(ResponseStatus.Failed)];
+                }
+            });
+        });
+    };
+    IdleChampionsApi.tryToJson = function (response) {
+        return __awaiter(this, void 0, void 0, function () {
+            var e_1;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 2, , 3]);
+                        return [4, response.json()];
+                    case 1: return [2, _a.sent()];
+                    case 2:
+                        e_1 = _a.sent();
+                        console.error(e_1);
+                        return [2, null];
+                    case 3: return [2];
                 }
             });
         });
