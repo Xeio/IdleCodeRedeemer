@@ -649,7 +649,7 @@ function openChests(userId, hash) {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    MAX_OPEN_AMOUNT = 99;
+                    MAX_OPEN_AMOUNT = 1000;
                     if (!_server || !_instanceId)
                         return [2];
                     if (!_shownCloseClientWarning) {

@@ -300,7 +300,7 @@ function blacksmithClick(){
 
 
 async function openChests(userId: string, hash: string){
-    const MAX_OPEN_AMOUNT = 99
+    const MAX_OPEN_AMOUNT = 1000
 
     if(!_server || !_instanceId) return
 
