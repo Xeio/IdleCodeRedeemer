@@ -383,7 +383,7 @@ class IdleChampionsApi {
         }
     }
 
-    static isGenericResponse(response: GenericResponse | PlayerData): response is GenericResponse{
+    static isGenericResponse(response: GenericResponse | any): response is GenericResponse{
         return response instanceof GenericResponse;
     }
 }

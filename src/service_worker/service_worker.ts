@@ -164,7 +164,7 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
             code: code 
         })
 
-        if("status" in codeResponse && codeResponse.status == ResponseStatus.SwitchServer && codeResponse.newServer){
+        if(IdleChampionsApi.isGenericResponse(codeResponse) && codeResponse.status == ResponseStatus.SwitchServer && codeResponse.newServer){
             console.log("Switching server")
 
             server = codeResponse.newServer
@@ -177,7 +177,7 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
                 code: code 
             })
         }
-        if("status" in codeResponse && codeResponse.status == ResponseStatus.OutdatedInstanceId){
+        if(IdleChampionsApi.isGenericResponse(codeResponse) && codeResponse.status == ResponseStatus.OutdatedInstanceId){
             console.log("Instance ID outdated, refreshing.")
 
             await new Promise(h => setTimeout(h, REQUEST_DELAY)) //Delay between requests
@@ -209,13 +209,13 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
             })
         }
 
-        if("status" in codeResponse){
+        if(IdleChampionsApi.isGenericResponse(codeResponse)){
             //Failed for a second time in a row for some reason (or for some un-handled failure type), just abort
             console.error("Unable to submit code, aborting upload process.")
             _optionsPort.postMessage({messageType: MessageType.Error, messageText:"Failed to submit code for unknown reason."})
             return
         }
-        else if("codeStatus" in codeResponse){
+        else{
             switch(codeResponse.codeStatus){
                 case CodeSubmitStatus.InvalidParameters:
                     console.error("Unable to submit code due to invalid parameters.")

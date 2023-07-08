@@ -332,7 +332,7 @@ async function openChests(userId: string, hash: string){
 
         console.log(`Opening ${currentAmount} chests`)
 
-        const openResponse: GenericResponse | OpenChestResponse = await IdleChampionsApi.openChests({
+        const openResponse = await IdleChampionsApi.openChests({
             server: _server,
             user_id: userId,
             hash: hash,
@@ -341,7 +341,7 @@ async function openChests(userId: string, hash: string){
             instanceId: _instanceId,
         })
 
-        if("status" in openResponse){
+        if(IdleChampionsApi.isGenericResponse(openResponse)){
             if(openResponse.status == ResponseStatus.SwitchServer && openResponse.newServer){
                 _server = openResponse.newServer
                 remainingChests += currentAmount
@@ -363,8 +363,7 @@ async function openChests(userId: string, hash: string){
                 return
             }
         }
-        
-        if("lootDetail" in openResponse){
+        else{
             aggregateOpenResults(openResponse.lootDetail, lootResults)
         }
 
@@ -532,7 +531,7 @@ async function useBlacksmithContracts(userId: string, hash: string){
 
         console.log(`Using ${currentAmount} contracts`)
 
-        const blacksmithResponse: GenericResponse | UseBlacksmithResponse = await IdleChampionsApi.useBlacksmith({
+        const blacksmithResponse = await IdleChampionsApi.useBlacksmith({
             server: _server,
             user_id: userId,
             hash: hash,
@@ -542,7 +541,7 @@ async function useBlacksmithContracts(userId: string, hash: string){
             instanceId: _instanceId,
         })
 
-        if("status" in blacksmithResponse){
+        if(IdleChampionsApi.isGenericResponse(blacksmithResponse)){
             if(blacksmithResponse.status == ResponseStatus.SwitchServer && blacksmithResponse.newServer){
                 _server = blacksmithResponse.newServer
                 remainingContracts += currentAmount
@@ -564,8 +563,7 @@ async function useBlacksmithContracts(userId: string, hash: string){
                 return
             }
         }
-        
-        if("actions" in blacksmithResponse){
+        else{
             aggregateBlacksmithResults(blacksmithResponse.actions)
         }
 

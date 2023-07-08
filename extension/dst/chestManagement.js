@@ -676,7 +676,7 @@ function openChests(userId, hash) {
                     remainingChests = chestAmount;
                     _a.label = 1;
                 case 1:
-                    if (!(remainingChests > 0)) return [3, 8];
+                    if (!(remainingChests > 0)) return [3, 10];
                     showInfo("Opening... ".concat(remainingChests, " chests remaining to open"));
                     currentAmount = remainingChests > MAX_OPEN_AMOUNT ? MAX_OPEN_AMOUNT : remainingChests;
                     remainingChests -= currentAmount;
@@ -691,7 +691,7 @@ function openChests(userId, hash) {
                         })];
                 case 2:
                     openResponse = _a.sent();
-                    if (!("status" in openResponse)) return [3, 5];
+                    if (!IdleChampionsApi.isGenericResponse(openResponse)) return [3, 6];
                     if (openResponse.status == ResponseStatus.SwitchServer && openResponse.newServer) {
                         _server = openResponse.newServer;
                         remainingChests += currentAmount;
@@ -715,21 +715,22 @@ function openChests(userId, hash) {
                         return [2];
                     }
                     _a.label = 5;
-                case 5:
-                    if ("lootDetail" in openResponse) {
-                        aggregateOpenResults(openResponse.lootDetail, lootResults);
-                    }
-                    displayLootResults(lootResults);
-                    if (!(remainingChests > 0)) return [3, 7];
-                    return [4, new Promise(function (h) { return setTimeout(h, REQUEST_DELAY); })];
+                case 5: return [3, 7];
                 case 6:
-                    _a.sent();
+                    aggregateOpenResults(openResponse.lootDetail, lootResults);
                     _a.label = 7;
-                case 7: return [3, 1];
+                case 7:
+                    displayLootResults(lootResults);
+                    if (!(remainingChests > 0)) return [3, 9];
+                    return [4, new Promise(function (h) { return setTimeout(h, REQUEST_DELAY); })];
                 case 8:
+                    _a.sent();
+                    _a.label = 9;
+                case 9: return [3, 1];
+                case 10:
                     console.log("Completed opening");
                     return [4, refreshInventory(userId, hash)];
-                case 9:
+                case 11:
                     _a.sent();
                     showSuccess("Opened ".concat(chestAmount, " chests"));
                     return [2];
@@ -858,7 +859,7 @@ function useBlacksmithContracts(userId, hash) {
                     remainingContracts = blacksmithAmount;
                     _a.label = 1;
                 case 1:
-                    if (!(remainingContracts > 0)) return [3, 8];
+                    if (!(remainingContracts > 0)) return [3, 10];
                     showInfo("Smithing... ".concat(remainingContracts, " contracts remaining to use"));
                     currentAmount = Math.min(remainingContracts, MAX_BLACKSMITH_AMOUNT);
                     remainingContracts -= currentAmount;
@@ -874,7 +875,7 @@ function useBlacksmithContracts(userId, hash) {
                         })];
                 case 2:
                     blacksmithResponse = _a.sent();
-                    if (!("status" in blacksmithResponse)) return [3, 5];
+                    if (!IdleChampionsApi.isGenericResponse(blacksmithResponse)) return [3, 6];
                     if (blacksmithResponse.status == ResponseStatus.SwitchServer && blacksmithResponse.newServer) {
                         _server = blacksmithResponse.newServer;
                         remainingContracts += currentAmount;
@@ -898,21 +899,22 @@ function useBlacksmithContracts(userId, hash) {
                         return [2];
                     }
                     _a.label = 5;
-                case 5:
-                    if ("actions" in blacksmithResponse) {
-                        aggregateBlacksmithResults(blacksmithResponse.actions);
-                    }
-                    displayBlacksmithResults();
-                    if (!(remainingContracts > 0)) return [3, 7];
-                    return [4, new Promise(function (h) { return setTimeout(h, REQUEST_DELAY); })];
+                case 5: return [3, 7];
                 case 6:
-                    _a.sent();
+                    aggregateBlacksmithResults(blacksmithResponse.actions);
                     _a.label = 7;
-                case 7: return [3, 1];
+                case 7:
+                    displayBlacksmithResults();
+                    if (!(remainingContracts > 0)) return [3, 9];
+                    return [4, new Promise(function (h) { return setTimeout(h, REQUEST_DELAY); })];
                 case 8:
+                    _a.sent();
+                    _a.label = 9;
+                case 9: return [3, 1];
+                case 10:
                     console.log("Completed blacksmithing");
                     return [4, refreshInventory(userId, hash)];
-                case 9:
+                case 11:
                     _a.sent();
                     showSuccess("Used ".concat(blacksmithAmount, " blacksmith contracts"));
                     return [2];

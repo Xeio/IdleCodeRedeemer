@@ -531,7 +531,7 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                         })];
                 case 4:
                     codeResponse = _d.sent();
-                    if (!("status" in codeResponse && codeResponse.status == ResponseStatus.SwitchServer && codeResponse.newServer)) return [3, 6];
+                    if (!(IdleChampionsApi.isGenericResponse(codeResponse) && codeResponse.status == ResponseStatus.SwitchServer && codeResponse.newServer)) return [3, 6];
                     console.log("Switching server");
                     server = codeResponse.newServer;
                     return [4, IdleChampionsApi.submitCode({
@@ -545,7 +545,7 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                     codeResponse = _d.sent();
                     _d.label = 6;
                 case 6:
-                    if (!("status" in codeResponse && codeResponse.status == ResponseStatus.OutdatedInstanceId)) return [3, 11];
+                    if (!(IdleChampionsApi.isGenericResponse(codeResponse) && codeResponse.status == ResponseStatus.OutdatedInstanceId)) return [3, 11];
                     console.log("Instance ID outdated, refreshing.");
                     return [4, new Promise(function (h) { return setTimeout(h, REQUEST_DELAY); })];
                 case 7:
@@ -580,12 +580,12 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                     codeResponse = _d.sent();
                     _d.label = 11;
                 case 11:
-                    if ("status" in codeResponse) {
+                    if (IdleChampionsApi.isGenericResponse(codeResponse)) {
                         console.error("Unable to submit code, aborting upload process.");
                         _optionsPort.postMessage({ messageType: "error", messageText: "Failed to submit code for unknown reason." });
                         return [2];
                     }
-                    else if ("codeStatus" in codeResponse) {
+                    else {
                         switch (codeResponse.codeStatus) {
                             case CodeSubmitStatus.InvalidParameters:
                                 console.error("Unable to submit code due to invalid parameters.");
