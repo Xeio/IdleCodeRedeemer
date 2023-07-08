@@ -188,13 +188,14 @@ async function uploadCodes(reedemedCodes: string[], pendingCodes: string[], inst
                 hash: hash,
             })
 
-            if(!userData) {
+            if(IdleChampionsApi.isGenericResponse(userData)) {
                 console.log("Failed to retreive user data.")
                 _optionsPort.postMessage({messageType: MessageType.Error, messageText:"Failed to retreieve user data, check user ID and hash."})
                 return
             }
-
-            instanceId = userData.details.instance_id
+            else{
+                instanceId = userData.details.instance_id
+            }
             chrome.storage.sync.set({[Globals.SETTING_INSTANCE_ID]: instanceId})
 
             await new Promise(h => setTimeout(h, REQUEST_DELAY)) //Delay between requests

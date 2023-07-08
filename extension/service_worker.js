@@ -208,11 +208,14 @@ var IdleChampionsApi = (function () {
                         return [4, IdleChampionsApi.tryToJson(response)];
                     case 2:
                         playerData = _a.sent();
+                        if (playerData.switch_play_server) {
+                            return [2, new GenericResponse(ResponseStatus.SwitchServer, playerData.switch_play_server)];
+                        }
                         if (playerData === null || playerData === void 0 ? void 0 : playerData.success) {
                             return [2, playerData];
                         }
                         _a.label = 3;
-                    case 3: return [2, undefined];
+                    case 3: return [2, new GenericResponse(ResponseStatus.Failed)];
                 }
             });
         });
@@ -373,6 +376,9 @@ var IdleChampionsApi = (function () {
                 }
             });
         });
+    };
+    IdleChampionsApi.isGenericResponse = function (response) {
+        return response instanceof GenericResponse;
     };
     IdleChampionsApi.CLIENT_VERSION = "999";
     IdleChampionsApi.NETWORK_ID = "21";
@@ -551,12 +557,14 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                         })];
                 case 8:
                     userData = _d.sent();
-                    if (!userData) {
+                    if (IdleChampionsApi.isGenericResponse(userData)) {
                         console.log("Failed to retreive user data.");
                         _optionsPort.postMessage({ messageType: "error", messageText: "Failed to retreieve user data, check user ID and hash." });
                         return [2];
                     }
-                    instanceId = userData.details.instance_id;
+                    else {
+                        instanceId = userData.details.instance_id;
+                    }
                     chrome.storage.sync.set((_b = {}, _b[Globals.SETTING_INSTANCE_ID] = instanceId, _b));
                     return [4, new Promise(function (h) { return setTimeout(h, REQUEST_DELAY); })];
                 case 9:

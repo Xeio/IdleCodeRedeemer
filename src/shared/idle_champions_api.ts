@@ -195,7 +195,7 @@ class IdleChampionsApi {
         return new GenericResponse(ResponseStatus.Failed)
     }
 
-    static async getUserDetails(options: GetuserdetailsOptions) : Promise<PlayerData | undefined> {
+    static async getUserDetails(options: GetuserdetailsOptions) : Promise<GenericResponse | PlayerData> {
         const request = new URL(options.server)
 
         request.searchParams.append("call", "getuserdetails")
@@ -226,11 +226,14 @@ class IdleChampionsApi {
         const response = await fetch(request.toString())
         if(response.ok){
             const playerData : PlayerData = await IdleChampionsApi.tryToJson(response)
+            if(playerData.switch_play_server){
+                return new GenericResponse(ResponseStatus.SwitchServer, playerData.switch_play_server)
+            }
             if(playerData?.success){
                 return playerData
             }
         }
-        return undefined
+        return new GenericResponse(ResponseStatus.Failed)
     }
 
     static async openChests(options: OpenChestsOptions) : Promise<GenericResponse | OpenChestResponse> {
@@ -378,5 +381,9 @@ class IdleChampionsApi {
             console.error(e)
             return null
         }
+    }
+
+    static isGenericResponse(response: GenericResponse | PlayerData): response is GenericResponse{
+        return response instanceof GenericResponse;
     }
 }

@@ -208,11 +208,14 @@ var IdleChampionsApi = (function () {
                         return [4, IdleChampionsApi.tryToJson(response)];
                     case 2:
                         playerData = _a.sent();
+                        if (playerData.switch_play_server) {
+                            return [2, new GenericResponse(ResponseStatus.SwitchServer, playerData.switch_play_server)];
+                        }
                         if (playerData === null || playerData === void 0 ? void 0 : playerData.success) {
                             return [2, playerData];
                         }
                         _a.label = 3;
-                    case 3: return [2, undefined];
+                    case 3: return [2, new GenericResponse(ResponseStatus.Failed)];
                 }
             });
         });
@@ -374,6 +377,9 @@ var IdleChampionsApi = (function () {
             });
         });
     };
+    IdleChampionsApi.isGenericResponse = function (response) {
+        return response instanceof GenericResponse;
+    };
     IdleChampionsApi.CLIENT_VERSION = "999";
     IdleChampionsApi.NETWORK_ID = "21";
     IdleChampionsApi.LANGUAGE_ID = "1";
@@ -449,6 +455,7 @@ function refreshClick() {
 function refreshInventory(userId, hash) {
     var _a, _b, _c;
     return __awaiter(this, void 0, void 0, function () {
+        var userDetailsResponse;
         var _d;
         return __generator(this, function (_e) {
             switch (_e.label) {
@@ -474,27 +481,29 @@ function refreshInventory(userId, hash) {
                             hash: hash
                         })];
                 case 3:
-                    _userData = _e.sent();
-                    if (!_userData) {
+                    userDetailsResponse = _e.sent();
+                    if (!IdleChampionsApi.isGenericResponse(userDetailsResponse)) return [3, 5];
+                    if (userDetailsResponse.status == ResponseStatus.Failed) {
                         showError("Failed to retreive user data.");
                         return [2];
                     }
-                    if (!_userData.switch_play_server) return [3, 5];
-                    console.log("Got switch server to '".concat(_userData.switch_play_server, "'."));
-                    _server = _userData.switch_play_server;
+                    if (!(userDetailsResponse.status == ResponseStatus.SwitchServer && userDetailsResponse.newServer)) return [3, 5];
+                    console.log("Got switch server to '".concat(userDetailsResponse.newServer, "'."));
+                    _server = userDetailsResponse.newServer;
                     return [4, IdleChampionsApi.getUserDetails({
                             server: _server,
                             user_id: userId,
                             hash: hash
                         })];
                 case 4:
-                    _userData = _e.sent();
-                    if (!_userData) {
+                    userDetailsResponse = _e.sent();
+                    if (IdleChampionsApi.isGenericResponse(userDetailsResponse)) {
                         showError("Failed to retreive user data.");
                         return [2];
                     }
                     _e.label = 5;
                 case 5:
+                    _userData = userDetailsResponse;
                     console.log("Refreshed inventory data.");
                     console.debug(_userData);
                     _instanceId = _userData.details.instance_id;

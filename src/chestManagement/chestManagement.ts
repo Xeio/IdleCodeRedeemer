@@ -105,34 +105,36 @@ async function refreshInventory(userId: string, hash: string) {
         return
     }
 
-    _userData = await IdleChampionsApi.getUserDetails({
+    let userDetailsResponse = await IdleChampionsApi.getUserDetails({
         server: _server,
         user_id: userId,
         hash: hash,
     })
 
-    if(!_userData) {
-        showError("Failed to retreive user data.")
-        return
-    }
-
-    if(_userData.switch_play_server)
-    {
-        console.log(`Got switch server to '${_userData.switch_play_server}'.`)
-
-        _server = _userData.switch_play_server;
-
-        _userData = await IdleChampionsApi.getUserDetails({
-            server: _server,
-            user_id: userId,
-            hash: hash,
-        })
-
-        if(!_userData) {
+    if(IdleChampionsApi.isGenericResponse(userDetailsResponse)) {
+        if(userDetailsResponse.status == ResponseStatus.Failed) {
             showError("Failed to retreive user data.")
             return
         }
+        if(userDetailsResponse.status == ResponseStatus.SwitchServer && userDetailsResponse.newServer)
+        {
+            console.log(`Got switch server to '${userDetailsResponse.newServer}'.`)
+
+            _server = userDetailsResponse.newServer;
+            
+            userDetailsResponse = await IdleChampionsApi.getUserDetails({
+                server: _server,
+                user_id: userId,
+                hash: hash,
+            })
+
+            if(IdleChampionsApi.isGenericResponse(userDetailsResponse)) {
+                showError("Failed to retreive user data.")
+                return
+            }
+        }
     }
+    _userData = userDetailsResponse as PlayerData
 
     console.log("Refreshed inventory data.")
     console.debug(_userData)
