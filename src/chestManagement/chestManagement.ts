@@ -332,7 +332,7 @@ async function openChests(userId: string, hash: string){
 
         console.log(`Opening ${currentAmount} chests`)
 
-        const openResponse = await IdleChampionsApi.openChests({
+        const openResponse: GenericResponse | OpenChestResponse = await IdleChampionsApi.openChests({
             server: _server,
             user_id: userId,
             hash: hash,
@@ -531,7 +531,7 @@ async function useBlacksmithContracts(userId: string, hash: string){
 
         console.log(`Using ${currentAmount} contracts`)
 
-        const blacksmithResponse = await IdleChampionsApi.useBlacksmith({
+        const blacksmithResponse: GenericResponse | UseBlacksmithResponse = await IdleChampionsApi.useBlacksmith({
             server: _server,
             user_id: userId,
             hash: hash,
