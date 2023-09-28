@@ -227,6 +227,8 @@ var IdleChampionsApi = (function () {
                 switch (_a.label) {
                     case 0:
                         request = new URL(options.server);
+                        if (options.count > IdleChampionsApi.MAX_OPEN_CHESTS)
+                            throw new Error("Count limited to IdleChampionsApi.MAX_OPEN_CHESTS opened per call.");
                         request.searchParams.append("call", "openGenericChest");
                         request.searchParams.append("user_id", options.user_id);
                         request.searchParams.append("hash", options.hash);
@@ -320,6 +322,8 @@ var IdleChampionsApi = (function () {
                 switch (_a.label) {
                     case 0:
                         request = new URL(options.server);
+                        if (options.count > IdleChampionsApi.MAX_BLACKSMITH)
+                            throw new Error("Count limited to IdleChampionsApi.MAX_BLACKSMITH per call.");
                         request.searchParams.append("call", "useServerBuff");
                         request.searchParams.append("user_id", options.user_id);
                         request.searchParams.append("hash", options.hash);
@@ -384,6 +388,8 @@ var IdleChampionsApi = (function () {
     IdleChampionsApi.NETWORK_ID = "21";
     IdleChampionsApi.LANGUAGE_ID = "1";
     IdleChampionsApi.MAX_BUY_CHESTS = 250;
+    IdleChampionsApi.MAX_OPEN_CHESTS = 1000;
+    IdleChampionsApi.MAX_BLACKSMITH = 50;
     return IdleChampionsApi;
 }());
 var REQUEST_DELAY = 2000;

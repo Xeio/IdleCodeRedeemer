@@ -227,6 +227,8 @@ var IdleChampionsApi = (function () {
                 switch (_a.label) {
                     case 0:
                         request = new URL(options.server);
+                        if (options.count > IdleChampionsApi.MAX_OPEN_CHESTS)
+                            throw new Error("Count limited to IdleChampionsApi.MAX_OPEN_CHESTS opened per call.");
                         request.searchParams.append("call", "openGenericChest");
                         request.searchParams.append("user_id", options.user_id);
                         request.searchParams.append("hash", options.hash);
@@ -320,6 +322,8 @@ var IdleChampionsApi = (function () {
                 switch (_a.label) {
                     case 0:
                         request = new URL(options.server);
+                        if (options.count > IdleChampionsApi.MAX_BLACKSMITH)
+                            throw new Error("Count limited to IdleChampionsApi.MAX_BLACKSMITH per call.");
                         request.searchParams.append("call", "useServerBuff");
                         request.searchParams.append("user_id", options.user_id);
                         request.searchParams.append("hash", options.hash);
@@ -384,6 +388,8 @@ var IdleChampionsApi = (function () {
     IdleChampionsApi.NETWORK_ID = "21";
     IdleChampionsApi.LANGUAGE_ID = "1";
     IdleChampionsApi.MAX_BUY_CHESTS = 250;
+    IdleChampionsApi.MAX_OPEN_CHESTS = 1000;
+    IdleChampionsApi.MAX_BLACKSMITH = 50;
     return IdleChampionsApi;
 }());
 document.addEventListener("DOMContentLoaded", loaded);
@@ -596,7 +602,7 @@ function purchaseChests(userId, hash) {
                 case 1:
                     if (!(remainingChests > 0)) return [3, 5];
                     showInfo("Purchasing... ".concat(remainingChests, " chests remaining to purchase"));
-                    currentAmount = remainingChests > IdleChampionsApi.MAX_BUY_CHESTS ? IdleChampionsApi.MAX_BUY_CHESTS : remainingChests;
+                    currentAmount = Math.min(remainingChests, IdleChampionsApi.MAX_BUY_CHESTS);
                     remainingChests -= currentAmount;
                     console.log("Purchasing ".concat(currentAmount, " chests"));
                     return [4, IdleChampionsApi.purchaseChests({
@@ -654,11 +660,10 @@ function blacksmithClick() {
 }
 function openChests(userId, hash) {
     return __awaiter(this, void 0, void 0, function () {
-        var MAX_OPEN_AMOUNT, lootResults, chestType, chestAmount, remainingChests, currentAmount, openResponse, lastInstanceId;
+        var lootResults, chestType, chestAmount, remainingChests, currentAmount, openResponse, lastInstanceId;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    MAX_OPEN_AMOUNT = 1000;
                     if (!_server || !_instanceId)
                         return [2];
                     if (!_shownCloseClientWarning) {
@@ -678,7 +683,7 @@ function openChests(userId, hash) {
                 case 1:
                     if (!(remainingChests > 0)) return [3, 10];
                     showInfo("Opening... ".concat(remainingChests, " chests remaining to open"));
-                    currentAmount = remainingChests > MAX_OPEN_AMOUNT ? MAX_OPEN_AMOUNT : remainingChests;
+                    currentAmount = Math.min(remainingChests, IdleChampionsApi.MAX_OPEN_CHESTS);
                     remainingChests -= currentAmount;
                     console.log("Opening ".concat(currentAmount, " chests"));
                     return [4, IdleChampionsApi.openChests({
@@ -842,11 +847,10 @@ var BlacksmithAggregateResult = (function () {
 }());
 function useBlacksmithContracts(userId, hash) {
     return __awaiter(this, void 0, void 0, function () {
-        var MAX_BLACKSMITH_AMOUNT, contractType, heroId, blacksmithAmount, remainingContracts, currentAmount, blacksmithResponse, lastInstanceId;
+        var contractType, heroId, blacksmithAmount, remainingContracts, currentAmount, blacksmithResponse, lastInstanceId;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    MAX_BLACKSMITH_AMOUNT = 50;
                     if (!_server || !_instanceId)
                         return [2];
                     contractType = document.getElementById("blackithContracType").value;
@@ -861,7 +865,7 @@ function useBlacksmithContracts(userId, hash) {
                 case 1:
                     if (!(remainingContracts > 0)) return [3, 10];
                     showInfo("Smithing... ".concat(remainingContracts, " contracts remaining to use"));
-                    currentAmount = Math.min(remainingContracts, MAX_BLACKSMITH_AMOUNT);
+                    currentAmount = Math.min(remainingContracts, IdleChampionsApi.MAX_BLACKSMITH);
                     remainingContracts -= currentAmount;
                     console.log("Using ".concat(currentAmount, " contracts"));
                     return [4, IdleChampionsApi.useBlacksmith({

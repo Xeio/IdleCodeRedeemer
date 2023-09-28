@@ -110,6 +110,8 @@ class IdleChampionsApi {
     private static NETWORK_ID = "21"
     private static LANGUAGE_ID = "1"
     public static readonly MAX_BUY_CHESTS = 250
+    public static readonly MAX_OPEN_CHESTS = 1000
+    public static readonly MAX_BLACKSMITH = 50
 
     static async getServer(): Promise<string | undefined> {
         const request = new URL('https://master.idlechampions.com/~idledragons/post.php')
@@ -240,6 +242,8 @@ class IdleChampionsApi {
     static async openChests(options: OpenChestsOptions) : Promise<GenericResponse | OpenChestResponse> {
         const request = new URL(options.server)
 
+        if(options.count > IdleChampionsApi.MAX_OPEN_CHESTS) throw new Error("Count limited to IdleChampionsApi.MAX_OPEN_CHESTS opened per call.")
+
         request.searchParams.append("call", "openGenericChest")
         request.searchParams.append("user_id", options.user_id)
         request.searchParams.append("hash", options.hash)
@@ -339,6 +343,8 @@ class IdleChampionsApi {
 
     static async useBlacksmith(options: UseBlacksmithOptions) : Promise<GenericResponse | UseBlacksmithResponse> {
         const request = new URL(options.server)
+
+        if(options.count > IdleChampionsApi.MAX_BLACKSMITH) throw new Error("Count limited to IdleChampionsApi.MAX_BLACKSMITH per call.")
 
         request.searchParams.append("call", "useServerBuff")
         request.searchParams.append("user_id", options.user_id)

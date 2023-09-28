@@ -239,7 +239,7 @@ async function purchaseChests(userId: string, hash: string){
     while(remainingChests > 0){
         showInfo(`Purchasing... ${remainingChests} chests remaining to purchase`)
 
-        const currentAmount = remainingChests > IdleChampionsApi.MAX_BUY_CHESTS ? IdleChampionsApi.MAX_BUY_CHESTS : remainingChests
+        const currentAmount = Math.min(remainingChests, IdleChampionsApi.MAX_BUY_CHESTS)
         remainingChests -= currentAmount
 
         console.log(`Purchasing ${currentAmount} chests`)
@@ -300,8 +300,6 @@ function blacksmithClick(){
 
 
 async function openChests(userId: string, hash: string){
-    const MAX_OPEN_AMOUNT = 1000
-
     if(!_server || !_instanceId) return
 
     if(!_shownCloseClientWarning){
@@ -321,11 +319,11 @@ async function openChests(userId: string, hash: string){
     }
 
     let remainingChests = chestAmount
-    //Have to batch these into max of 100 at a time
+    //Have to batch these
     while(remainingChests > 0){
         showInfo(`Opening... ${remainingChests} chests remaining to open`)
         
-        const currentAmount = remainingChests > MAX_OPEN_AMOUNT ? MAX_OPEN_AMOUNT : remainingChests
+        const currentAmount = Math.min(remainingChests, IdleChampionsApi.MAX_OPEN_CHESTS)
         remainingChests -= currentAmount
 
         console.log(`Opening ${currentAmount} chests`)
@@ -505,8 +503,6 @@ class BlacksmithAggregateResult{
 }
 
 async function useBlacksmithContracts(userId: string, hash: string){
-    const MAX_BLACKSMITH_AMOUNT = 50
-
     if(!_server || !_instanceId) return
 
     const contractType = <any>(document.getElementById("blackithContracType") as HTMLSelectElement).value as ContractType
@@ -520,11 +516,11 @@ async function useBlacksmithContracts(userId: string, hash: string){
     }
 
     let remainingContracts = blacksmithAmount
-    //Have to batch these into max of 100 at a time
+    //Have to batch these
     while(remainingContracts > 0){
         showInfo(`Smithing... ${remainingContracts} contracts remaining to use`)
         
-        const currentAmount = Math.min(remainingContracts, MAX_BLACKSMITH_AMOUNT)
+        const currentAmount = Math.min(remainingContracts, IdleChampionsApi.MAX_BLACKSMITH)
         remainingContracts -= currentAmount
 
         console.log(`Using ${currentAmount} contracts`)
