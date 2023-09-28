@@ -274,8 +274,8 @@ var IdleChampionsApi = (function () {
                 switch (_a.label) {
                     case 0:
                         request = new URL(options.server);
-                        if (options.count > 100)
-                            throw new Error("Limited to 100 chests purchased per call.");
+                        if (options.count > IdleChampionsApi.MAX_BUY_CHESTS)
+                            throw new Error("Count limited to IdleChampionsApi.MAX_BUY_CHESTS purchased per call.");
                         request.searchParams.append("call", "buysoftcurrencychest");
                         request.searchParams.append("user_id", options.user_id);
                         request.searchParams.append("hash", options.hash);
@@ -383,6 +383,7 @@ var IdleChampionsApi = (function () {
     IdleChampionsApi.CLIENT_VERSION = "999";
     IdleChampionsApi.NETWORK_ID = "21";
     IdleChampionsApi.LANGUAGE_ID = "1";
+    IdleChampionsApi.MAX_BUY_CHESTS = 250;
     return IdleChampionsApi;
 }());
 var REQUEST_DELAY = 2000;

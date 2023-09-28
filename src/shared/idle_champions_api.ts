@@ -109,6 +109,7 @@ class IdleChampionsApi {
     private static CLIENT_VERSION = "999"
     private static NETWORK_ID = "21"
     private static LANGUAGE_ID = "1"
+    public static readonly MAX_BUY_CHESTS = 250
 
     static async getServer(): Promise<string | undefined> {
         const request = new URL('https://master.idlechampions.com/~idledragons/post.php')
@@ -288,7 +289,7 @@ class IdleChampionsApi {
     static async purchaseChests(options: PurchaseChestsOptions) : Promise<GenericResponse> {
         const request = new URL(options.server)
 
-        if(options.count > 100) throw new Error("Limited to 100 chests purchased per call.")
+        if(options.count > IdleChampionsApi.MAX_BUY_CHESTS) throw new Error("Count limited to IdleChampionsApi.MAX_BUY_CHESTS purchased per call.")
 
         request.searchParams.append("call", "buysoftcurrencychest")
         request.searchParams.append("user_id", options.user_id)

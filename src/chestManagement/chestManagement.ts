@@ -227,8 +227,6 @@ function purchaseClick(){
 async function purchaseChests(userId: string, hash: string){
     if(!_server) return
 
-    const MAX_PURCHASE_AMOUNT = 100
-
     const chestType = <any>(document.getElementById("buyChestType") as HTMLSelectElement).value as ChestType
     const chestAmount = parseInt((document.getElementById("buyCountRange") as HTMLInputElement).value) || 0
 
@@ -237,11 +235,11 @@ async function purchaseChests(userId: string, hash: string){
     }
 
     let remainingChests = chestAmount
-    //Have to batch these into max of 100 at a time
+    //Have to batch these
     while(remainingChests > 0){
         showInfo(`Purchasing... ${remainingChests} chests remaining to purchase`)
 
-        const currentAmount = remainingChests > MAX_PURCHASE_AMOUNT ? MAX_PURCHASE_AMOUNT : remainingChests
+        const currentAmount = remainingChests > IdleChampionsApi.MAX_BUY_CHESTS ? IdleChampionsApi.MAX_BUY_CHESTS : remainingChests
         remainingChests -= currentAmount
 
         console.log(`Purchasing ${currentAmount} chests`)

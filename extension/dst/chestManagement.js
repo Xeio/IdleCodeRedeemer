@@ -274,8 +274,8 @@ var IdleChampionsApi = (function () {
                 switch (_a.label) {
                     case 0:
                         request = new URL(options.server);
-                        if (options.count > 100)
-                            throw new Error("Limited to 100 chests purchased per call.");
+                        if (options.count > IdleChampionsApi.MAX_BUY_CHESTS)
+                            throw new Error("Count limited to IdleChampionsApi.MAX_BUY_CHESTS purchased per call.");
                         request.searchParams.append("call", "buysoftcurrencychest");
                         request.searchParams.append("user_id", options.user_id);
                         request.searchParams.append("hash", options.hash);
@@ -383,6 +383,7 @@ var IdleChampionsApi = (function () {
     IdleChampionsApi.CLIENT_VERSION = "999";
     IdleChampionsApi.NETWORK_ID = "21";
     IdleChampionsApi.LANGUAGE_ID = "1";
+    IdleChampionsApi.MAX_BUY_CHESTS = 250;
     return IdleChampionsApi;
 }());
 document.addEventListener("DOMContentLoaded", loaded);
@@ -579,13 +580,12 @@ function purchaseClick() {
 }
 function purchaseChests(userId, hash) {
     return __awaiter(this, void 0, void 0, function () {
-        var MAX_PURCHASE_AMOUNT, chestType, chestAmount, remainingChests, currentAmount, responseStatus;
+        var chestType, chestAmount, remainingChests, currentAmount, responseStatus;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     if (!_server)
                         return [2];
-                    MAX_PURCHASE_AMOUNT = 100;
                     chestType = document.getElementById("buyChestType").value;
                     chestAmount = parseInt(document.getElementById("buyCountRange").value) || 0;
                     if (!chestType || chestAmount < 1) {
@@ -596,7 +596,7 @@ function purchaseChests(userId, hash) {
                 case 1:
                     if (!(remainingChests > 0)) return [3, 5];
                     showInfo("Purchasing... ".concat(remainingChests, " chests remaining to purchase"));
-                    currentAmount = remainingChests > MAX_PURCHASE_AMOUNT ? MAX_PURCHASE_AMOUNT : remainingChests;
+                    currentAmount = remainingChests > IdleChampionsApi.MAX_BUY_CHESTS ? IdleChampionsApi.MAX_BUY_CHESTS : remainingChests;
                     remainingChests -= currentAmount;
                     console.log("Purchasing ".concat(currentAmount, " chests"));
                     return [4, IdleChampionsApi.purchaseChests({
