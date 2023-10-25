@@ -47,9 +47,9 @@ function getCodesList() : string[] {
     const regex = /(?:[A-Z0-9*!@#$%^&*]-?){12}(?:(?:[A-Z0-9*!@#$%^&*]-?){4})?/g
     const codes: string[] = []
 
-    const messageElements = document.querySelectorAll("div[class^='message-']")
+    const messageElements = document.querySelectorAll("div[class^='message']")
     messageElements.forEach(messageElement => {
-        const markupElement = messageElement.querySelector("div[class^='markup-']") as HTMLElement
+        const markupElement = messageElement.querySelector("div[class^='markup']") as HTMLElement
         if(markupElement){
             const codeMatch = markupElement.innerText.toUpperCase().match(regex)
             if(codeMatch?.[0]){

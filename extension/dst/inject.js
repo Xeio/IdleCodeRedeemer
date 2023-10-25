@@ -47,9 +47,9 @@ function onMessage(message, port) {
 function getCodesList() {
     var regex = /(?:[A-Z0-9*!@#$%^&*]-?){12}(?:(?:[A-Z0-9*!@#$%^&*]-?){4})?/g;
     var codes = [];
-    var messageElements = document.querySelectorAll("div[class^='message-']");
+    var messageElements = document.querySelectorAll("div[class^='message']");
     messageElements.forEach(function (messageElement) {
-        var markupElement = messageElement.querySelector("div[class^='markup-']");
+        var markupElement = messageElement.querySelector("div[class^='markup']");
         if (markupElement) {
             var codeMatch = markupElement.innerText.toUpperCase().match(regex);
             if (codeMatch === null || codeMatch === void 0 ? void 0 : codeMatch[0]) {
