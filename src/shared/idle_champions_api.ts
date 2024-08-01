@@ -111,7 +111,7 @@ class IdleChampionsApi {
     private static LANGUAGE_ID = "1"
     public static readonly MAX_BUY_CHESTS = 250
     public static readonly MAX_OPEN_CHESTS = 1000
-    public static readonly MAX_BLACKSMITH = 50
+    public static readonly MAX_BLACKSMITH = 1000
 
     static async getServer(): Promise<string | undefined> {
         const request = new URL('https://master.idlechampions.com/~idledragons/post.php')
