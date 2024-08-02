@@ -1,6 +1,6 @@
 {
   "name": "Idle Code Redeemer",
-  "version": "1.9.1",
+  "version": "1.9.2",
   "manifest_version": 3,
   "description": "Reads codes from Discord and submits them to Idle Champions.",
   "permissions": [
