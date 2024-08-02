@@ -26,7 +26,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     function verb(n) { return function (v) { return step([n, v]); }; }
     function step(op) {
         if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
+        while (g && (g = 0, op[0] && (_ = 0)), _) try {
             if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
             if (y = 0, t) op = [op[0] & 2, t.value];
             switch (op[0]) {
@@ -389,7 +389,7 @@ var IdleChampionsApi = (function () {
     IdleChampionsApi.LANGUAGE_ID = "1";
     IdleChampionsApi.MAX_BUY_CHESTS = 250;
     IdleChampionsApi.MAX_OPEN_CHESTS = 1000;
-    IdleChampionsApi.MAX_BLACKSMITH = 50;
+    IdleChampionsApi.MAX_BLACKSMITH = 1000;
     return IdleChampionsApi;
 }());
 var REQUEST_DELAY = 2000;
@@ -497,10 +497,10 @@ function startUploadProcess() {
     });
 }
 function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
-    var _a;
     return __awaiter(this, void 0, void 0, function () {
         var server, duplicates, newCodes, expired, invalid, cannotRedeem, chests, heroUnlocks, skinUnlocks, code, codeResponse, userData;
-        var _b, _c;
+        var _a, _b;
+        var _c;
         return __generator(this, function (_d) {
             switch (_d.label) {
                 case 0:
@@ -560,7 +560,7 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                     return [4, IdleChampionsApi.getUserDetails({
                             server: server,
                             user_id: userId,
-                            hash: hash
+                            hash: hash,
                         })];
                 case 8:
                     userData = _d.sent();
@@ -572,7 +572,7 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                     else {
                         instanceId = userData.details.instance_id;
                     }
-                    chrome.storage.sync.set((_b = {}, _b[Globals.SETTING_INSTANCE_ID] = instanceId, _b));
+                    chrome.storage.sync.set((_a = {}, _a[Globals.SETTING_INSTANCE_ID] = instanceId, _a));
                     return [4, new Promise(function (h) { return setTimeout(h, REQUEST_DELAY); })];
                 case 9:
                     _d.sent();
@@ -621,7 +621,7 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                                 }
                                 else {
                                     console.log("Sucessfully redeemed: ".concat(code));
-                                    (_a = codeResponse.lootDetail) === null || _a === void 0 ? void 0 : _a.forEach(function (loot) {
+                                    (_c = codeResponse.lootDetail) === null || _c === void 0 ? void 0 : _c.forEach(function (loot) {
                                         var _a;
                                         switch (loot.loot_action) {
                                             case "generic_chest":
@@ -645,7 +645,7 @@ function uploadCodes(reedemedCodes, pendingCodes, instanceId, userId, hash) {
                                 if (reedemedCodes.length > 300) {
                                     reedemedCodes.shift();
                                 }
-                                chrome.storage.sync.set((_c = {}, _c[Globals.SETTING_CODES] = reedemedCodes, _c[Globals.SETTING_PENDING] = pendingCodes, _c));
+                                chrome.storage.sync.set((_b = {}, _b[Globals.SETTING_CODES] = reedemedCodes, _b[Globals.SETTING_PENDING] = pendingCodes, _b));
                                 break;
                         }
                     }

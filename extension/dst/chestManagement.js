@@ -26,7 +26,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     function verb(n) { return function (v) { return step([n, v]); }; }
     function step(op) {
         if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
+        while (g && (g = 0, op[0] && (_ = 0)), _) try {
             if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
             if (y = 0, t) op = [op[0] & 2, t.value];
             switch (op[0]) {
@@ -389,7 +389,7 @@ var IdleChampionsApi = (function () {
     IdleChampionsApi.LANGUAGE_ID = "1";
     IdleChampionsApi.MAX_BUY_CHESTS = 250;
     IdleChampionsApi.MAX_OPEN_CHESTS = 1000;
-    IdleChampionsApi.MAX_BLACKSMITH = 50;
+    IdleChampionsApi.MAX_BLACKSMITH = 1000;
     return IdleChampionsApi;
 }());
 document.addEventListener("DOMContentLoaded", loaded);
@@ -460,10 +460,10 @@ function refreshClick() {
     });
 }
 function refreshInventory(userId, hash) {
-    var _a, _b, _c;
     return __awaiter(this, void 0, void 0, function () {
         var userDetailsResponse;
-        var _d;
+        var _a;
+        var _b, _c, _d;
         return __generator(this, function (_e) {
             switch (_e.label) {
                 case 0:
@@ -485,7 +485,7 @@ function refreshInventory(userId, hash) {
                     return [4, IdleChampionsApi.getUserDetails({
                             server: _server,
                             user_id: userId,
-                            hash: hash
+                            hash: hash,
                         })];
                 case 3:
                     userDetailsResponse = _e.sent();
@@ -500,7 +500,7 @@ function refreshInventory(userId, hash) {
                     return [4, IdleChampionsApi.getUserDetails({
                             server: _server,
                             user_id: userId,
-                            hash: hash
+                            hash: hash,
                         })];
                 case 4:
                     userDetailsResponse = _e.sent();
@@ -514,11 +514,11 @@ function refreshInventory(userId, hash) {
                     console.log("Refreshed inventory data.");
                     console.debug(_userData);
                     _instanceId = _userData.details.instance_id;
-                    chrome.storage.sync.set((_d = {}, _d[Globals.SETTING_INSTANCE_ID] = _userData.details.instance_id, _d));
+                    chrome.storage.sync.set((_a = {}, _a[Globals.SETTING_INSTANCE_ID] = _userData.details.instance_id, _a));
                     document.getElementById("gemCount").textContent = _userData.details.red_rubies.toLocaleString();
-                    document.getElementById("silverChestCount").textContent = ((_a = _userData.details.chests[1]) === null || _a === void 0 ? void 0 : _a.toLocaleString()) || "0";
-                    document.getElementById("goldChestCount").textContent = ((_b = _userData.details.chests[2]) === null || _b === void 0 ? void 0 : _b.toLocaleString()) || "0";
-                    document.getElementById("electrumChestCount").textContent = ((_c = _userData.details.chests[282]) === null || _c === void 0 ? void 0 : _c.toLocaleString()) || "0";
+                    document.getElementById("silverChestCount").textContent = ((_b = _userData.details.chests[1]) === null || _b === void 0 ? void 0 : _b.toLocaleString()) || "0";
+                    document.getElementById("goldChestCount").textContent = ((_c = _userData.details.chests[2]) === null || _c === void 0 ? void 0 : _c.toLocaleString()) || "0";
+                    document.getElementById("electrumChestCount").textContent = ((_d = _userData.details.chests[282]) === null || _d === void 0 ? void 0 : _d.toLocaleString()) || "0";
                     document.getElementById("whiteBlacksmithCount").textContent = findBuffCount(31..toString()).toLocaleString() || "0";
                     document.getElementById("greenBlacksmithCount").textContent = findBuffCount(32..toString()).toLocaleString() || "0";
                     document.getElementById("blueBlacksmithCount").textContent = findBuffCount(33..toString()).toLocaleString() || "0";
@@ -692,7 +692,7 @@ function openChests(userId, hash) {
                             hash: hash,
                             chestTypeId: chestType,
                             count: currentAmount,
-                            instanceId: _instanceId
+                            instanceId: _instanceId,
                         })];
                 case 2:
                     openResponse = _a.sent();
@@ -875,7 +875,7 @@ function useBlacksmithContracts(userId, hash) {
                             heroId: heroId,
                             contractType: contractType,
                             count: currentAmount,
-                            instanceId: _instanceId
+                            instanceId: _instanceId,
                         })];
                 case 2:
                     blacksmithResponse = _a.sent();
