@@ -38,8 +38,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const code = interaction.options.getString('code', true).toUpperCase().replaceAll('-', '');
     logger.info(`[REDEEM] Redeeming code: ${code} for user ${interaction.user.tag}`);
 
-    // Check if code is already redeemed
-    const isRedeemed = await codeManager.isCodeRedeemed(code);
+    // Check if this user has already redeemed this code
+    const isRedeemed = await codeManager.isCodeRedeemedByUser(code, interaction.user.id);
     if (isRedeemed) {
       logger.info(`[REDEEM] Code ${code} already redeemed`);
       await auditManager.logAction(interaction.user.id, 'CODE_REDEEM_FAILED', {

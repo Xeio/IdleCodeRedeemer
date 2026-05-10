@@ -30,10 +30,14 @@ class CodeManager {
         isPublic: isPublic ? 1 : 0,
       })
       .onConflictDoUpdate({
-        target: redeemedCodes.code,
-        set: { discordId, status, lootDetail: lootDetail ? JSON.stringify(lootDetail) : null, isPublic: isPublic ? 1 : 0 },
+        target: [redeemedCodes.code, redeemedCodes.discordId],
+        set: { status, lootDetail: lootDetail ? JSON.stringify(lootDetail) : null },
       })
       .run();
+    // If this redemption makes the code public, propagate to ALL rows for this code
+    if (isPublic) {
+      db.update(redeemedCodes).set({ isPublic: 1 }).where(eq(redeemedCodes.code, code)).run();
+    }
   }
 
   async isCodeRedeemed(code: string): Promise<boolean> {
@@ -41,6 +45,21 @@ class CodeManager {
       .select({ code: redeemedCodes.code })
       .from(redeemedCodes)
       .where(and(eq(redeemedCodes.code, code), or(eq(redeemedCodes.status, 'Success'), eq(redeemedCodes.status, 'Code Expired'))))
+      .get();
+    return result !== undefined;
+  }
+
+  async isCodeRedeemedByUser(code: string, discordId: string): Promise<boolean> {
+    const result = db
+      .select({ code: redeemedCodes.code })
+      .from(redeemedCodes)
+      .where(
+        and(
+          eq(redeemedCodes.code, code),
+          eq(redeemedCodes.discordId, discordId),
+          or(eq(redeemedCodes.status, 'Success'), eq(redeemedCodes.status, 'Code Expired'))
+        )
+      )
       .get();
     return result !== undefined;
   }
@@ -67,8 +86,9 @@ class CodeManager {
   }
 
   async getPublicUnexpiredCodes(): Promise<RedeemedCodeRow[]> {
+    // With per-user rows, group by code to avoid duplicates; return one row per public code
     return db
-      .select()
+      .selectDistinct({ code: redeemedCodes.code, id: redeemedCodes.id, discordId: redeemedCodes.discordId, redeemedAt: redeemedCodes.redeemedAt, status: redeemedCodes.status, lootDetail: redeemedCodes.lootDetail, isPublic: redeemedCodes.isPublic, expiresAt: redeemedCodes.expiresAt })
       .from(redeemedCodes)
       .where(
         and(
@@ -115,6 +135,21 @@ class CodeManager {
       .where(and(eq(redeemedCodes.code, code), eq(redeemedCodes.status, 'Code Expired')))
       .get();
     return result !== undefined;
+  }
+
+  async getAllValidCodes(): Promise<string[]> {
+    // Return distinct codes that have at least one 'Success' row and are not expired
+    const results = db
+      .selectDistinct({ code: redeemedCodes.code })
+      .from(redeemedCodes)
+      .where(
+        and(
+          eq(redeemedCodes.status, 'Success'),
+          sql`${redeemedCodes.code} NOT IN (SELECT code FROM ${redeemedCodes} WHERE status = 'Code Expired')`
+        )
+      )
+      .all();
+    return results.map((r) => r.code);
   }
 
   async markCodeAsExpired(code: string): Promise<void> {

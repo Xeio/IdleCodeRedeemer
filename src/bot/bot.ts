@@ -11,6 +11,7 @@ import logger from './utils/logger';
 import { apiRequestLogger } from './utils/apiRequestLogger';
 import * as backfillCommand from './commands/backfill';
 import * as blacksmithCommand from './commands/blacksmith';
+import * as catchupCommand from './commands/catchup';
 import * as codesCommand from './commands/codes';
 import * as helpCommand from './commands/help';
 import * as inventoryCommand from './commands/inventory';
@@ -48,6 +49,7 @@ const client = new Client({
 const commands = [
   backfillCommand,
   blacksmithCommand,
+  catchupCommand,
   codesCommand,
   helpCommand,
   inventoryCommand,

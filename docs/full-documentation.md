@@ -4,7 +4,7 @@ A Discord bot that automatically scans for and redeems Idle Champions promo code
 
 ## Features
 
-- 🤖 **Slash Commands** - `/setup`, `/redeem`, `/inventory`, `/open`, `/blacksmith`, `/codes`, `/makepublic`, `/backfill`, `/help`
+- 🤖 **Slash Commands** - `/setup`, `/redeem`, `/catchup`, `/inventory`, `/open`, `/blacksmith`, `/codes`, `/makepublic`, `/backfill`, `/help`
 - 🔄 **Auto Code Detection** - Scans Discord messages for codes automatically
 - ⏮️ **Message History Backfill** - Recover missed codes from message history (protected with rate limiting)
 - 🎁 **Code Redemption** - Submit codes and get rewards
@@ -59,6 +59,7 @@ brew install mise
 | ------------------------------------------------------------- | ----------------------------------------------------- |
 | `/setup user_id:<id> user_hash:<hash>`                        | Save your Idle Champions credentials                  |
 | `/redeem code:<code>`                                         | Manually redeem a code                                |
+| `/catchup`                                                    | Redeem all known valid codes you haven't claimed yet  |
 | `/inventory`                                                  | View your account (gold, rubies, equipment, progress) |
 | `/open chest_type:<type> count:<count>`                       | Open chests (Gold, Sapphire, etc.)                    |
 | `/blacksmith contract_type:<type> hero_id:<id> count:<count>` | Upgrade heroes                                        |
@@ -89,6 +90,21 @@ Manually redeem a single code and immediately receive rewards.
   - `code` - The promo code to redeem (e.g., `IDLE2024`)
 - **Response:** Shows rewards obtained (gold, rubies, chests, etc.)
 - **Example:** `/redeem code:IDLE2024`
+
+#### `/catchup`
+
+Redeem all known valid codes that you have not yet claimed. Useful when you first join the server or the bot was offline when new codes were posted.
+
+- **No parameters required**
+- **Behaviour:**
+  - Fetches every code the bot knows about (redeemed by any user + pending codes)
+  - Skips codes you have already redeemed
+  - Skips codes that have already expired
+  - Refreshes your `instance_id` every 10 API calls to prevent staleness
+  - Adds a 150 ms delay between API calls to avoid rate limiting
+- **Response:** Reports how many codes were newly redeemed, already had, expired, or failed
+- **Available to:** All users (no special permissions required)
+- **Example:** `/catchup`
 
 ### Inventory & Progress
 
@@ -184,7 +200,7 @@ src/bot/
 ├── bot.ts                     # Main Discord client & event handlers
 ├── api/
 │   └── idleChampionsApi.ts    # Game server API client
-├── commands/              # Slash command handlers (9 commands)
+├── commands/              # Slash command handlers (10 commands)
 ├── database/              # Database layer (Drizzle ORM)
 │   ├── db.ts              # Drizzle connection & migrate() on startup
 │   ├── userManager.ts     # User credentials
@@ -194,7 +210,10 @@ src/bot/
 │   ├── schema/            # Drizzle table definitions (one file per table)
 │   └── migrations/        # Auto-generated SQL migrations
 ├── handlers/              # Message scanning for codes
-└── utils/                 # Helpers (debug logging, etc.)
+└── utils/                 # Helpers (logging, debug logging, etc.)
+
+src/test/
+└── setup.ts               # Bun test preload (DB_PATH=:memory:)
 lib/
 └── *.d.ts                 # Type definitions from game API
 ```

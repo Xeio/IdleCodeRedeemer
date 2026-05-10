@@ -30,6 +30,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
           inline: false,
         },
         {
+          name: '🔄 Catch Up',
+          value: '`/catchup`\nRedeem all known valid codes you have not yet claimed (e.g. after joining the server).',
+          inline: false,
+        },
+        {
           name: '📦 Check Inventory',
           value: '`/inventory`\nView your chests, hero unlocks, and contracts.',
           inline: false,

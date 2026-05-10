@@ -153,6 +153,45 @@ mise run format:check
 
 **Fail Action**: Commit rejected by pre-commit hook until formatted
 
+### 6. Unit Tests
+
+**Purpose**: Verify individual modules behave correctly in isolation
+
+**Type**: Automated unit tests using the built-in Bun test runner
+
+**Command (Local)**:
+```bash
+bun test
+```
+
+**Watch Mode (Local)**:
+```bash
+bun test --watch
+```
+
+**What It Tests**:
+
+| File | Tests | Coverage |
+|------|-------|----------|
+| `src/bot/handlers/codeScanner.test.ts` | 12 | `extractCodesFromText` — regex patterns, emoji stripping, case normalisation, edge cases |
+| `src/bot/database/codeManager.test.ts` | 32 | All `CodeManager` methods — per-user redemption, public/private codes, pending codes, expiry |
+| `src/bot/database/userManager.test.ts` | 13 | All `UserManager` CRUD operations |
+
+**Total**: 57 tests across 3 files
+
+**Test Infrastructure**:
+
+- `bunfig.toml` registers a preload file: `src/test/setup.ts`
+- `src/test/setup.ts` sets `DB_PATH=:memory:` and `MIGRATIONS_PATH` **before any module imports**
+- Tests use plain static imports — `db.ts` automatically opens an in-memory SQLite database
+- `initializeDatabase()` is called in `beforeAll` to apply migrations
+- Tables are cleared in FK-safe order in `beforeEach` (children before parents)
+- `closeDatabase()` is **never** called in tests — Bun reuses workers between test files
+
+**Pass Criteria**: All 57 tests pass with zero failures
+
+**Fail Action**: Test run exits with a non-zero code and shows failed assertion details
+
 ## Running Tests Locally
 
 ### Before Submitting a Pull Request
@@ -166,16 +205,19 @@ mise run install
 # 2. Compile TypeScript
 mise run build
 
-# 3. Run linting and fix auto-fixable issues
+# 3. Run unit tests
+bun test
+
+# 4. Run linting and fix auto-fixable issues
 mise run lint:fix
 
-# 4. Run code formatting
+# 5. Run code formatting
 mise run format
 
-# 5. Check for security vulnerabilities
+# 6. Check for security vulnerabilities
 bun audit
 
-# 6. Sign off on your commits
+# 7. Sign off on your commits
 git commit -s -m "message"
 ```
 
@@ -448,12 +490,12 @@ mise run gitleaks
 
 | Requirement | Status | Evidence |
 |---|---|---|
-| **Automated test suite configured** | ✅ | 5 test suites documented, 6 CI/CD workflows |
+| **Automated test suite configured** | ✅ | 6 test suites documented, 6 CI/CD workflows + 57 unit tests |
 | **Tests run before every merge** | ✅ | Branch protection requires checks pass |
 | **Results visible to contributors** | ✅ | GitHub Actions logs, PR status checks |
 | **Consistent environment** | ✅ | Docker container with standardized tools |
 | **Local testing available** | ✅ | Test commands documented, scripts provided |
-| **Multiple test types** | ✅ | Build, linting, security, type checking, formatting |
+| **Multiple test types** | ✅ | Build, linting, security, type checking, formatting, unit tests |
 | **Documented** | ✅ | This file (testing-strategy.md) and CONTRIBUTING.md |
 
 ## References

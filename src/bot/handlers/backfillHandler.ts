@@ -162,9 +162,10 @@ export async function backfillChannelHistory(
 
         // Try to redeem each code for this user
         for (const code of Array.from(allCodes)) {
-          // Skip if already redeemed
-          const isRedeemed = await codeManager.isCodeRedeemed(code);
-          if (isRedeemed) {
+          // Skip only if the code is expired - a successful redemption by another
+          // user should NOT block this user from also redeeming it.
+          const isExpired = await codeManager.isCodeExpired(code);
+          if (isExpired) {
             continue;
           }
 

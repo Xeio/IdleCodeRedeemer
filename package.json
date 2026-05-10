@@ -6,6 +6,8 @@
   "docs": "docs",
   "scripts": {
     "typecheck": "tsc -p tsconfig.bot.json",
+    "test": "bun test",
+    "test:watch": "bun test --watch",
     "build": "bun build --compile --bytecode --minify --sourcemap src/bot/bot.ts --outfile dist-bundle/bot",
     "start": "./dist-bundle/bot",
     "dev": "bun run --bun src/bot/bot.ts",

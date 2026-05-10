@@ -37,6 +37,7 @@ src/bot/
 ├── commands/
 │   ├── setup.ts                # Save user credentials
 │   ├── redeem.ts               # Manual code redemption
+│   ├── catchup.ts              # Redeem all known codes the user hasn't claimed
 │   ├── inventory.ts            # Show account info
 │   ├── open.ts                 # Open chests
 │   ├── blacksmith.ts           # Upgrade heroes
@@ -62,10 +63,12 @@ src/bot/
 │   ├── codeScanner.ts          # Message code detection
 │   └── backfillHandler.ts      # Message history scanning & redemption
 └── utils/
-    └── debugLogger.ts          # Response logging & cleanup
+    ├── logger.ts               # Winston logger (file + console output)
+    ├── apiRequestLogger.ts     # API response logging & cleanup
+    └── debugLogger.ts          # Debug utilities
 
-lib/
-└── *.d.ts                      # Type definitions from game API
+src/test/
+└── setup.ts                    # Bun test preload: sets DB_PATH=:memory:
 ```
 
 ## Key Technologies
@@ -77,6 +80,8 @@ lib/
 - **Drizzle ORM** - Type-safe query builder and schema manager
 - **Bun Fetch API** - Built-in HTTP client (replaces `node-fetch`)
 - **TypeScript** - Type-safe development (`noEmit: true`; type-check only)
+- **Winston** - Structured logging to file + console
+- **Bun test** - Built-in test runner (no additional dependencies)
 
 ## Important Notes
 
@@ -97,6 +102,68 @@ When calling game APIs (redeem, open chests, blacksmith), you must:
 3. Pass it to the API call
 
 This prevents "Outdated instance id" errors from the server.
+
+## Logging
+
+The bot uses Winston for structured logging.
+
+- **Log directory**: `logs/` (auto-created)
+- **Files**: `combined.log` (all levels, 20 rotated files), `error.log` (errors only, 10 files)
+- **Default level**: `info` — override with `LOG_LEVEL=debug` in `.env`
+- **Levels**: `error`, `warn`, `info`, `debug`, `trace`
+- **Console**: colour-coded timestamps, printed alongside file output
+
+```bash
+# Follow live logs
+tail -f logs/combined.log
+
+# Errors only
+tail -f logs/error.log
+```
+
+## Testing
+
+The project uses the built-in **Bun test runner**. Tests use an in-memory SQLite database so the real `data/idle.db` is never touched.
+
+### Running Tests
+
+```bash
+bun test            # Run all tests once
+bun test --watch    # Re-run on file changes
+```
+
+### Test Layout
+
+| File | What it tests |
+|------|---------------|
+| `src/bot/handlers/codeScanner.test.ts` | `extractCodesFromText` — regex, emoji stripping, case normalisation |
+| `src/bot/database/codeManager.test.ts` | All `CodeManager` methods — per-user redemption, public/private, pending codes |
+| `src/bot/database/userManager.test.ts` | All `UserManager` CRUD operations |
+
+### How It Works
+
+`bunfig.toml` configures a preload file:
+
+```toml
+[test]
+preload = ["./src/test/setup.ts"]
+```
+
+`src/test/setup.ts` sets environment variables before any module is imported:
+
+```typescript
+process.env.DB_PATH = ':memory:';
+process.env.MIGRATIONS_PATH = '...';
+```
+
+This means test files can use plain static imports — `db.ts` opens an in-memory database automatically.
+
+### Writing New Tests
+
+- Co-locate test files: `<module>.test.ts` next to `<module>.ts`
+- Import `db` from `./db` and call `initializeDatabase()` in `beforeAll`
+- Clear tables in `beforeEach` in FK-safe order (children before parents)
+- **Never call `closeDatabase()` in `afterAll`** — Bun reuses workers between test files; closing the connection breaks later files
 
 ### API Pattern
 

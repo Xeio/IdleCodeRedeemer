@@ -73,10 +73,11 @@ idle-code-redeemer/
 - **[src/bot/bot.ts](../src/bot/bot.ts)** - Discord client initialization, event handlers, command routing
 - **[src/bot/api/idleChampionsApi.ts](../src/bot/api/idleChampionsApi.ts)** - Game server API client with query-parameter format
 
-### Commands (9 slash commands)
+### Commands (10 slash commands)
 
 - **[src/bot/commands/setup.ts](../src/bot/commands/setup.ts)** - `/setup user_id:<id> user_hash:<hash>`
 - **[src/bot/commands/redeem.ts](../src/bot/commands/redeem.ts)** - `/redeem code:<code>`
+- **[src/bot/commands/catchup.ts](../src/bot/commands/catchup.ts)** - `/catchup` (redeem all known codes the user hasn't claimed)
 - **[src/bot/commands/inventory.ts](../src/bot/commands/inventory.ts)** - `/inventory` (gold, rubies, equipment, progress)
 - **[src/bot/commands/open.ts](../src/bot/commands/open.ts)** - `/open chest_type:<type> count:<count>`
 - **[src/bot/commands/blacksmith.ts](../src/bot/commands/blacksmith.ts)** - `/blacksmith contract_type:<type> hero_id:<id> count:<count>`
@@ -98,12 +99,22 @@ idle-code-redeemer/
 ### Auto Features
 
 - **[src/bot/handlers/codeScanner.ts](../src/bot/handlers/codeScanner.ts)** - Message scanning for codes (regex pattern)
-- **[src/bot/utils/debugLogger.ts](../src/bot/utils/debugLogger.ts)** - API response logging with auto-cleanup
+- **[src/bot/utils/logger.ts](../src/bot/utils/logger.ts)** - Winston structured logger (file + console)
+- **[src/bot/utils/apiRequestLogger.ts](../src/bot/utils/apiRequestLogger.ts)** - API response logging
+- **[src/bot/utils/debugLogger.ts](../src/bot/utils/debugLogger.ts)** - Debug utilities
+
+### Tests
+
+- **[src/bot/handlers/codeScanner.test.ts](../src/bot/handlers/codeScanner.test.ts)** - Unit tests for code detection regex
+- **[src/bot/database/codeManager.test.ts](../src/bot/database/codeManager.test.ts)** - Unit tests for all CodeManager methods
+- **[src/bot/database/userManager.test.ts](../src/bot/database/userManager.test.ts)** - Unit tests for all UserManager CRUD operations
+- **[src/test/setup.ts](../src/test/setup.ts)** - Bun test preload: sets `DB_PATH=:memory:` before imports
 
 ### Configuration
 
 - **[.env.example](../.env.example)** - Template for environment variables
 - **[.mise.toml](../.mise.toml)** - Task definitions and tool versions (Bun 1.3.13, Gitleaks)
+- **[bunfig.toml](../bunfig.toml)** - Bun configuration (test preload, registered via `[test].preload`)
 - **[package.json](../package.json)** - Bun scripts & dependencies
 - **[tsconfig.bot.json](../tsconfig.bot.json)** - TypeScript compiler options (`noEmit: true` — type-check only)
 - **[drizzle.config.ts](../drizzle.config.ts)** - Drizzle Kit configuration (schema path, migrations output)
