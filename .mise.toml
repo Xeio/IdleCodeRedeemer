@@ -23,27 +23,23 @@ run = "bun run dev"
 env = { NODE_ENV = "development" }
 
 [tasks.build]
-description = "Build TypeScript to JavaScript"
+description = "Build standalone executable with Bun"
 run = "bun run build"
 
 [tasks."prod:build"]
-description = "Build minified production bundle"
-run = "bun run build:prod"
+description = "Build minified production executable"
+run = "bun run build"
 env = { NODE_ENV = "production" }
 
 [tasks.start]
 description = "Start the bot in production"
-run = "bun start"
+run = "bun run start"
 env = { NODE_ENV = "production" }
 
 [tasks."prod:start"]
-description = "Start the minified production bundle"
-run = "bun run start:prod"
+description = "Start the compiled production executable"
+run = "bun run start"
 env = { NODE_ENV = "production" }
-
-[tasks.watch]
-description = "Watch TypeScript files and rebuild on changes"
-run = "bun run watch"
 
 [tasks.docker-build]
 description = "Build Docker image"

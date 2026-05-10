@@ -9,8 +9,15 @@ import IdleChampionsApi from './api/idleChampionsApi';
 import { initDebugLogger } from './utils/debugLogger';
 import logger from './utils/logger';
 import { apiRequestLogger } from './utils/apiRequestLogger';
-import fs from 'fs';
-import path from 'path';
+import * as backfillCommand from './commands/backfill';
+import * as blacksmithCommand from './commands/blacksmith';
+import * as codesCommand from './commands/codes';
+import * as helpCommand from './commands/help';
+import * as inventoryCommand from './commands/inventory';
+import * as makepublicCommand from './commands/makepublic';
+import * as openCommand from './commands/open';
+import * as redeemCommand from './commands/redeem';
+import * as setupCommand from './commands/setup';
 
 // CRITICAL: Disable certificate validation for Idle Champions API
 // Their server has an expired certificate - this must be set BEFORE any HTTPS requests
@@ -37,21 +44,22 @@ const client = new Client({
 // Initialize command collection
 (client as any).commands = new Collection();
 
-// Load commands
-const commandsPath = path.join(__dirname, 'commands');
-const commandFiles = fs
-  .readdirSync(commandsPath)
-  .filter((file) => file.endsWith('.js') || file.endsWith('.ts'));
+// Load commands statically (required for bundled production builds)
+const commands = [
+  backfillCommand,
+  blacksmithCommand,
+  codesCommand,
+  helpCommand,
+  inventoryCommand,
+  makepublicCommand,
+  openCommand,
+  redeemCommand,
+  setupCommand,
+];
 
-for (const file of commandFiles) {
-  const filePath = path.join(commandsPath, file);
-  delete require.cache[require.resolve(filePath)];
-  const command = require(filePath);
-
-  if (command.data && command.execute) {
-    (client as any).commands.set(command.data.name, command);
-    logger.debug(`Loaded command: ${command.data.name}`);
-  }
+for (const command of commands) {
+  (client as any).commands.set(command.data.name, command);
+  logger.debug(`Loaded command: ${command.data.name}`);
 }
 
 // Event: Ready

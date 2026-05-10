@@ -22,7 +22,6 @@ ENV NODE_TLS_REJECT_UNAUTHORIZED=0
 # Copy configuration files for Mise and project
 COPY .mise.toml ./
 COPY package.json ./
-COPY esbuild.prod.js ./
 COPY .env.example .env
 COPY bin/mise ./bin/mise
 
@@ -43,44 +42,29 @@ COPY src/lib ./src/lib
 # Build the production bundle
 RUN bin/mise run prod:build
 
-# Production stage
+# Production stage — only needs the compiled binary, no Bun or node_modules required
 FROM debian:13.4-slim@sha256:109e2c65005bf160609e4ba6acf7783752f8502ad218e298253428690b9eaa4b AS production
 
 WORKDIR /app
 
-# Install only runtime dependencies
+# Install only ca-certificates for HTTPS (the bot calls external APIs)
 RUN apt-get update \
   && apt-get -y --no-install-recommends install \
-    ca-certificates curl \
+    ca-certificates \
   && rm -rf /var/lib/apt/lists/*
-
-# Configure Mise environment
-ENV MISE_DATA_DIR="/app/.mise"
-ENV MISE_CONFIG_DIR="/app/.mise/config"
-ENV MISE_CACHE_DIR="/app/.mise/cache"
-ENV PATH="/app/.mise/shims:$PATH"
 
 # Disable SSL cert validation for Idle Champions API (expired certificate)
 ENV NODE_TLS_REJECT_UNAUTHORIZED=0
 
-# Copy built artifacts and necessary files from builder
-COPY --from=builder /app/.mise ./.mise
-COPY --from=builder /app/bin/mise ./bin/mise
-COPY --from=builder /app/dist-bundle ./dist-bundle
-COPY --from=builder /app/.mise.toml ./
-COPY --from=builder /app/package.json ./
-COPY --from=builder /app/bun.lock ./
-COPY --from=builder /app/.env .env
-
-# Install only production dependencies
-RUN bin/mise run prod:install
+# Copy the self-contained compiled executable from builder
+COPY --from=builder /app/dist-bundle/bot ./dist-bundle/bot
 
 # Create data and logs directories
-RUN mkdir -p /app/data api-logs
+RUN mkdir -p /app/data /app/api-logs
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:3000/health || exit 1
+  CMD pgrep -f "dist-bundle/bot" || exit 1
 
-# Start the bot with production bundle via mise
-CMD ["./bin/mise", "run", "prod:start"]
+# Run the self-contained executable directly — no Bun, no Node, no mise needed
+CMD ["/app/dist-bundle/bot"]
